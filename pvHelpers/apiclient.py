@@ -3,12 +3,23 @@ import requests
 
 from . import misc
 
+session_cache = {}
+
+def getSession(backend):
+    if backend not in session_cache:
+        # Let's avoid a random exploding cache.
+        if len(session_cache) > 1000:
+            session_cache.clear()
+        session_cache[backend] = requests.Session()
+    return session_cache[backend]
+
 class APIClient:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, as_user, backend):
         self.user = as_user
         self.backend = backend
+        self.__session = getSession(backend)
 
     @abc.abstractmethod
     def signRequest(self, data):
@@ -16,23 +27,23 @@ class APIClient:
 
     def get(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
         url, _, headers = self._prepareRequest(resource, "GET", None)
-        return requests.get(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.get(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
 
     def put(self, resource, params, timeout=misc.HTTP_TIMEOUT):
         url, raw_body, headers = self._prepareRequest(resource, "PUT", params)
-        return requests.put(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.put(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
 
     def post(self, resource, params, timeout=misc.HTTP_TIMEOUT):
         url, raw_body, headers = self._prepareRequest(resource, "POST", params)
-        return requests.post(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.post(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
 
     def delete(self, resource, timeout=misc.HTTP_TIMEOUT):
         url, _, headers = self._prepareRequest(resource, "DELETE", None)
-        return requests.delete(url, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.delete(url, timeout=timeout, allow_redirects=False, headers=headers)
 
     def patch(self, resource, params, timeout=misc.HTTP_TIMEOUT):
         url, raw_body, headers = self._prepareRequest(resource, "PATCH", params)
-        return requests.patch(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.patch(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
 
     def _prepareRequest(self, resource, method, body):
         url = self.backend + resource
@@ -43,7 +54,6 @@ class APIClient:
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
         status, signature = self.signRequest(canonical_request)
         if status == False:
-            g_log.error("userSignAPI failed: %s" % self.user.email)
             raise UnableToGetTokenError()
         headers = {
             "content-type" : "application/json",
