@@ -24,33 +24,53 @@ def getdir(path):
 
 class MetaConf(type):
     @staticmethod
-    def determineCurrentMode():
+    def determineCurrentMode(mode_file_path):
+        if not isinstance(mode_file_path, unicode):
+            raise Exception(u"error, determineCurrentMode: mode_file_path must be unicode")
+
         # Precedence
         # 0. Env[PREVEIL_MODE]
-        # 1. 'dev'
-        status, mode = unicodeIfUnicodeElseDecode(os.environ.get('PREVEIL_MODE', u'dev'))
-        if status == False:
-            raise Exception("error, determineCurrentMode failed")
-
-        return mode
-
-    def __init__(cls, name, bases, dct):
-        cls.mode = MetaConf.determineCurrentMode()
-        cls.data = {}
-
-        config_dir = dct["config_dir"]
+        # 1. conf/default-mode
+        # 2. 'dev'
+        mode = os.environ.get(u'PREVEIL_MODE')
+        if mode != None:
+            status, mode = unicodeIfUnicodeElseDecode(mode)
+            if status == False:
+                raise Exception(u"error, determineCurrentMode: unicodeIfUnicodeElseDecode failed")
+            return mode
 
         try:
-            path = os.path.join(config_dir, "config.yaml")
-            with open(path, 'r') as f:
+            with open(mode_file_path, u'r') as f:
+                mode = f.read().strip()
+            status, mode = ASCIIToUnicode(mode)
+            if status == False:
+                raise Exception(u"error, determineCurrentMode: ASCIIToUnicode failed")
+            return mode
+        except IOError:
+            pass
+
+        return u'dev'
+
+    def __init__(cls, name, bases, dct):
+        config_dir = dct.get(u"config_dir")
+        if not isinstance(config_dir, unicode):
+            raise Exception(u"error: MetaConf.config_dir must be unicode")
+        mode_file_path = os.path.join(config_dir, u"default-mode")
+        config_file_path = os.path.join(config_dir, u"config.yaml")
+
+        cls.mode = MetaConf.determineCurrentMode(mode_file_path)
+        cls.data = {}
+
+        try:
+            with open(config_file_path, u'r') as f:
                 c = yaml.load(f.read())
                 if c.has_key(cls.mode) is False:
-                    raise Exception("error, exiting: PREVEIL_MODE={} unavailable at {}".format(mode, path))
+                    raise Exception(u"error, exiting: PREVEIL_MODE={} unavailable at {}".format(mode, config_file_path))
             cls.data = c
         except IOError:
             pass
 
-        cls.path = path
+        cls.path = config_file_path
 
         super(MetaConf, cls).__init__(name, bases, dct)
 
@@ -63,7 +83,7 @@ class MetaConf(type):
             override_mode = cls.mode
 
         if cls.data.has_key(override_mode) == False:
-            raise Exception("error, exiting: PREVEIL_MODE={} unavailable at {} for key {}".format(override_mode, cls.path, key))
+            raise Exception(u"error, exiting: PREVEIL_MODE={} unavailable at {} for key {}".format(override_mode, cls.config_file_path, key))
         value = cls.data[override_mode][key]
 
         return value
