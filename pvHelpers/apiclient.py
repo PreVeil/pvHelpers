@@ -54,7 +54,7 @@ class APIClient:
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
         status, signature = self.signRequest(canonical_request)
         if status == False:
-            raise UnableToGetTokenError()
+            raise requests.exceptions.RequestException("failed to sign request")
         headers = {
             "content-type" : "application/json",
             "x-user-id"    : str(self.user.user_id),
@@ -62,5 +62,5 @@ class APIClient:
         }
         status, encoded_raw_body = misc.utf8Encode(raw_body)
         if status == False:
-            raise UnableToGetTokenError()
+            raise requests.exceptions.RequestException("failed to utf8 encode request body")
         return url, encoded_raw_body, headers

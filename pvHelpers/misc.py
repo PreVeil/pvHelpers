@@ -261,21 +261,21 @@ def getBodyFromFlankerMessage(message):
         tmp.remove_headers(*tmp.headers.keys())
         return tmp.to_string()
 
-# FIXME: Don't use logRaise()
 def checkRunningAsRoot():
     if "darwin" == sys.platform:
         uid = os.getuid()
         gid = os.getgid()
         if uid != os.geteuid():
-            logRaise("ruid must match euid")
+            return False
         elif gid != os.getegid():
-            logRaise("rgid must match egid")
+            return False
         elif uid != 0 or pwd.getpwuid(uid).pw_name != "root":
-            logRaise("all servers must be started with uid=0 (root)")
+            return False
         elif gid != 0 or grp.getgrgid(gid).gr_name != "wheel":
-            logRaise("all servers must be started with gid=0 (wheel)")
-    elif "win32" == sys.platform:
-        pass
+            return False
+        return True
+    else:
+        return True
 
 class DoAsPreVeil:
     def __init__(self):
