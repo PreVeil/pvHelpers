@@ -12,9 +12,11 @@ import logging.handlers
 import flanker.mime
 import sqlite3
 
-if "darwin" == sys.platform:
+if sys.platform in ["darwin", "linux2"]:
     import pwd
     import grp
+else:
+    pass
 
 DATA_DIR_MODE = 0o750
 HTTP_TIMEOUT = 15
@@ -262,16 +264,16 @@ def getBodyFromFlankerMessage(message):
         return tmp.to_string()
 
 def checkRunningAsRoot():
-    if "darwin" == sys.platform:
+    if sys.platform in ["darwin", "linux2"]:
         uid = os.getuid()
         gid = os.getgid()
         if uid != os.geteuid():
             return False
         elif gid != os.getegid():
             return False
-        elif uid != 0 or pwd.getpwuid(uid).pw_name != "root":
+        elif uid != 0:
             return False
-        elif gid != 0 or grp.getgrgid(gid).gr_name != "wheel":
+        elif gid != 0:
             return False
         return True
     else:
@@ -282,7 +284,7 @@ class DoAsPreVeil:
         pass
 
     def __enter__(self):
-        if "darwin" == sys.platform:
+        if sys.platform in ["darwin", "linux2"]:
             self.original_egid = os.getegid()
             self.original_euid = os.geteuid()
 
@@ -295,15 +297,15 @@ class DoAsPreVeil:
             self.noop = False
             os.setegid(preveil_pwuid.pw_gid)
             os.seteuid(preveil_pwuid.pw_uid)
-        elif "win32" == sys.platform:
+        else:
             pass
 
     def __exit__(self, type, value, traceback):
-        if "darwin" == sys.platform:
+        if sys.platform in ["darwin", "linux2"]:
             if self.noop is False:
                 os.setegid(self.original_egid)
                 os.seteuid(self.original_euid)
-        elif "win32" == sys.platform:
+        else:
             pass
 
         if isinstance(value, Exception):
@@ -330,11 +332,13 @@ def quietMakedirsInPreVeilDataDir(path):
         raise Exception("path is not in data dir: %s" % path)
 
     with DoAsPreVeil() as _:
-        if "darwin" == sys.platform:
+        if sys.platform in ["darwin", "linux2"]:
             mask = os.umask(0o777)
             os.umask(mask)
             if (DATA_DIR_MODE & (~ mask)) != DATA_DIR_MODE:
                 raise Exception("bad umask: %s" % mask)
+        else:
+            pass
 
         try:
             os.makedirs(path, DATA_DIR_MODE)
@@ -347,11 +351,13 @@ def quietMkdirInPreVeilDataDir(path):
         raise Exception("path is not in data dir: %s" % path)
 
     with DoAsPreVeil() as _:
-        if "darwin" == sys.platform:
+        if sys.platform in ["darwin", "linux2"]:
             mask = os.umask(0o777)
             os.umask(mask)
             if (DATA_DIR_MODE & (~ mask)) != DATA_DIR_MODE:
                 raise Exception("bad umask: %s" % mask)
+        else:
+            pass
 
         try:
             os.mkdir(path, DATA_DIR_MODE)
@@ -363,12 +369,10 @@ def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 def preveilDataDir():
-    if "darwin" == sys.platform:
+    if sys.platform in ["darwin", "linux2"]:
         return os.path.join("/", "var", "preveil")
     elif "win32" == sys.platform:
         return os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")
-    elif "linux2" == sys.platform:
-        return os.path.join("/", "var", "preveil")
     else:
         raise Exception("preveilDataDir: Unsupported platform")
 
