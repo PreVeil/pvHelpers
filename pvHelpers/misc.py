@@ -10,6 +10,7 @@ import logging
 import logging.handlers
 import sqlite3
 import types
+import struct
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
@@ -19,6 +20,10 @@ else:
 
 DATA_DIR_MODE = 0o750
 HTTP_TIMEOUT = 15
+
+def initRandom():
+    seed = struct.unpack('=I', os.urandom(4))[0]
+    random.seed(seed)
 
 def getdir(path):
     return os.path.dirname(os.path.realpath(path))
