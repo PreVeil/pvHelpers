@@ -1,3 +1,3 @@
 from .misc import *
-from .user import UserData, fetchUserByEmail, fetchUserByID, _fetchUsers, _materializeUserDatum, fetchUsersByEmail, fetchUsersByID
+from .user import UserData, fetchUser, _fetchUsers, _materializeUserDatum, fetchUsers
 from .apiclient import *

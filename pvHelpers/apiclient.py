@@ -37,9 +37,9 @@ class APIClient:
         url, raw_body, headers = self._prepareRequest(resource, "POST", params)
         return self.__session.post(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
 
-    def delete(self, resource, timeout=misc.HTTP_TIMEOUT):
+    def delete(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
         url, _, headers = self._prepareRequest(resource, "DELETE", None)
-        return self.__session.delete(url, timeout=timeout, allow_redirects=False, headers=headers)
+        return self.__session.delete(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
 
     def patch(self, resource, params, timeout=misc.HTTP_TIMEOUT):
         url, raw_body, headers = self._prepareRequest(resource, "PATCH", params)
@@ -55,9 +55,12 @@ class APIClient:
         status, signature = self.signRequest(canonical_request)
         if status == False:
             raise requests.exceptions.RequestException("failed to sign request")
+        status, encoded_user_id = misc.utf8Encode(self.user.user_id)
+        if status == False:
+            raise requests.exceptions.RequestException("failed to utf8 encode user_id")
         headers = {
             "content-type" : "application/json",
-            "x-user-id"    : str(self.user.user_id),
+            "x-user-id"    : encoded_user_id,
             "x-signature"  : signature,
         }
         status, encoded_raw_body = misc.utf8Encode(raw_body)
