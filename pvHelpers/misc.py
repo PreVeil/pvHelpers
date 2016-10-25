@@ -6,11 +6,10 @@ import time
 import simplejson
 import datetime
 import base64
-import twisted.python.log
 import logging
 import logging.handlers
-import flanker.mime
 import sqlite3
+import types
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
@@ -130,9 +129,13 @@ class LogWrapper:
     # depend on the PreVeil directory structure.  Once we've confirmed
     # the PreVeil directories exist, we can start logging to disk instead of
     # stdout.
-    def startFileSystemWrites(self, name, extra_logger=None):
-        logobj = logging.getLogger(name)
-        logobj.setLevel(logging.DEBUG)
+    def startFileSystemWrites(self, name, twisted_observer_fn=None, extra_logger=None):
+        if not isinstance(twisted_observer_fn, types.NoneType):
+            if not (callable(twisted_observer_fn) and twisted_observer_fn.__name__ == "PythonLoggingObserver"):
+                return False
+
+        self.logobj = logging.getLogger(name)
+        self.logobj.setLevel(logging.DEBUG)
 
         logpath = os.path.join(logsDir(), "{}.log".format(name))
         # TimedRotatingFileHandler will only rotate the logs if the process is
@@ -142,15 +145,14 @@ class LogWrapper:
         handler   = logging.handlers.RotatingFileHandler(logpath, maxBytes=1000000, backupCount=1000)
         formatter = logging.Formatter('%(asctime)s %(levelname)s [%(filename)s,%(lineno)d]: %(message)s')
         handler.setFormatter(formatter)
-        logobj.addHandler(handler)
+        self.logobj.addHandler(handler)
 
         if extra_logger is not None:
             extra_logger.addHandler(handler)
 
-        observer = twisted.python.log.PythonLoggingObserver(loggerName=name)
-        observer.start()
-
-        self.logobj = logobj
+        if twisted_observer_fn is not None:
+            observer = twisted_observer_fn(loggerName=name)
+            observer.start()
 
 def unicodeToASCII(s):
     if not isinstance(s, unicode):
@@ -252,16 +254,19 @@ def getTempFilePath():
     return os.path.join(tempDir(),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
-def getBodyFromFlankerMessage(message):
-    if message.content_type.is_singlepart():
-        return message._container.read_body()
-    else:
-        assert message.content_type.is_multipart()
+def getBodyFromFlankerMessage(message, flanker_from_string):
+    if not (callable(flanker_from_string) and flanker_from_string.__name__ == "from_string"):
+        return False, None
 
+    if message.content_type.is_singlepart():
+        return True, message._container.read_body()
+    elif message.content_type.is_multipart():
         # HACK: Print message text without the headers
-        tmp = flanker.mime.from_string(message.to_string())
+        tmp = flanker_from_string(message.to_string())
         tmp.remove_headers(*tmp.headers.keys())
-        return tmp.to_string()
+        return True, tmp.to_string()
+    else:
+        return False, None
 
 def checkRunningAsRoot():
     if sys.platform in ["darwin", "linux2"]:
