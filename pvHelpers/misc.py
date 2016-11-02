@@ -386,14 +386,17 @@ def preveilDataDir():
     else:
         raise Exception("preveilDataDir: Unsupported platform")
 
+def daemonDataDir():
+    return os.path.join(preveilDataDir(), "daemon")
+
 def logsDir():
-    return os.path.join(preveilDataDir(), "logs")
+    return os.path.join(daemonDataDir(), "logs")
 
 def tempDir():
-    return os.path.join(preveilDataDir(), "temp")
+    return os.path.join(daemonDataDir(), "temp")
 
 def modesDir():
-    return os.path.join(preveilDataDir(), "modes")
+    return os.path.join(daemonDataDir(), "modes")
 
 def getModeDir(mode):
     return os.path.join(modesDir(), mode)
@@ -402,12 +405,13 @@ def getModeDir(mode):
 # owner:group
 #
 # This function tries to provide the following guarentee, if a process returns
-# successfully from initDirs(), /var/preveil/* is available to it with the
+# successfully from initDaemonDataDirs(), /var/preveil/* is available to it with the
 # correct owner:group.  This guarentee is easier to provide if all processes
 # only create these directories (or change their permissions) with this
 # function.
-def initDirs(mode):
+def initDaemonDataDirs(mode):
     quietMkdirInPreVeilDataDir(preveilDataDir())
+    quietMkdirInPreVeilDataDir(daemonDataDir())
     quietMkdirInPreVeilDataDir(logsDir())
     quietMkdirInPreVeilDataDir(tempDir())
     quietMkdirInPreVeilDataDir(modesDir())
