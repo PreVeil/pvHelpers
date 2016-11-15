@@ -337,6 +337,20 @@ def isSameDirOrChild(directory, test_child):
     # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
     return os.path.commonprefix([test_child, directory]) == directory
 
+def recur_chown(path, uid, gid):
+    for root, dirs, files in os.walk(path):
+        for name in dirs:
+            os.chown(os.path.join(root, name), uid, gid)
+        for name in files:
+            os.chown(os.path.join(root, name), uid, gid)
+
+def quiet_mkdir(path):
+    try:
+        os.mkdir(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+
 def quietMakedirsInPreVeilDataDir(path):
     if isSameDirOrChild(preveilDataDir(), path) is False:
         raise Exception("path is not in data dir: %s" % path)
@@ -410,12 +424,26 @@ def getModeDir(mode):
 # only create these directories (or change their permissions) with this
 # function.
 def initDaemonDataDirs(mode):
-    quietMkdirInPreVeilDataDir(preveilDataDir())
-    quietMkdirInPreVeilDataDir(daemonDataDir())
-    quietMkdirInPreVeilDataDir(logsDir())
-    quietMkdirInPreVeilDataDir(tempDir())
-    quietMkdirInPreVeilDataDir(modesDir())
-    quietMkdirInPreVeilDataDir(getModeDir(mode))
+    if sys.platform in ["darwin", "linux2"]:
+        mask = os.umask(0o777)
+        os.umask(mask)
+        if (DATA_DIR_MODE & (~ mask)) != DATA_DIR_MODE:
+            raise Exception("bad umask: %s" % mask)
+    else:
+        pass
+
+    quiet_mkdir(preveilDataDir())
+    quiet_mkdir(daemonDataDir())
+    quiet_mkdir(logsDir())
+    quiet_mkdir(tempDir())
+    quiet_mkdir(modesDir())
+    quiet_mkdir(getModeDir(mode))
+
+    preveil_pwuid = pwd.getpwnam("preveil")
+    preveil_uid = preveil_pwuid.pw_uid
+    preveil_gid = preveil_pwuid.pw_gid
+
+    recur_chown(preveilDataDir(), preveil_uid, preveil_gid)
 
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
