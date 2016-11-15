@@ -447,11 +447,13 @@ def initDaemonDataDirs(mode):
     quiet_mkdir(modesDir())
     quiet_mkdir(getModeDir(mode))
 
-    preveil_pwuid = pwd.getpwnam("preveil")
-    preveil_uid = preveil_pwuid.pw_uid
-    preveil_gid = preveil_pwuid.pw_gid
-
-    recur_chown(preveilDataDir(), preveil_uid, preveil_gid)
+    if sys.platform in ["darwin", "linux2"]:
+        preveil_pwuid = pwd.getpwnam("preveil")
+        preveil_uid = preveil_pwuid.pw_uid
+        preveil_gid = preveil_pwuid.pw_gid
+        recur_chown(preveilDataDir(), preveil_uid, preveil_gid)
+    else:
+        pass
 
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
