@@ -321,6 +321,14 @@ class DoAsPreVeil:
         if isinstance(value, Exception):
             raise value
 
+def switchUserPreVeil():
+    if sys.platform in ["darwin", "linux2"]:
+        preveil_pwuid = pwd.getpwnam("preveil")
+        os.setregid(preveil_pwuid.pw_gid, preveil_pwuid.pw_gid)
+        os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
+    elif "win32" == sys.platform:
+        pass
+
 # lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
 def isSameDirOrChild(directory, test_child):
     directory = os.path.normpath(os.path.realpath(directory))
