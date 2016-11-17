@@ -28,71 +28,45 @@ def initRandom():
 def getdir(path):
     return os.path.dirname(os.path.realpath(path))
 
-class MetaConf(type):
-    @staticmethod
-    def determineCurrentMode(mode_file_path):
-        if not isinstance(mode_file_path, unicode):
-            raise Exception(u"error, determineCurrentMode: mode_file_path must be unicode")
+def resolvePreVeilMode(mode_file_path):
+    if not isinstance(mode_file_path, unicode):
+        print u"error, determineCurrentMode: mode_file_path must be unicode"
+        return False, None
 
-        # Precedence
-        # 0. Env[PREVEIL_MODE]
-        # 1. conf/default-mode
-        # 2. 'dev'
-        mode = os.environ.get(u'PREVEIL_MODE')
-        if mode != None:
-            status, mode = unicodeIfUnicodeElseDecode(mode)
-            if status == False:
-                raise Exception(u"error, determineCurrentMode: unicodeIfUnicodeElseDecode failed")
-            return mode
+    # Precedence
+    # 0. Env[PREVEIL_MODE]
+    # 1. conf/default-mode
+    # 2. 'dev'
+    mode = os.environ.get(u'PREVEIL_MODE')
+    if mode != None:
+        status, mode = unicodeIfUnicodeElseDecode(mode)
+        if status == False:
+            print u"error, determineCurrentMode: unicodeIfUnicodeElseDecode failed"
+            return False, None
+        return True, mode
 
-        try:
-            with open(mode_file_path, u'r') as f:
-                mode = f.read().strip()
-            status, mode = ASCIIToUnicode(mode)
-            if status == False:
-                raise Exception(u"error, determineCurrentMode: ASCIIToUnicode failed")
-            return mode
-        except IOError:
-            pass
+    try:
+        with open(mode_file_path, u'r') as f:
+            mode = f.read().strip()
+        status, mode = ASCIIToUnicode(mode)
+        if status == False:
+            print u"error, determineCurrentMode: ASCIIToUnicode failed"
+        return True, mode
+    except IOError:
+        pass
 
-        return u'dev'
+    return True, u'dev'
 
-    def __init__(cls, name, bases, dct):
-        config_dir = dct.get(u"config_dir")
-        if not isinstance(config_dir, unicode):
-            raise Exception(u"error: MetaConf.config_dir must be unicode")
-        mode_file_path = os.path.join(config_dir, u"default-mode")
-        config_file_path = os.path.join(config_dir, u"config.yaml")
+def readYAMLConfig(path):
+    if not isinstance(path, unicode):
+        return False, None
 
-        cls.mode = MetaConf.determineCurrentMode(mode_file_path)
-        cls.data = {}
-
-        try:
-            with open(config_file_path, u'r') as f:
-                c = yaml.load(f.read())
-                if c.has_key(cls.mode) is False:
-                    raise Exception(u"error, exiting: PREVEIL_MODE={} unavailable at {}".format(mode, config_file_path))
-            cls.data = c
-        except IOError:
-            pass
-
-        cls.path = config_file_path
-
-        super(MetaConf, cls).__init__(name, bases, dct)
-
-    def _getValue(cls, key, override_mode=None):
-        value = os.environ.get(key)
-        if value is not None:
-            return value
-
-        if override_mode is None:
-            override_mode = cls.mode
-
-        if cls.data.has_key(override_mode) == False:
-            raise Exception(u"error, exiting: PREVEIL_MODE={} unavailable at {} for key {}".format(override_mode, cls.config_file_path, key))
-        value = cls.data[override_mode][key]
-
-        return value
+    try:
+        with open(path, u'r') as f:
+            c = yaml.load(f.read())
+            return True, c
+    except IOError as e:
+        return False, None
 
 class LogWrapper:
     def __init__(self):
