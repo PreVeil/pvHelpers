@@ -397,6 +397,12 @@ def modesDir():
 def getModeDir(mode):
     return os.path.join(modesDir(), mode)
 
+def getUserDatabasePath(mode):
+    return os.path.join(getModeDir(mode), "user_db.sqlite")
+
+def getCachePath(mode):
+    return os.path.join(getModeDir(mode), "db.sqlite")
+
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
 # owner:group
 #
