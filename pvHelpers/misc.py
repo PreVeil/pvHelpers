@@ -320,6 +320,7 @@ def isSameDirOrChild(directory, test_child):
     return os.path.commonprefix([test_child, directory]) == directory
 
 def recur_chown(path, uid, gid):
+    os.chown(path, uid, gid)
     for root, dirs, files in os.walk(path):
         for name in dirs:
             os.chown(os.path.join(root, name), uid, gid)
