@@ -3,8 +3,9 @@ import requests
 
 from . import misc
 
-session_cache = {}
+BACKEND_API_VERSION = "v2"
 
+session_cache = {}
 def getSession(backend):
     if backend not in session_cache:
         # Let's avoid a random exploding cache.
@@ -62,6 +63,7 @@ class APIClient:
             "content-type" : "application/json",
             "x-user-id"    : encoded_user_id,
             "x-signature"  : signature,
+            "accept-version" : BACKEND_API_VERSION,
         }
         status, encoded_raw_body = misc.utf8Encode(raw_body)
         if status == False:

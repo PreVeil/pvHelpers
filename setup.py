@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name='pvHelpers',
-      version='1.15',
+      version='1.16',
       packages=['pvHelpers'],
       install_requires=[
         "PyYAML==3.11",
