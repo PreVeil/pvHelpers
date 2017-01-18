@@ -17,9 +17,9 @@ def getSession(backend):
 class APIClient:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, as_user, backend):
-        self.user = as_user
-        self.backend = backend
+    def __init__(self, user_id, backend):
+        self.user_id = user_id
+        self.__backend = backend
         self.__session = getSession(backend)
 
     @abc.abstractmethod
@@ -47,7 +47,7 @@ class APIClient:
         return self.__session.patch(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
 
     def _prepareRequest(self, resource, method, body):
-        url = self.backend + resource
+        url = self.__backend + resource
         if body is None:
             raw_body = u""
         else:
@@ -56,7 +56,7 @@ class APIClient:
         status, signature = self.signRequest(canonical_request)
         if status == False:
             raise requests.exceptions.RequestException("failed to sign request")
-        status, encoded_user_id = misc.utf8Encode(self.user.user_id)
+        status, encoded_user_id = misc.utf8Encode(self.user_id)
         if status == False:
             raise requests.exceptions.RequestException("failed to utf8 encode user_id")
         headers = {

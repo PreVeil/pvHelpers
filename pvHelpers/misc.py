@@ -8,9 +8,10 @@ import datetime
 import base64
 import logging
 import logging.handlers
-import sqlite3
 import types
 import struct
+
+from sqlalchemy import create_engine, event, orm
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
@@ -295,6 +296,119 @@ class DoAsPreVeil:
         if isinstance(value, Exception):
             raise value
 
+# FIXME: Do we need to handle more "events" in order to get DDL queries
+#        to work in SAVEPOINTs.
+class GetUserDBSessionAsPreVeil(DoAsPreVeil):
+    def __init__(self, mode):
+        DoAsPreVeil.__init__(self)
+        self.mode = mode
+
+    __engines = {}
+    @classmethod
+    def getSessionMaker(cls, mode):
+        value = cls.__engines.get(mode, None)
+        if value != None:
+            (engine, session_maker) = value
+            return session_maker
+
+        engine = create_engine('sqlite:///{}'.format(getUserDatabasePath(mode)))
+        # HACK: source, http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
+        # Let's use use DDL queries in transactions.
+        @event.listens_for(engine, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            # disable pysqlite's emitting of the BEGIN statement entirely.
+            # also stops it from emitting COMMIT before any DDL.
+            dbapi_connection.isolation_level = None
+            dbapi_connection.execute('PRAGMA fullfsync = 1')
+        @event.listens_for(engine, "begin")
+        def do_begin(conn):
+            # emit our own BEGIN
+            conn.execute("BEGIN IMMEDIATE")
+
+        session_maker = orm.session.sessionmaker(bind=engine, autocommit=True)
+        cls.__engines[mode] = (engine, session_maker)
+        return session_maker
+
+    def __enter__(self):
+        DoAsPreVeil.__enter__(self)
+
+        self.session = self.getSessionMaker(self.mode)()
+        return self.session
+
+    def __exit__(self, type, value, traceback):
+        self.session.close()
+
+        DoAsPreVeil.__exit__(self, type, value, traceback)
+
+class GetMailDBSessionAsPreVeil(DoAsPreVeil):
+    def __init__(self, mode):
+        DoAsPreVeil.__init__(self)
+        self.mode = mode
+
+    __engines = {}
+    @classmethod
+    def getSessionMaker(cls, mode):
+        value = cls.__engines.get(mode, None)
+        if value != None:
+            (engine, session_maker) = value
+            return session_maker
+
+        engine = create_engine('sqlite:///{}'.format(getMailDatabasePath(mode)))
+        # HACK: source, http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
+        # Let's use use DDL queries in transactions.
+        @event.listens_for(engine, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            # disable pysqlite's emitting of the BEGIN statement entirely.
+            # also stops it from emitting COMMIT before any DDL.
+            dbapi_connection.isolation_level = None
+            dbapi_connection.execute('PRAGMA fullfsync = 1')
+        @event.listens_for(engine, "begin")
+        def do_begin(conn):
+            # emit our own BEGIN
+            conn.execute("BEGIN IMMEDIATE")
+        session_maker = orm.session.sessionmaker(bind=engine, autocommit=True)
+        cls.__engines[mode] = (engine, session_maker)
+        return session_maker
+
+    def __enter__(self):
+        DoAsPreVeil.__enter__(self)
+
+        self.session = self.getSessionMaker(self.mode)()
+        return self.session
+
+    def __exit__(self, type, value, traceback):
+        self.session.close()
+
+        DoAsPreVeil.__exit__(self, type, value, traceback)
+
+class UserDBNode:
+    @staticmethod
+    def new(user_id, display_name, mail_cid, password):
+        if not isinstance(user_id, unicode):
+            return False, None
+        if not isinstance(display_name, unicode):
+            return False, None
+        if not isinstance(mail_cid, unicode):
+            return False, None
+        if not isinstance(password, unicode):
+            return False, None
+
+        return True, UserDBNode(user_id, display_name, mail_cid, password)
+
+    def __init__(self, user_id, display_name, mail_cid, password):
+        self.user_id = user_id
+        self.display_name = display_name
+        self.mail_cid = mail_cid
+        self.password = password
+
+    def toDict(self):
+        return {
+            "user_id" : self.user_id,
+            "display_name" : self.display_name,
+            "mail_cid" : self.mail_cid,
+            "password" : self.password
+        }
+
 def switchUserPreVeil():
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
@@ -401,7 +515,7 @@ def getModeDir(mode):
 def getUserDatabasePath(mode):
     return os.path.join(getModeDir(mode), "user_db.sqlite")
 
-def getCachePath(mode):
+def getMailDatabasePath(mode):
     return os.path.join(getModeDir(mode), "db.sqlite")
 
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
