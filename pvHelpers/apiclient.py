@@ -5,6 +5,17 @@ from . import misc
 
 BACKEND_API_VERSION = "v2"
 
+# If no authentication method is given with the auth argument, Requests will
+# attempt to get the authentication credentials for the URL's hostname from
+# the user's netrc file. The netrc file overrides raw HTTP authentication
+# headers set with headers=.
+#
+# Use NOOPAuth to avoid the slow read from the netrc file.
+class __NOOPAuth(requests.auth.AuthBase):
+    def __call__(self, r):
+        return r
+NOOPAuth = __NOOPAuth()
+
 session_cache = {}
 def getSession(backend):
     if backend not in session_cache:
@@ -12,6 +23,7 @@ def getSession(backend):
         if len(session_cache) > 1000:
             session_cache.clear()
         session_cache[backend] = requests.Session()
+        session_cache[backend].auth = NOOPAuth
     return session_cache[backend]
 
 class APIClient:
