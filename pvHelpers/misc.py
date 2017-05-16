@@ -10,6 +10,8 @@ import logging
 import logging.handlers
 import types
 import struct
+import collections
+import copy
 
 from sqlalchemy import create_engine, event, orm
 
@@ -549,6 +551,41 @@ def initDaemonDataDirs(mode):
         recur_chown(preveilDataDir(), preveil_uid, preveil_gid)
     else:
         pass
+
+class CaseInsensitiveSet(collections.Set):
+    def __init__(self, lyst):
+        self.data  = dict()
+        for e in lyst:
+            self.data[e.upper()] = e
+
+    def __contains__(self, item):
+        return item.upper() in self.data
+
+    def __iter__(self):
+        for _, n in self.data.iteritems():
+            yield n
+
+    def __len__(self):
+        return len(self.data)
+
+    def union(self, other):
+        if type(other) != list:
+            util.logRaise("bad type")
+        new = copy.deepcopy(self.data)
+        for o in other:
+            new[o.upper()] = o
+
+        return CaseInsensitiveSet(new.values())
+
+    def difference(self, other):
+        if type(other) != list:
+            util.logRaise("bad type")
+        new = copy.deepcopy(self.data)
+        for o in other:
+            if o.upper() in new:
+                del new[o.upper()]
+
+        return CaseInsensitiveSet(new.values())
 
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
