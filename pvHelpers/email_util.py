@@ -152,18 +152,24 @@ class Email(object):
         if not isinstance(raw_mime, mime.message.part.MimePart):
             raise EmailException(u"getSnippetFromMIME: raw_mime must be of type MimePart")
 
-        plain_string = u""
-        html_string = u""
+        plain_string = None
+        # only using plain/text parts for snippet generation.
+        # TODO: add a HTML stripper and use plain/html parts if
+        # there are no plain/text alternatives
         for part in raw_mime.walk(with_self=True):
             if part.content_type == "text/plain":
-                plain_string += u"\n" + part.body
-            if part.content_type == "text/html":
-                html_string += u"\n" + part.body
+                if plain_string is None:
+                    plain_string = part.body
+                else:
+                    plain_string += u"\n" + part.body
 
-        body_string = html_string if len(html_string) > len(plain_string) else plain_string
-        snippet = body_string[:1024]
-        if len(body_string) > len(snippet):
+        if plain_string is None:
+            return u""
+
+        snippet = plain_string[:1024]
+        if len(plain_string) > len(snippet):
             snippet += u"..."
+
         return snippet
 
     @staticmethod
@@ -201,6 +207,7 @@ class Email(object):
 
         return Email.fromDict({
             "revision_id": revision_id,
+            "expunged": False,
             "version": version,
             "server_id": server_id,
             "server_time": server_time,
@@ -284,26 +291,26 @@ class Email(object):
     @staticmethod # raw mime only has some of an email information like body, atts, ...
     def fromMIME(raw_mime, server_id, revision_id, protocol_version, version, \
                     snippet, uid, thread_id, mailbox_server_id, flags, message_id, \
-                    server_time, subject, sender, tos, ccs, bccs, reply_to, in_reply_to, references):
+                    server_time, subject, sender, tos, ccs, bccs, reply_to, in_reply_to, references, expunged):
         if not isinstance(raw_mime, mime.message.part.MimePart):
             raise EmailException(u"fromMIME: raw_mime must be of type mime.message.part.MimePart or str")
 
         if tos == None:
             tos = raw_mime.headers.get("To")
             tos = addresslib.address.parse_list(tos)
-            tos = [to.address for to in tos]
+            tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
         if ccs == None:
             ccs = raw_mime.headers.get("Cc")
             ccs = addresslib.address.parse_list(ccs)
-            ccs = [cc.address for cc in ccs]
+            ccs = [{"user_id": cc.address, "display_name": cc.display_name} for cc in ccs]
         if bccs == None:
             bccs = raw_mime.headers.get("Bcc")
             bccs = addresslib.address.parse_list(bccs)
-            bccs = [bcc.address for bcc in bccs]
+            bccs = [{"user_id": bcc.address, "display_name": bcc.display_name} for bcc in bccs]
         if reply_to == None:
             reply_to = raw_mime.headers.get("Reply-To")
             reply_to = addresslib.address.parse_list(reply_to)
-            reply_to = [rpt.address for rpt in reply_to]
+            reply_to = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_to]
         if subject == None:
             subject = raw_mime.headers.get("Subject", u"")
         if in_reply_to == None:
@@ -353,6 +360,7 @@ class Email(object):
 
         return Email.fromDict({
             "server_id": server_id,
+            "expunged": expunged,
             "revision_id": revision_id,
             "protocol_version": protocol_version,
             "version": version,
@@ -382,36 +390,46 @@ class Email(object):
                 in_reply_to, attachments, body, body_ref_id, subject, flags, tos, \
                 ccs, bccs, sender, expunged, server_time, revision_id, reply_to):
 
-        if not isinstance(sender, unicode):
-            raise EmailException(u"Email.__init__: sender must be of type unicode")
+        if not isinstance(sender, dict):
+            raise EmailException(u"Email.__init__: sender must be of type dict")
+        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
+            raise EmailException(u"Email.__init__: sender['user_id']/sender['display_name'] must exist and be of type unicode")
         self.sender = sender
 
         if not isinstance(tos, list):
             raise EmailException(u"Email.__init__: tos must be of type list")
         for to in tos:
-            if not isinstance(to, unicode):
-                raise EmailException(u"Email.__init__: tos element must be of type unicode")
+            if not isinstance(to, dict):
+                raise EmailException(u"Email.__init__: tos element must be of type dict")
+            if not isinstance(to.get("user_id"), unicode) or not isinstance(to.get("display_name"), unicode):
+                raise EmailException(u"Email.__init__: to['user_id']/to['display_name'] must exist and be of type unicode")
         self.tos = tos
 
         if not isinstance(ccs, list):
             raise EmailException(u"Email.__init__: ccs must be of type list")
         for cc in ccs:
-            if not isinstance(cc, unicode):
-                raise EmailException(u"Email.__init__: ccs element must be of type unicode")
+            if not isinstance(cc, dict):
+                raise EmailException(u"Email.__init__: ccs element must be of type dict")
+            if not isinstance(cc.get("user_id"), unicode) or not isinstance(cc.get("display_name"), unicode):
+                raise EmailException(u"Email.__init__: cc['user_id']/cc['display_name'] must exist and be of type unicode")
         self.ccs = ccs
 
         if not isinstance(bccs, list):
             raise EmailException(u"Email.__init__: bccs must be of type list")
         for bcc in bccs:
-            if not isinstance(bcc, unicode):
-                raise EmailException(u"Email.__init__: bccs element must be of type unicode")
+            if not isinstance(bcc, dict):
+                raise EmailException(u"Email.__init__: bccs element must be of type dict")
+            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
+                raise EmailException(u"Email.__init__: bcc['user_id']/bcc['display_name'] must exist and be of type unicode")
         self.bccs = bccs
 
         if not isinstance(reply_to, list):
             raise EmailException(u"Email.__init__: reply_to must be of type list")
         self.reply_to = []
         for rep in reply_to:
-            if not isinstance(rep, unicode):
+            if not isinstance(rep, dict):
+                continue
+            if not isinstance(rep.get("user_id"), unicode) or not isinstance(rep.get("display_name"), unicode):
                 continue
             self.reply_to.append(rep)
 
@@ -570,15 +588,15 @@ class Email(object):
                 else:
                     message = body_shell
 
-                message.headers["From"] = u"{} <{}>".format(self.sender, self.sender)
+                message.headers["From"] = u"{} <{}>".format(self.sender["display_name"], self.sender["user_id"])
                 if self.ccs:
-                    message.headers["Cc"] = u"{}".format(", ".join([u"{} <{}>".format(cc, cc) for cc in self.ccs]))
+                    message.headers["Cc"] = u"{}".format(", ".join([u"{} <{}>".format(cc["display_name"], cc["user_id"]) for cc in self.ccs]))
                 if self.tos:
-                    message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to, to) for to in self.tos]))
+                    message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], to["user_id"]) for to in self.tos]))
                 if self.bccs:
-                    message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc, bcc) for bcc in self.bccs]))
+                    message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in self.bccs]))
                 if self.reply_to:
-                    message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt, rpt) for rpt in self.reply_to]))
+                    message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in self.reply_to]))
 
                 if self.subject:
                     message.headers["Subject"] = self.subject
@@ -656,10 +674,10 @@ class Email(object):
         o["message_id"] = self.message_id
         o["date"] = email.utils.formatdate(self.server_time)
         o["subject"] = self.subject
-        o["sender"] = {"address": self.sender, "name": self.sender}
-        o["tos"] = [{"address": to, "name": to} for to in self.tos]
-        o["ccs"] = [{"address": cc, "name": cc} for cc in self.ccs]
-        o["bccs"] = [{"address": bcc, "name": bcc} for bcc in self.bccs]
+        o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
+        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
+        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.ccs]
+        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
         o["has_attachments"] = len(self.attachments) > 0
@@ -720,7 +738,7 @@ def V2ToV1(email):
                             PROTOCOL_VERSION.V1, email.version, email.snippet, email.uid, \
                             email.thread_id, email.mailbox_server_id, email.flags, \
                             email.message_id, email.server_time, email.subject, \
-                            email.sender, email.tos, email.ccs, email.bccs, email.reply_to, email.in_reply_to, email.references)
+                            email.sender, email.tos, email.ccs, email.bccs, email.reply_to, email.in_reply_to, email.references, email.expunged)
 
 def replaceDummyReferences(message, reference_map):
     if not isinstance(message, mime.message.part.MimePart):
@@ -902,12 +920,14 @@ def setMIMEBcc(message, bccs):
     if not isinstance(bccs, list):
         return False, None
     for bcc in bccs:
-        if not isinstance(bcc, unicode):
+        if not isinstance(bcc, dict):
+            return False, None
+        if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
             return False, None
 
     if len(bccs) == 0:
         message.remove_headers("Bcc")
     else:
-        message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc, bcc) for bcc in bccs]))
+        message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
 
     return True, mime.from_string(message.to_string())
