@@ -200,7 +200,7 @@ def b64dec(data, altchars=None):
         return False, None
 
 def toInt(data):
-    if not (isinstance(data, unicode) or (isinstance(data, (int, long, float)))):
+    if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
         return False, None
 
     try:
