@@ -1,13 +1,14 @@
 import requests
-
 from . import misc
+from . import keys
 from . import apiclient
 
-class UserData:
-    def __init__(self, user_id, display_name, mail_cid):
-        self.user_id      = user_id
+class UserData(object):
+    def __init__(self, user_id, display_name, mail_cid, public_key):
+        self.user_id = user_id
         self.display_name = display_name
-        self.mail_cid     = mail_cid
+        self.mail_cid = mail_cid
+        self.public_key = public_key
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
@@ -40,7 +41,15 @@ def _materializeUserDatum(json_user):
     if mail_cid == None:
         return False, None
 
-    return True, UserData(user_id, display_name, mail_cid)
+    public_key = json_user.get("public_key")
+    if public_key == None:
+        return False, None
+
+    status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
+    if status == False:
+        return False, None
+
+    return True, UserData(user_id, display_name, mail_cid, public_key)
 
 # You probably want to use fetchUsers().
 def _fetchUsers(queries, client):

@@ -200,7 +200,7 @@ def b64dec(data, altchars=None):
         return False, None
 
 def toInt(data):
-    if not (isinstance(data, unicode) or (isinstance(data, (int, long, float)))):
+    if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
         return False, None
 
     try:
@@ -383,9 +383,13 @@ class GetMailDBSessionAsPreVeil(DoAsPreVeil):
 
         DoAsPreVeil.__exit__(self, type, value, traceback)
 
+class NOT_ASSIGNED:
+    def __init__(self):
+        pass
+
 class UserDBNode:
     @staticmethod
-    def new(user_id, display_name, mail_cid, password):
+    def new(user_id, display_name, mail_cid, password, luser_uid):
         if not isinstance(user_id, unicode):
             return False, None
         if not isinstance(display_name, unicode):
@@ -394,14 +398,17 @@ class UserDBNode:
             return False, None
         if not isinstance(password, unicode):
             return False, None
+        if not isinstance(luser_uid, (int, NOT_ASSIGNED)):
+            return False, None
 
-        return True, UserDBNode(user_id, display_name, mail_cid, password)
+        return True, UserDBNode(user_id, display_name, mail_cid, password, luser_uid)
 
-    def __init__(self, user_id, display_name, mail_cid, password):
+    def __init__(self, user_id, display_name, mail_cid, password, luser_uid):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.password = password
+        self.luser_uid = luser_uid
 
     def toDict(self):
         return {
