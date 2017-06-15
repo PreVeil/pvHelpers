@@ -503,7 +503,7 @@ class Email(object):
         self.version = version
 
         if not isinstance(uid, (int, types.NoneType)):
-            raise EmailException(u"Email.__init__: uid must be of type unicode")
+            raise EmailException(u"Email.__init__: uid must be of type int")
         self.uid = uid
 
         if not isinstance(thread_id, (unicode, types.NoneType)):
@@ -666,10 +666,12 @@ class Email(object):
     # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
         o = {}
+        o["unique_id"] = self.server_id
         o["snippet"] = self.snippet
         o["uid"] = self.uid
         o["thread_id"] = self.thread_id
-        o["mailbox"] = self.mailbox_name
+        o["mailbox_name"] = self.mailbox_name
+        o["mailbox_id"] = self.mailbox_server_id
         o["flags"] = self.flags
         o["message_id"] = self.message_id
         o["date"] = email.utils.formatdate(self.server_time)
@@ -680,7 +682,6 @@ class Email(object):
         o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
-        o["has_attachments"] = len(self.attachments) > 0
 
         if with_body:
             if self.protocol_version == PROTOCOL_VERSION.V1:
@@ -726,6 +727,18 @@ class Email(object):
             o["html"] = body.get("html")
             o["text"] = body.get("text")
             o["attachments"] = browser_atts
+        else:
+            o["html"] = None
+            o["text"] = None
+            o["attachments"] = [{
+                "filename": att.metadata.filename,
+                "content_type": att.metadata.content_type,
+                "size": None,
+                "content": None,
+                "content_disposition": att.metadata.content_disposition,
+                "content_id": att.metadata.content_id
+            } for att in self.attachments]
+
         return o
 
 # V2 to V1 conversion is a pure function. While V1 to V2 conversion is not pure because of the alternating boundaries
