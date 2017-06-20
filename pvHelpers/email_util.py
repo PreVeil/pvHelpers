@@ -636,6 +636,72 @@ class Email(object):
     def loadBody(self, content):
         self.body = content
 
+    def loadAttachmentContent(self, reference_id, content):
+        for attachment in self.attachments:
+            if attachment.reference_id == reference_id:
+                attachment.loadContent(content)
+
+    def getAttachmentContent(self, reference_id):
+        requested_attachments = filter(lambda att: att.reference_id == reference_id, self.attachments)
+        if len(requested_attachments) == 0:
+            raise EmailException(u"getAttachmentContent: reference_id {} doesn't belong to email {}".format(reference_id, self.server_id))
+
+        if any([att.content == None for att in requested_attachments]):
+            raise EmailException(u"getAttachmentContent: attachment content must be loaded {}".format(reference_id))
+
+        if self.protocol_version == PROTOCOL_VERSION.V1:
+            try:
+                att_part = mime.create.from_string(requested_attachments[0].content)
+                if att_part.content_type.is_message_container():
+                    part_content = att_part.enclosed.to_string()
+                else:
+                    part_content = att_part.body
+            except mime.MimeError as e:
+                raise EmailException(u"getAttachmentContent: exception {}".format(e))
+
+            status, encoded = Email.encodeContentIfUnicode(part_content)
+            if status == False:
+                raise EmailException(u"getAttachmentContent: failed to utf-8 encode a unicode attachment")
+
+            return encoded
+
+        elif self.protocol_version == PROTOCOL_VERSION.V2:
+            return requested_attachments[0].content
+        else:
+            raise EmailException(u"getAttachmentContent: protocol_version not supported")
+
+    # TODO: handle inline atts as well
+    def getBodyContent(self):
+        if self.body == None:
+            raise EmailException(u"getBodyContent: Body content must be loaded!")
+
+        if self.protocol_version == PROTOCOL_VERSION.V1:
+            try:
+                message = mime.create.from_string(self.body)
+                text, html, attachments = _parseMIME(message)
+                status, body = Email.serializeBody({"text": text, "html": html})
+                if status == False:
+                    raise EmailException(u"getBodyContent: failed to serialize body")
+
+            except mime.MimeError as e:
+                raise EmailException(u"getBodyContent: exception {}".format(e))
+
+        elif self.protocol_version == PROTOCOL_VERSION.V2:
+            body = self.body
+            attachments = self.attachments
+
+        else:
+            raise EmailException(u"getBodyContent: protocol_version not supported")
+
+        if body == None:
+            body = {"text": u"", "html": u""}
+        else:
+            status, body = Email.deserializeBody(body)
+            if status == False:
+                raise EmailException(u"getBodyContent: Failed to deserialize body")
+
+        return body
+
     def toDict(self):
         return {
             "revision_id": self.revision_id,
@@ -664,7 +730,7 @@ class Email(object):
         }
 
     # toBrowser is only to conform with browser expectations and can be removed
-    def toBrowser(self, with_body=False):
+    def toBrowser(self):
         o = {}
         o["unique_id"] = self.server_id
         o["snippet"] = self.snippet
@@ -682,62 +748,17 @@ class Email(object):
         o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
-
-        if with_body:
-            if self.protocol_version == PROTOCOL_VERSION.V1:
-                try:
-                    message = self.toMIME()
-                    text, html, attachments = _parseMIME(message)
-                    status, body = Email.serializeBody({"text": text, "html": html})
-                    if status == False:
-                        raise EmailException(u"toBrowser: failed to serialize body")
-
-                except mime.MimeError as e:
-                    raise EmailException(u"toBrowser: exception {}".format(e))
-
-            elif self.protocol_version == PROTOCOL_VERSION.V2:
-                body = self.body
-                attachments = self.attachments
-
-            else:
-                raise EmailException(u"toBrowser: protocol_version not supported")
-
-            if body == None:
-                body = {"text": u"", "html": u""}
-            else:
-                status, body = Email.deserializeBody(body)
-                if status == False:
-                    raise EmailException(u"toBrowser: Failed to deserialize body")
-
-            browser_atts = []
-            for att in attachments:
-                status, encoded = misc.b64enc(att.content)
-                if status == False:
-                    continue
-
-                browser_atts.append({
-                    "filename": att.metadata.filename,
-                    "content_type": att.metadata.content_type,
-                    "size": len(att.content),
-                    "content_disposition": att.metadata.content_disposition,
-                    "content": encoded,
-                    "content_id": att.metadata.content_id
-                })
-
-            o["html"] = body.get("html")
-            o["text"] = body.get("text")
-            o["attachments"] = browser_atts
-        else:
-            o["html"] = None
-            o["text"] = None
-            o["attachments"] = [{
-                "filename": att.metadata.filename,
-                "content_type": att.metadata.content_type,
-                "size": None,
-                "content": None,
-                "content_disposition": att.metadata.content_disposition,
-                "content_id": att.metadata.content_id
-            } for att in self.attachments]
+        o["html"] = None
+        o["text"] = None
+        o["attachments"] = [{
+            "reference_id": att.reference_id,
+            "filename": att.metadata.filename,
+            "content_type": att.metadata.content_type,
+            "size": 0, # add size to metadata
+            "content": None,
+            "content_disposition": att.metadata.content_disposition,
+            "content_id": att.metadata.content_id
+        } for att in self.attachments]
 
         return o
 
