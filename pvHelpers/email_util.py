@@ -671,7 +671,7 @@ class Email(object):
         o["snippet"] = self.snippet
         o["uid"] = self.uid
         o["thread_id"] = self.thread_id
-        o["mailbox_name"] = setMailboxAlias(self.mailbox_name)
+        o["mailbox_name"] = getMailboxAlias(self.mailbox_name)
         o["mailbox_id"] = self.mailbox_server_id
         o["flags"] = self.flags
         o["message_id"] = self.message_id
@@ -949,7 +949,7 @@ def setMIMEBcc(message, bccs):
 
 ###FIXME: this works when we only have aliases for the 4 default maiboxes,
 # and use the real "DB" mailbox_name for a custom mailbox
-def setMailboxAlias(mailbox_name):
-    if (mailbox_name in MAILBOX_ALIAS):
+def getMailboxAlias(mailbox_name):
+    if mailbox_name in MAILBOX_ALIAS:
         return MAILBOX_ALIAS[mailbox_name]
     return mailbox_name
