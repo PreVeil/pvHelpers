@@ -9,6 +9,7 @@ import libnacl
 
 DUMMY_DISPOSITION = u"dummy"
 DUMMY_CONTENT_TYPE = u"dummy/dummy"
+MAILBOX_ALIAS = {u"INBOX":u"inbox", u"Drafts":u"drafts", u"Sent Messages":u"sent", u"Deleted Messages":u"trash"}
 
 class PROTOCOL_VERSION():
     V1 = 1
@@ -670,7 +671,7 @@ class Email(object):
         o["snippet"] = self.snippet
         o["uid"] = self.uid
         o["thread_id"] = self.thread_id
-        o["mailbox_name"] = self.mailbox_name
+        o["mailbox_name"] = getMailboxAlias(self.mailbox_name)
         o["mailbox_id"] = self.mailbox_server_id
         o["flags"] = self.flags
         o["message_id"] = self.message_id
@@ -944,3 +945,11 @@ def setMIMEBcc(message, bccs):
         message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
 
     return True, mime.from_string(message.to_string())
+
+
+###FIXME: this works when we only have aliases for the 4 default maiboxes,
+# and use the real "DB" mailbox_name for a custom mailbox
+def getMailboxAlias(mailbox_name):
+    if mailbox_name in MAILBOX_ALIAS:
+        return MAILBOX_ALIAS[mailbox_name]
+    return mailbox_name
