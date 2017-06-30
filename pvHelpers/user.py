@@ -1,13 +1,16 @@
 import requests
-
+from . import keys
 from . import misc
 from . import apiclient
 
-class UserData:
-    def __init__(self, user_id, display_name, mail_cid):
-        self.user_id      = user_id
+class UserData(object):
+    def __init__(self, user_id, display_name, mail_cid, public_key, org_id, org_meta):
+        self.user_id = user_id
         self.display_name = display_name
-        self.mail_cid     = mail_cid
+        self.mail_cid = mail_cid
+        self.public_key = public_key
+        self.org_id = org_id
+        self.org_metadata = org_meta
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
@@ -40,11 +43,24 @@ def _materializeUserDatum(json_user):
     if mail_cid == None:
         return False, None
 
-    return True, UserData(user_id, display_name, mail_cid)
+    org_id = json_user.get("entity_id")
+
+    org_meta = json_user.get("entity_metadata")
+
+    public_key = json_user.get("public_key")
+    if public_key == None:
+        return False, None
+
+    status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
+    if status == False:
+        return False, None
+
+
+    return True, UserData(user_id, display_name, mail_cid, public_key, org_id, org_meta)
 
 # You probably want to use fetchUsers().
 def _fetchUsers(queries, client):
-    if not isinstance(client, apiclient.APIClient):
+    if not isinstance(client, apiclient.UserAPIClient):
         return False, None
     params = {"spec" : misc.jdumps(queries)}
     try:

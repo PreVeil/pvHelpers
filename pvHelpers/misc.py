@@ -200,7 +200,7 @@ def b64dec(data, altchars=None):
         return False, None
 
 def toInt(data):
-    if not (isinstance(data, unicode) or (isinstance(data, (int, long, float)))):
+    if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
         return False, None
 
     try:
@@ -385,7 +385,7 @@ class GetMailDBSessionAsPreVeil(DoAsPreVeil):
 
 class UserDBNode:
     @staticmethod
-    def new(user_id, display_name, mail_cid, password):
+    def new(user_id, display_name, mail_cid, password, org_id, org_meta):
         if not isinstance(user_id, unicode):
             return False, None
         if not isinstance(display_name, unicode):
@@ -394,21 +394,29 @@ class UserDBNode:
             return False, None
         if not isinstance(password, unicode):
             return False, None
+        if not isinstance(org_id, (types.NoneType, unicode)):
+            return False,None
+        if not isinstance(org_meta, (types.NoneType, dict)):
+            return False, None
 
-        return True, UserDBNode(user_id, display_name, mail_cid, password)
+        return True, UserDBNode(user_id, display_name, mail_cid, password, org_id, org_meta)
 
-    def __init__(self, user_id, display_name, mail_cid, password):
+    def __init__(self, user_id, display_name, mail_cid, password, org_id, org_meta):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.password = password
+        self.org_id = org_id
+        self.org_metadata = org_meta
 
     def toDict(self):
         return {
             "user_id" : self.user_id,
             "display_name" : self.display_name,
             "mail_cid" : self.mail_cid,
-            "password" : self.password
+            "password" : self.password,
+            "org_id" : self.org_id,
+            "org_metadata" : self.org_metadata
         }
 
 def switchUserPreVeil():
