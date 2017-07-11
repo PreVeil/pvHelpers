@@ -1,44 +1,11 @@
 import types
 from . import misc
-from sqlalchemy import create_engine, event, orm
+from sqlalchemy import create_engine, event, orm, exc
 from sqlalchemy.pool import SingletonThreadPool
 
-# Model for User Bucket protocol_version=0
-class UserDBNode(object):
-    @staticmethod
-    def new(user_id, display_name, mail_cid, password, org_id, org_meta):
-        if not isinstance(user_id, unicode):
-            return False, None
-        if not isinstance(display_name, unicode):
-            return False, None
-        if not isinstance(mail_cid, unicode):
-            return False, None
-        if not isinstance(password, unicode):
-            return False, None
-        if not isinstance(org_id, (types.NoneType, unicode)):
-            return False,None
-        if not isinstance(org_meta, (types.NoneType, dict)):
-            return False, None
-
-        return True, UserDBNode(user_id, display_name, mail_cid, password, org_id, org_meta)
-
-    def __init__(self, user_id, display_name, mail_cid, password, org_id, org_meta):
-        self.user_id = user_id
-        self.display_name = display_name
-        self.mail_cid = mail_cid
-        self.password = password
-        self.org_id = org_id
-        self.org_metadata = org_meta
-
-    def toDict(self):
-        return {
-            "user_id" : self.user_id,
-            "display_name" : self.display_name,
-            "mail_cid" : self.mail_cid,
-            "password" : self.password,
-            "org_id" : self.org_id,
-            "org_metadata" : self.org_metadata
-        }
+# TODO: be more specific on these errors, i.e. :
+# no need to retry on NoSuchColumnError, while can retry on TimeoutError
+DBRetryableErrors = [exc.SQLAlchemyError]
 
 class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
     def __init__(self, path):
@@ -110,3 +77,7 @@ class GetUserDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode):
         self.mode = mode
         super(GetUserDBSessionAsPreVeil, self).__init__("sqlite:///{}".format(misc.getUserDatabasePath(mode)))
+
+class DBException(Exception):
+    def __init__(self, message="DBException"):
+        super(DBException, self).__init__(message)

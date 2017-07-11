@@ -1,16 +1,71 @@
-import requests
+import requests, types
 from . import keys
 from . import misc
 from . import apiclient
 
+class OrganizationInfo(object):
+    def __init__(self, organiztion_id, organiztion_name, department_name, role):
+        self.org_id = organiztion_id
+        self.org_name = organiztion_name
+        self.dept_name = department_name
+        self.role = role
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.toDict() == other.toDict()
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def toDict(self):
+        return {
+            "org_id": self.org_id,
+            "org_name": self.org_name,
+            "dept_name": self.dept_name,
+            "role": self.role
+        }
+
+# Model for User Bucket protocol_version=0
+class UserDBNode(object):
+    @staticmethod
+    def new(user_id, display_name, mail_cid, password, org_info):
+        if not isinstance(user_id, unicode):
+            return False, None
+        if not isinstance(display_name, unicode):
+            return False, None
+        if not isinstance(mail_cid, unicode):
+            return False, None
+        if not isinstance(password, unicode):
+            return False, None
+        if not isinstance(org_info, (types.NoneType, OrganizationInfo)):
+            return False,None
+
+        return True, UserDBNode(user_id, display_name, mail_cid, password, org_info)
+
+    def __init__(self, user_id, display_name, mail_cid, password, org_info):
+        self.user_id = user_id
+        self.display_name = display_name
+        self.mail_cid = mail_cid
+        self.password = password
+        self.org_info = org_info
+
+    def toDict(self):
+        return {
+            "user_id" : self.user_id,
+            "display_name" : self.display_name,
+            "mail_cid" : self.mail_cid,
+            "password" : self.password,
+            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
+        }
+
 class UserData(object):
-    def __init__(self, user_id, display_name, mail_cid, public_key, org_id, org_meta):
+    def __init__(self, user_id, display_name, mail_cid, public_key, organiztion_info):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.public_key = public_key
-        self.org_id = org_id
-        self.org_metadata = org_meta
+        self.org_info = organiztion_info
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
@@ -44,8 +99,13 @@ def _materializeUserDatum(json_user):
         return False, None
 
     org_id = json_user.get("entity_id")
-
     org_meta = json_user.get("entity_metadata")
+    organiztion_info = None
+    if isinstance(org_id, unicode) and isinstance(org_meta, dict):
+        org_name = org_meta.get("name")
+        department = org_meta.get("department")
+        role = org_meta.get("role")
+        organiztion_info = OrganizationInfo(org_id, org_name, department, role)
 
     public_key = json_user.get("public_key")
     if public_key == None:
@@ -55,8 +115,7 @@ def _materializeUserDatum(json_user):
     if status == False:
         return False, None
 
-
-    return True, UserData(user_id, display_name, mail_cid, public_key, org_id, org_meta)
+    return True, UserData(user_id, display_name, mail_cid, public_key, organiztion_info)
 
 # You probably want to use fetchUsers().
 def _fetchUsers(queries, client):

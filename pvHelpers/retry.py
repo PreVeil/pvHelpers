@@ -27,6 +27,8 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
     exception_stack = []
     for it in xrange(0, count):
         try:
+            # TODO: it's worth devising a way to let caller know the function succeeded after
+            # how many times of try, it'd help tuning the retry count
             return_value = func(*args, **kwargs)
         except exceptions as e:
             exception_stack.append(e)
@@ -36,7 +38,7 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
             continue
         except Exception as e:
             if wrapping_exception:
-                raise wrapping_exception(e.message)
+                raise wrapping_exception(u"Function throwed {}: {}".format(type(e), e.message))
             raise
         else:
             # TODO: we can add conditions for value of `return_value` so to perform retry upon them
