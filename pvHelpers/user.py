@@ -67,6 +67,14 @@ class UserData(object):
         self.public_key = public_key
         self.org_info = organiztion_info
 
+    def toDict(self):
+        return {
+            "user_id" : self.user_id,
+            "display_name" : self.display_name,
+            "mail_cid" : self.mail_cid,
+            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict(),
+        }
+
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
         return False, None
@@ -85,7 +93,7 @@ def fetchUser(user_id, client, key_version=-1):
         return False, None
     return True, user_datum
 
-def _materializeUserDatum(json_user):
+def _materializeUserDatum(json_user, client):
     user_id = json_user.get("user_id")
     if user_id == None:
         return False, None
@@ -102,13 +110,19 @@ def _materializeUserDatum(json_user):
     org_meta = json_user.get("entity_metadata")
     organiztion_info = None
     if isinstance(org_id, unicode) and isinstance(org_meta, dict):
-        org_name = org_meta.get("name")
         department = org_meta.get("department")
         role = org_meta.get("role")
+        status, org_info = getOrgInfo(org_id, client)
+        if status is False:
+            org_name = None
+        else:
+            org_name = org_info.get("display_name")
+
         organiztion_info = OrganizationInfo(org_id, org_name, department, role)
 
     public_key = json_user.get("public_key")
     if public_key == None:
+        # Account is not claimed yet.
         return False, None
 
     status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
@@ -156,13 +170,31 @@ def fetchUsers(user_ids, client):
 
     output = misc.CaseInsensitiveDict()
     for u in users:
-        status, user_datum = _materializeUserDatum(u)
+        status, user_datum = _materializeUserDatum(u, client)
         if status == False:
             continue
         output[user_datum.user_id] = user_datum
 
-    for (x, _) in user_ids:
-        if x not in output:
-            output[x] = False
-
     return True, output
+
+def getOrgInfo(org_id, client):
+    try:
+        resp = client.get("/users/orgs/{}".format(org_id))
+    except requests.exceptions.RequestException as e:
+        g_log.error("getOrgInfo: request exception: %s" % e)
+        return False, None
+
+    if resp.status_code != requests.codes.ok:
+        g_log.error("getOrgInfo: bad status code: %s" % resp.status_code)
+        return False, None
+
+    if resp.encoding != "utf-8" or not isinstance(resp.text, unicode):
+        g_log.error("getOrgInfo: bad encoding")
+        return False, None
+
+    status, data = misc.jloads(resp.text)
+    if status == False:
+        g_log.error("getOrgInfo: invalid json response")
+        return False, None
+
+    return True, data
