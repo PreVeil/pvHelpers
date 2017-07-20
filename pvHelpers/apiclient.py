@@ -26,40 +26,62 @@ def getSession(backend):
         session_cache[backend].auth = NOOPAuth
     return session_cache[backend]
 
-class APIClient:
+class PublicAPIClient:
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, backend):
+        self._backend = backend
+        self._session = getSession(backend)
+
+    def get(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
+        url, _, headers = self._prepareRequest(resource, "GET", None)
+        return self._session.get(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
+
+    def put(self, resource, params, timeout=misc.HTTP_TIMEOUT):
+        url, raw_body, headers = self._prepareRequest(resource, "PUT", params)
+        return self._session.put(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+
+    def post(self, resource, params, timeout=misc.HTTP_TIMEOUT):
+        url, raw_body, headers = self._prepareRequest(resource, "POST", params)
+        return self._session.post(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+
+    def delete(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
+        url, _, headers = self._prepareRequest(resource, "DELETE", None)
+        return self._session.delete(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
+
+    def patch(self, resource, params, timeout=misc.HTTP_TIMEOUT):
+        url, raw_body, headers = self._prepareRequest(resource, "PATCH", params)
+        return self._session.patch(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
+
+    def _prepareRequest(self, resource, method, body):
+        url = self._backend + resource
+        if body is None:
+            raw_body = u""
+        else:
+            raw_body = misc.jdumps(body)
+
+        headers = {
+            "content-type" : "application/json",
+            "accept-version" : BACKEND_API_VERSION,
+        }
+        status, encoded_raw_body = misc.utf8Encode(raw_body)
+        if status == False:
+            raise requests.exceptions.RequestException("failed to utf8 encode request body")
+        return url, encoded_raw_body, headers
+
+class UserAPIClient(PublicAPIClient):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, user_id, backend):
+        super(UserAPIClient, self).__init__(backend=backend)
         self.user_id = user_id
-        self.__backend = backend
-        self.__session = getSession(backend)
 
     @abc.abstractmethod
     def signRequest(self, data):
         raise NotImplementedError
 
-    def get(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
-        url, _, headers = self._prepareRequest(resource, "GET", None)
-        return self.__session.get(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
-
-    def put(self, resource, params, timeout=misc.HTTP_TIMEOUT):
-        url, raw_body, headers = self._prepareRequest(resource, "PUT", params)
-        return self.__session.put(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
-
-    def post(self, resource, params, timeout=misc.HTTP_TIMEOUT):
-        url, raw_body, headers = self._prepareRequest(resource, "POST", params)
-        return self.__session.post(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
-
-    def delete(self, resource, params=None, timeout=misc.HTTP_TIMEOUT):
-        url, _, headers = self._prepareRequest(resource, "DELETE", None)
-        return self.__session.delete(url, params=params, timeout=timeout, allow_redirects=False, headers=headers)
-
-    def patch(self, resource, params, timeout=misc.HTTP_TIMEOUT):
-        url, raw_body, headers = self._prepareRequest(resource, "PATCH", params)
-        return self.__session.patch(url, data=raw_body, timeout=timeout, allow_redirects=False, headers=headers)
-
     def _prepareRequest(self, resource, method, body):
-        url = self.__backend + resource
+        url = self._backend + resource
         if body is None:
             raw_body = u""
         else:
