@@ -58,7 +58,17 @@ def resolvePreVeilMode(mode_file_path):
     except IOError:
         pass
 
-    return True, u'dev'
+    mode = "ansible_local_dev" if isWindows() else "dev"
+    return True, mode
+
+def isWindows():
+    return sys.platform == "win32"
+
+def isOSX():
+    return sys.platform == "darwin"
+
+def isLinux():
+    return sys.platform in ["linux", "linux2", "linux3"]
 
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
@@ -303,7 +313,7 @@ def switchUserPreVeil():
         preveil_pwuid = pwd.getpwnam("preveil")
         os.setregid(preveil_pwuid.pw_gid, preveil_pwuid.pw_gid)
         os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
-    elif "win32" == sys.platform:
+    elif isWindows():
         pass
 
 # lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
@@ -381,7 +391,7 @@ def file_no_ext(path):
 def preveilDataDir():
     if sys.platform in ["darwin", "linux2"]:
         return os.path.join("/", "var", "preveil")
-    elif "win32" == sys.platform:
+    elif isWindows():
         return os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")
     else:
         raise Exception("preveilDataDir: Unsupported platform")
