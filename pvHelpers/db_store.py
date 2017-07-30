@@ -1,26 +1,31 @@
-import types
+import types, semver
 from . import misc
 from sqlalchemy import create_engine, event, orm, exc
 from sqlalchemy.pool import SingletonThreadPool
+from pysqlite2 import dbapi2 as sqlite3
 
 # TODO: be more specific on these errors, i.e. :
 # no need to retry on NoSuchColumnError, while can retry on TimeoutError
 DBRetryableErrors = [exc.SQLAlchemyError]
 
 class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
+    DRIVER = sqlite3
+    PYSQLITE_VERSION = semver.parse_version_info(sqlite3.version)
+    SQLITE_DRIVER_VERSION = semver.parse_version_info(sqlite3.sqlite_version)
+    __session_factory = {}
+
     def __init__(self, path):
         super(GetDBSessionAsPreVeil, self).__init__()
         self.db_path = path
         self.session = None
-
-    __session_factory = {}
 
     @classmethod
     def getSession(cls, path):
         # creating new DB session factory, binding it to an engine and a connection pool
         if path not in cls.__session_factory:
             # using SingltonThreadPool so to maintain the connection instead of recreating one per transaction
-            engine = create_engine(path, poolclass=SingletonThreadPool)
+            # Explicitly using standalone pysqlite2 driver instead of the built-in pysqlite driver
+            engine = create_engine("sqlite+pysqlite:///{}".format(path), poolclass=SingletonThreadPool, module=cls.DRIVER)
 
             # HACK: source, http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
             # Let's use use DDL queries in transactions.
@@ -71,12 +76,12 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
 class GetMailDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode):
         self.mode = mode
-        super(GetMailDBSessionAsPreVeil, self).__init__("sqlite:///{}".format(misc.getMailDatabasePath(mode)))
+        super(GetMailDBSessionAsPreVeil, self).__init__(misc.getMailDatabasePath(mode))
 
 class GetUserDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode):
         self.mode = mode
-        super(GetUserDBSessionAsPreVeil, self).__init__("sqlite:///{}".format(misc.getUserDatabasePath(mode)))
+        super(GetUserDBSessionAsPreVeil, self).__init__(misc.getUserDatabasePath(mode))
 
 class DBException(Exception):
     def __init__(self, message="DBException"):
