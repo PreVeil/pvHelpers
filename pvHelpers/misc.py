@@ -58,17 +58,7 @@ def resolvePreVeilMode(mode_file_path):
     except IOError:
         pass
 
-    mode = "ansible_local_dev" if isWindows() else "dev"
-    return True, mode
-
-def isWindows():
-    return sys.platform == "win32"
-
-def isOSX():
-    return sys.platform == "darwin"
-
-def isLinux():
-    return sys.platform in ["linux", "linux2", "linux3"]
+    return True, u'dev'
 
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
@@ -313,7 +303,7 @@ def switchUserPreVeil():
         preveil_pwuid = pwd.getpwnam("preveil")
         os.setregid(preveil_pwuid.pw_gid, preveil_pwuid.pw_gid)
         os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
-    elif isWindows():
+    elif "win32" == sys.platform:
         pass
 
 # lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
@@ -391,7 +381,7 @@ def file_no_ext(path):
 def preveilDataDir():
     if sys.platform in ["darwin", "linux2"]:
         return os.path.join("/", "var", "preveil")
-    elif isWindows():
+    elif "win32" == sys.platform:
         return os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")
     else:
         raise Exception("preveilDataDir: Unsupported platform")
@@ -515,3 +505,9 @@ class CaseInsensitiveDict(dict):
         for k in list(self.keys()):
             v = super(CaseInsensitiveDict, self).pop(k)
             self.__setitem__(k, v)
+
+class NOT_ASSIGNED(object):
+    def __init__(self):
+        pass
+    def __str__(self):
+        return u"__NOT_ASSIGNED__"

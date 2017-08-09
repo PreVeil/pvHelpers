@@ -26,10 +26,10 @@ class OrganizationInfo(object):
             "role": self.role
         }
 
-# Model for User Bucket protocol_version=0
+# Model for User Bucket protocol_version=1
 class UserDBNode(object):
     @staticmethod
-    def new(user_id, display_name, mail_cid, password, org_info):
+    def new(user_id, display_name, mail_cid, password, org_info, luser_uid):
         if not isinstance(user_id, unicode):
             return False, None
         if not isinstance(display_name, unicode):
@@ -39,16 +39,19 @@ class UserDBNode(object):
         if not isinstance(password, unicode):
             return False, None
         if not isinstance(org_info, (types.NoneType, OrganizationInfo)):
-            return False,None
+            return False, None
+        if not isinstance(luser_uid, (unicode, misc.NOT_ASSIGNED)):
+            return False, None
 
-        return True, UserDBNode(user_id, display_name, mail_cid, password, org_info)
+        return True, UserDBNode(user_id, display_name, mail_cid, password, org_info, luser_uid)
 
-    def __init__(self, user_id, display_name, mail_cid, password, org_info):
+    def __init__(self, user_id, display_name, mail_cid, password, org_info, luser_uid):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.password = password
         self.org_info = org_info
+        self.luser_uid = luser_uid
 
     def toDict(self):
         return {
@@ -56,7 +59,8 @@ class UserDBNode(object):
             "display_name" : self.display_name,
             "mail_cid" : self.mail_cid,
             "password" : self.password,
-            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
+            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict(),
+            "luser_uid" : str(self.luser_uid)
         }
 
 class UserData(object):
@@ -72,7 +76,7 @@ class UserData(object):
             "user_id" : self.user_id,
             "display_name" : self.display_name,
             "mail_cid" : self.mail_cid,
-            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict(),
+            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
         }
 
 def fetchUser(user_id, client, key_version=-1):
