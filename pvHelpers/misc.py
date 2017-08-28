@@ -505,3 +505,9 @@ class CaseInsensitiveDict(dict):
         for k in list(self.keys()):
             v = super(CaseInsensitiveDict, self).pop(k)
             self.__setitem__(k, v)
+
+class NOT_ASSIGNED(object):
+    def __init__(self):
+        pass
+    def __str__(self):
+        return u"__NOT_ASSIGNED__"
