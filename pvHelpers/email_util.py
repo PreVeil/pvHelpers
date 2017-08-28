@@ -673,6 +673,8 @@ class Email(object):
         o["thread_id"] = self.thread_id
         o["mailbox_name"] = getMailboxAlias(self.mailbox_name)
         o["mailbox_id"] = self.mailbox_server_id
+        o["version"] = self.version
+        o["rev_id"] = self.revision_id
         o["flags"] = self.flags
         o["message_id"] = self.message_id
         o["date"] = email.utils.formatdate(self.server_time)
