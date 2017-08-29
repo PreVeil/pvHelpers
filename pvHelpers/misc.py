@@ -119,7 +119,10 @@ class LogWrapper:
         self.logobj = logging.getLogger(name)
         self.logobj.setLevel(logging.DEBUG)
 
-        logpath = os.path.join(logsDir(), "{}.log".format(name))
+        mode_file = os.path.join(getdir(__file__),"../../daemon/conf/default-mode")
+        mode = open(mode_file, 'r').read().split('\n')[0]
+
+        logpath = os.path.join(logsDir(mode), "{}.log".format(name))
         # TimedRotatingFileHandler will only rotate the logs if the process is
         # running at midnight (assuming a log per day). This means that
         # clients who put their computer to sleep at night will never get a log
@@ -378,28 +381,33 @@ def quietMkdirInPreVeilDataDir(path):
 def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
 
-def preveilDataDir():
+def preveilDataDir(mode):
+    dirName = "preveil"
+    winDirName = "PreVeilData"
+    if mode == "bleed":
+        dirName = "preveil_bleed"
+        winDirName = "PreVeilBleedData"
     if sys.platform in ["darwin", "linux2"]:
-        return os.path.join("/", "var", "preveil")
+        return os.path.join("/", "var", dirName)
     elif "win32" == sys.platform:
-        return os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")
+        return os.path.join(os.getenv("SystemDrive") + "\\", winDirName)
     else:
         raise Exception("preveilDataDir: Unsupported platform")
 
-def daemonDataDir():
-    return os.path.join(preveilDataDir(), "daemon")
+def daemonDataDir(mode):
+    return os.path.join(preveilDataDir(mode), "daemon")
 
-def logsDir():
-    return os.path.join(daemonDataDir(), "logs")
+def logsDir(mode):
+    return os.path.join(daemonDataDir(mode), "logs")
 
-def tempDir():
-    return os.path.join(daemonDataDir(), "temp")
+def tempDir(mode):
+    return os.path.join(daemonDataDir(mode), "temp")
 
-def modesDir():
-    return os.path.join(daemonDataDir(), "modes")
+def modesDir(mode):
+    return os.path.join(daemonDataDir(mode), "modes")
 
 def getModeDir(mode):
-    return os.path.join(modesDir(), mode)
+    return os.path.join(modesDir(mode), mode)
 
 def getUserDatabasePath(mode):
     return os.path.join(getModeDir(mode), "user_db.sqlite")
@@ -424,18 +432,18 @@ def initDaemonDataDirs(mode):
     else:
         pass
 
-    quiet_mkdir(preveilDataDir())
-    quiet_mkdir(daemonDataDir())
-    quiet_mkdir(logsDir())
-    quiet_mkdir(tempDir())
-    quiet_mkdir(modesDir())
+    quiet_mkdir(preveilDataDir(mode))
+    quiet_mkdir(daemonDataDir(mode))
+    quiet_mkdir(logsDir(mode))
+    quiet_mkdir(tempDir(mode))
+    quiet_mkdir(modesDir(mode))
     quiet_mkdir(getModeDir(mode))
 
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
         preveil_uid = preveil_pwuid.pw_uid
         preveil_gid = preveil_pwuid.pw_gid
-        recur_chown(preveilDataDir(), preveil_uid, preveil_gid)
+        recur_chown(preveilDataDir(mode), preveil_uid, preveil_gid)
     else:
         pass
 
