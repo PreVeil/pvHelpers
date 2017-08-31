@@ -381,10 +381,10 @@ def quietMkdirInPreVeilDataDir(path):
 def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
 
-def preveilDataDir(mode):
+def preveilDataDir(app_mode):
     dirName = "preveil"
     winDirName = "PreVeilData"
-    if mode == "bleed":
+    if app_mode == "bleed":
         dirName = "preveil_bleed"
         winDirName = "PreVeilBleedData"
     if sys.platform in ["darwin", "linux2"]:
