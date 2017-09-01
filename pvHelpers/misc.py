@@ -71,7 +71,7 @@ def readYAMLConfig(path):
     except IOError as e:
         return False, None
 
-class LogWrapper:
+class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
 
@@ -138,6 +138,8 @@ class LogWrapper:
         if twisted_observer_fn is not None:
             observer = twisted_observer_fn(loggerName=name)
             observer.start()
+
+g_log = _LogWrapper()
 
 def unicodeToASCII(s):
     if not isinstance(s, unicode):
