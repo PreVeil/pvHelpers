@@ -519,3 +519,11 @@ class NOT_ASSIGNED(object):
         pass
     def __str__(self):
         return u"__NOT_ASSIGNED__"
+
+def MergeDicts(*args):
+    ret = {}
+    for _dict in args:
+        if not isinstance(_dict, dict):
+            raise TypeError(u"MergeDicts: Arguments must be of type dict")
+        ret.update(_dict)
+    return ret
