@@ -71,7 +71,7 @@ def readYAMLConfig(path):
     except IOError as e:
         return False, None
 
-class LogWrapper:
+class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
 
@@ -111,16 +111,14 @@ class LogWrapper:
     # depend on the PreVeil directory structure.  Once we've confirmed
     # the PreVeil directories exist, we can start logging to disk instead of
     # stdout.
-    def startFileSystemWrites(self, name, twisted_observer_fn=None, extra_logger=None):
+    # <mode> only determines the application directory to use, `PreVeilData` or `PreVeilBleedData`
+    def startFileSystemWrites(self, name, mode, twisted_observer_fn=None, extra_logger=None):
         if not isinstance(twisted_observer_fn, types.NoneType):
             if not (callable(twisted_observer_fn) and twisted_observer_fn.__name__ == "PythonLoggingObserver"):
                 return False
 
         self.logobj = logging.getLogger(name)
         self.logobj.setLevel(logging.DEBUG)
-
-        mode_file = os.path.join(getdir(__file__),"../../daemon/conf/default-mode")
-        mode = open(mode_file, 'r').read().split('\n')[0]
 
         logpath = os.path.join(logsDir(mode), "{}.log".format(name))
         # TimedRotatingFileHandler will only rotate the logs if the process is
@@ -138,6 +136,8 @@ class LogWrapper:
         if twisted_observer_fn is not None:
             observer = twisted_observer_fn(loggerName=name)
             observer.start()
+
+g_log = _LogWrapper()
 
 def unicodeToASCII(s):
     if not isinstance(s, unicode):
