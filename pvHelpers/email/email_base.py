@@ -8,6 +8,7 @@ from ..misc import NOT_ASSIGNED
 ########### Factory Base Class ##########
 #########################################
 class EmailBase(object):
+    __initialized = False
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs, sender, reply_tos, \
                  subject, body,  attachments, references, in_reply_to, message_id, snippet):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
@@ -105,6 +106,13 @@ class EmailBase(object):
             raise EmailException(u"EmailBase.__init__: snippet must be of type unicode")
         self._snippet = snippet
 
+        self.__initialized = True
+
+    def __setattr__(self, key, value):
+        if self.__initialized and not hasattr(self, key):
+            raise KeyError(u"EmailBase has not attribute {}".format(key))
+        object.__setattr__(self, key, value)
+
     def snippet(self):
         raise EmailException(NotImplemented(u"EmailBase.snippet: snippet getter not implemented"))
 
@@ -114,8 +122,8 @@ class EmailBase(object):
     def toBrowser(self):
         raise EmailException(NotImplemented(u"EmailBase.toBrowser: toBrowser must be implemented by children classes"))
 
-    def toMIME(self):
-        raise EmailException(NotImplemented(u"EmailBase.toMIME: toMIME must be implemented by children classes"))
+    def toMime(self):
+        raise EmailException(NotImplemented(u"EmailBase.toMime: toMime must be implemented by children classes"))
 
     def loadBody(self, content):
         self.body.content = content

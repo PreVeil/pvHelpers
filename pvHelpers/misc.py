@@ -184,6 +184,11 @@ def unicodeIfUnicodeElseDecode(b):
     else:
         return utf8Decode(b)
 
+def encodeContentIfUnicode(content):
+    if isinstance(content, unicode):
+        return utf8Encode(content)
+    return True, content
+
 # binary -> unicode
 def b64enc(data, altchars=None):
     if not (isinstance(data, bytes) or isinstance(data, str)):

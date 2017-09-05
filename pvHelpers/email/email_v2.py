@@ -2,6 +2,7 @@ from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
 from ..misc import b64enc, g_log
 import email.utils
+from flanker import mime
 
 class EmailV2(EmailHelpers, EmailBase):
     protocol_version = PROTOCOL_VERSION.V2
@@ -19,7 +20,6 @@ class EmailV2(EmailHelpers, EmailBase):
                                       tos, ccs, bccs, sender, reply_tos, subject, \
                                       body,  attachments, references, in_reply_to, message_id, snippet)
 
-
     def snippet(self):
         if self._snippet is None:
             status, body = EmailHelpers.deserializeBody(self.body.content)
@@ -34,13 +34,13 @@ class EmailV2(EmailHelpers, EmailBase):
 
         return self._snippet
 
-    def toMIME(self):
+    def toMime(self):
         if not self.body.isLoaded() or ( len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
-            raise EmailException(u"EmailV2.toMIME: All content must be loaded!")
+            raise EmailException(u"EmailV2.toMime: All content must be loaded!")
 
-        status, body = EmailHelpers.deserializeBody(self.body)
+        status, body = EmailHelpers.deserializeBody(self.body.content)
         if status == False:
-            raise EmailException(u"EmailV2.toMIME: Failed to deserialize body")
+            raise EmailException(u"EmailV2.toMime: Failed to deserialize body")
 
         text = body.get("text")
         html = body.get("html")
@@ -58,7 +58,7 @@ class EmailV2(EmailHelpers, EmailBase):
                     html_text_part = mime.create.text("html", html)
                     html_part.append(html_text_part)
                     for att in inline_attachments:
-                        html_part.append(att.toMIME())
+                        html_part.append(att.toMime())
                 else:
                     html_part = mime.create.text("html", html)
 
@@ -72,7 +72,7 @@ class EmailV2(EmailHelpers, EmailBase):
                 message = mime.create.multipart("mixed")
                 message.append(body_shell)
                 for att in regular_attachments:
-                    att_part = att.toMIME()
+                    att_part = att.toMime()
                     if att_part.content_type.is_message_container():
                         att_part.headers["Content-Type"].params["name"] = att.metadata.filename
                         att_part.headers["Content-Disposition"].params["filename"] = att.metadata.filename
@@ -88,8 +88,8 @@ class EmailV2(EmailHelpers, EmailBase):
                 message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], to["user_id"]) for to in self.tos]))
             if self.bccs:
                 message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in self.bccs]))
-            if self.reply_to:
-                message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in self.reply_to]))
+            if self.reply_tos:
+                message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in self.reply_tos]))
 
             if self.subject:
                 message.headers["Subject"] = self.subject
@@ -99,12 +99,12 @@ class EmailV2(EmailHelpers, EmailBase):
                 message.headers["In-Reply-To"] = u"{}".format(self.in_reply_to)
             if self.references:
                 message.headers["References"] = u"{}".format(" ".join(self.references))
-            if self.server_attr.server_time:
+            if not isinstance(self.server_attr, NOT_ASSIGNED) and self.server_attr.server_time != None:
                 date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_attr.server_time)
                 message.headers["Date"] = date
 
         except mime.EncodingError as e:
-            raise EmailException(u"EmailV2.toMIME: exception, {}".format(e))
+            raise EmailException(u"EmailV2.toMime: exception, {}".format(e))
 
         return message
 

@@ -18,9 +18,11 @@ class EmailFactory(object):
         elif v is PROTOCOL_VERSION.V2:
             return EmailV2(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V3:
-            return EmailV3(*args, **kwargs)
+            raise EmailException("not now")
+            #return EmailV3(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V4:
-            return EmailV4(*args, **kwargs)
+            raise EmailException("not now")
+            #return EmailV4(*args, **kwargs)
 
         raise EmailException(u"EmailFactory.__init__: Unsupported protocol_version")
 
@@ -57,9 +59,11 @@ class EmailFactory(object):
         elif v is PROTOCOL_VERSION.V2:
             return EmailV2(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V3:
-            return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            raise EmailException("not now")
+            #return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
-            return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            raise EmailException("not now")
+            #return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")

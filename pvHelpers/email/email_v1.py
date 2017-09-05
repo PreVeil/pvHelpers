@@ -1,10 +1,10 @@
-from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
+from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
 from ..misc import MergeDicts, b64enc, NOT_ASSIGNED
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
-import email.utils
+import email.utils, types, libnacl
 
 
 # Using this with the flanker MIME class forces it to always reparse the
@@ -19,10 +19,10 @@ class EmailV1(EmailHelpers, EmailBase):
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
                  body, attachments, references, in_reply_to, message_id, snippet=None):
 
-        super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, [t["user_id"] for t in self.named_tos], \
-                                      [c["user_id"] for c in self.named_ccs], [b["user_id"] for b in self.named_bccs], \
-                                      self.named_sender["user_id"], [rpt["user_id"] for rpt in self.named_reply_to], subject, body, \
+        super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, tos, \
+                                      ccs, bccs, sender, reply_tos, subject, body, \
                                       attachments, references, in_reply_to, message_id, snippet)
+
 
     @classmethod
     def fromMime(cls, mime_string, flags, sender):
@@ -37,7 +37,7 @@ class EmailV1(EmailHelpers, EmailBase):
         named_sender = sender
 
         try:
-            raw_body = mime.create.from_string(mime_string)
+            raw_mime = mime.create.from_string(mime_string)
         except mime.MimeError as e:
             raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
 
@@ -53,14 +53,14 @@ class EmailV1(EmailHelpers, EmailBase):
         bccs = addresslib.address.parse_list(bccs)
         named_bccs = [{"user_id": bcc.address, "display_name": bcc.display_name} for bcc in bccs]
         reply_to = raw_mime.headers.get("Reply-To")
-        reply_to = addresslib.address.parse_list(reply_to)
-        named_reply_to = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_to]
+        reply_tos = addresslib.address.parse_list(reply_to)
+        named_reply_tos = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_tos]
 
         references = [u"<{}>".format(ref) for ref in raw_mime.references]
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
-        message_body, att_parts = cls.separateAttachments(raw_body)
+        message_body, att_parts = EmailV1.separateAttachments(raw_mime)
         body = message_body.to_string()
         body = Content(body, None, None)
         attachments = []
@@ -69,32 +69,31 @@ class EmailV1(EmailHelpers, EmailBase):
             filename = o.get("filename")
             if filename is None:
                 filename = u"untitled"
-            metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None, None)
+            metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None)
             content = Content(att_part.to_string(), None, None)
             attachments.append(Attachment(metadata, content))
 
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)
 
-        return cls(NOT_ASSIGNED(), cls.protocol_version, flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_to, subject, body, attachments, references, in_reply_to)
 
-
-    def toMIME(self):
-        if not self.body.isLoaded() or ( len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
-            raise EmailException(u"EmailV1.toMIME: All content must be loaded!")
+    def toMime(self):
+        if not self.body.isLoaded() or (len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
+            raise EmailException(u"EmailV1.toMime: All content must be loaded!")
 
         try:
-            status, message = _restoreAttachments(mime.create.from_string(self.body.content), {libnacl.encode.hex_encode(libnacl.crypto_hash(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
+            status, message = EmailV1.restoreAttachments(mime.create.from_string(self.body.content), {libnacl.encode.hex_encode(libnacl.crypto_hash(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
             if status == False:
-                raise EmailException(u"EmailV1.toMIME: failed to restore atts")
+                raise EmailException(u"EmailV1.toMime: failed to restore atts")
             # Reporting the server reception time,
             # 1) similar to what we report to browser,
             # 2) Dates added by MUAs can be incorrect
-            if self.server_time:
-                date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_time)
+            if not isinstance(self.server_attr, NOT_ASSIGNED) and self.server_attr.server_time != None:
+                date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_attr.server_time)
                 message.headers["Date"] = date
 
         except mime.MimeError as e:
-            raise EmailException(u"toMIME: flanker exception {}".format(e))
+            raise EmailException(u"toMime: flanker exception {}".format(e))
 
         return message
 
@@ -109,7 +108,7 @@ class EmailV1(EmailHelpers, EmailBase):
         o["flags"] = self.flags
         o["snippet"] = self.snippet()
         o["date"] = email.utils.formatdate(self.server_attr.server_time)
-        o["subject"] = self.subjects
+        o["subject"] = self.subject
         # THis needs fixing, get names from server
         o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
         o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
@@ -121,7 +120,7 @@ class EmailV1(EmailHelpers, EmailBase):
 
         if with_body:
             try:
-                message = self.toMIME()
+                message = self.toMime()
                 text, html, attachments = EmailHelpers.parseMIME(message)
             except mime.MimeError as e:
                 raise EmailException(u"EmailV1.toBrowser: exception {}".format(e))
@@ -183,11 +182,17 @@ class EmailV1(EmailHelpers, EmailBase):
 
     def snippet(self):
         if self._snippet is None:
+            try:
+                raw_mime = self.toMime()
+            except EmailException as e:
+                g_log.debug(u"EmailV1.snippet: {}".format(e))
+                return u""
+
             plain_string = None
             # only using plain/text parts for snippet generation.
             # TODO: add a HTML stripper and use plain/html parts if
             # there are no plain/text alternatives
-            for part in self.raw_body.walk(with_self=True):
+            for part in raw_mime.walk(with_self=True):
                 if part.content_type == "text/plain":
                     if plain_string is None:
                         plain_string = part.body
@@ -205,6 +210,7 @@ class EmailV1(EmailHelpers, EmailBase):
 
         return self._snippet
 
+    @staticmethod
     def separateAttachments(msg):
         msg = mime.create.from_string(msg.to_string())
         if msg.content_type.is_multipart():
@@ -213,7 +219,7 @@ class EmailV1(EmailHelpers, EmailBase):
             new_parts = []
             attachments = []
             for p in msg.parts:
-                new_p, atts = separateAttachments(p)
+                new_p, atts = EmailV1.separateAttachments(p)
                 new_parts.append(new_p)
                 attachments += atts
             msg.parts = new_parts
@@ -231,13 +237,12 @@ class EmailV1(EmailHelpers, EmailBase):
             placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)
             return placeholder, [msg]
 
-    separateAttachments = staticmethod(separateAttachments)
-
+    @staticmethod
     def restoreAttachments(msg, atts):
         if msg.content_type.is_multipart():
             new_parts = []
             for x in msg.parts:
-                status, new_part = restoreAttachments(x, atts)
+                status, new_part = EmailV1.restoreAttachments(x, atts)
                 if status == False:
                     return False, None
                 new_parts.append(new_part)
@@ -253,8 +258,6 @@ class EmailV1(EmailHelpers, EmailBase):
             return True, atts[att_id]
         else:
             return True, msg
-
-    restoreAttachments = staticmethod(restoreAttachments)
 
     @staticmethod
     def replaceDummyReferences(message, reference_map):

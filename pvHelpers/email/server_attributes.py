@@ -2,6 +2,7 @@ from .email_helpers import EmailException
 import types
 
 class ServerAttributes(object):
+    __initialized = False
     def __init__(self, server_id, revision_id=None, mailbox_server_id=None, mailbox_name=None, version=None, uid=None, thread_id=None, server_time=None, expunged=None):
         if not isinstance(server_id, unicode):
             raise EmailException(u"ServerAttributes.__init__: server_id must be of type unicode")
@@ -38,3 +39,10 @@ class ServerAttributes(object):
         if not isinstance(expunged, (bool, types.NoneType)):
             raise EmailException(u"ServerAttributes.__init__: expunged must be of type bool")
         self.expunged = expunged
+
+        self.__initialized = True
+
+    def __setattr__(self, key, value):
+        if self.__initialized and not hasattr(self, key):
+            raise KeyError(u"ServerAttributes has not attribute {}".format(key))
+        object.__setattr__(self, key, value)

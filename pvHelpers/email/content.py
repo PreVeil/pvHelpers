@@ -1,17 +1,25 @@
 import types
-from .email_helpers import EmailException
+import email_helpers
 
 class Content(object):
+    __initialized = False
     def __init__(self, content=None, reference_id=None, block_ids=None):
         if not isinstance(content, (bytes, str, types.NoneType)):
-            raise EmailException(u"Content.__init__: content must be of type bytes/str/None")
+            raise email_helpers.EmailException(u"Content.__init__: content must be of type bytes/str/None")
         self.content = content
         if not isinstance(reference_id, (unicode, types.NoneType)):
-            raise EmailException(u"Content.__init__: reference_id must be of type unicode/None")
+            raise email_helpers.EmailException(u"Content.__init__: reference_id must be of type unicode/None")
         self.reference_id = reference_id
         if not isinstance(block_ids, (list, types.NoneType)):
-            raise EmailException(u"Content.__init__: block_ids must be of type list")
+            raise email_helpers.EmailException(u"Content.__init__: block_ids must be of type list")
         self.block_ids = block_ids
+
+        self.__initialized = True
+
+    def __setattr__(self, key, value):
+        if self.__initialized and not hasattr(self, key):
+            raise KeyError(u"Content has not attribute {}".format(key))
+        object.__setattr__(self, key, value)
 
     def toDict(self):
         return {
