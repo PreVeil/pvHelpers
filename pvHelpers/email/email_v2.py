@@ -1,12 +1,13 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
-from ..misc import b64enc
+from ..misc import b64enc, g_log
+import email.utils
 
 class EmailV2(EmailHelpers, EmailBase):
     protocol_version = PROTOCOL_VERSION.V2
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id):
+                 body, attachments, references, in_reply_to, message_id, snippet=None):
 
         # check body content structure
         # if not isinstance(body, dict):
@@ -16,19 +17,22 @@ class EmailV2(EmailHelpers, EmailBase):
 
         super(EmailV2, self).__init__(server_attr, self.__class__.protocol_version, flags, \
                                       tos, ccs, bccs, sender, reply_tos, subject, \
-                                      body,  attachments, references, in_reply_to, message_id)
+                                      body,  attachments, references, in_reply_to, message_id, snippet)
 
 
     def snippet(self):
-        status, body = EmailHelpers.deserializeBody(self.body.content)
-        if status == False:
-            raise EmailException(u"EmailV2.snippet: Failed to deserialize body")
+        if self._snippet is None:
+            status, body = EmailHelpers.deserializeBody(self.body.content)
+            if status == False:
+                raise EmailException(u"EmailV2.snippet: Failed to deserialize body")
 
-        body_string = body.get("text")
-        snippet = body_string[:1024]
-        if len(body_string) > len(snippet):
-            snippet += u"..."
-        return snippet
+            body_string = body.get("text")
+            snippet = body_string[:1024]
+            if len(body_string) > len(snippet):
+                snippet += u"..."
+            return snippet
+
+        return self._snippet
 
     def toMIME(self):
         if not self.body.isLoaded() or ( len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
@@ -95,8 +99,8 @@ class EmailV2(EmailHelpers, EmailBase):
                 message.headers["In-Reply-To"] = u"{}".format(self.in_reply_to)
             if self.references:
                 message.headers["References"] = u"{}".format(" ".join(self.references))
-            if self.server_time:
-                date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_time)
+            if self.server_attr.server_time:
+                date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_attr.server_time)
                 message.headers["Date"] = date
 
         except mime.EncodingError as e:
@@ -107,21 +111,21 @@ class EmailV2(EmailHelpers, EmailBase):
     # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
         o = {}
-        # o["unique_id"] = self.server_id
-        # o["uid"] = self.uid
-        # o["thread_id"] = self.thread_id
-        # o["mailbox_name"] = getMailboxAlias(self.mailbox_name)
-        # o["mailbox_id"] = self.mailbox_server_id
+        o["unique_id"] = self.server_attr.server_id
+        o["uid"] = self.server_attr.uid
+        o["thread_id"] = self.server_attr.thread_id
+        o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
+        o["mailbox_id"] = self.server_attr.mailbox_server_id
         o["snippet"] = self.snippet()
         o["flags"] = self.flags
-        o["date"] = email.utils.formatdate(self.server_time)
+        o["date"] = email.utils.formatdate(self.server_attr.server_time)
         o["subject"] = self.subject
         # This needs fixing, should get the names from server
-        o["sender"] = {"address": self.sender, "name": self.sender}
-        o["tos"] = [{"address": to, "name": to} for to in self.tos]
-        o["ccs"] = [{"address": cc, "name": cc} for cc in self.ccs]
-        o["bccs"] = [{"address": bcc, "name": bcc} for bcc in self.bccs]
-        o["reply_to"] = [{"address": rpt, "name": rpt} for rpt in self.reply_tos]
+        o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
+        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
+        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.ccs]
+        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
+        o["reply_to"] = [{"address": rpt["user_id"], "name": rpt["display_name"]} for rpt in self.reply_tos]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
 
@@ -134,7 +138,7 @@ class EmailV2(EmailHelpers, EmailBase):
                     raise EmailException(u"EmailV2.toBrowser: Failed to deserialize body")
 
             browser_atts = []
-            for att in attachments:
+            for att in self.attachments:
                 status, encoded = b64enc(att.content.content)
                 if status == False:
                     continue

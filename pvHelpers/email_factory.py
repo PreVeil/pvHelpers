@@ -1,5 +1,5 @@
 from .email import EmailException, PROTOCOL_VERSION, Content,\
-                   EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes
+                   EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt, g_log
 
 #########################################
@@ -42,21 +42,24 @@ class EmailFactory(object):
         status, v = toInt(metadata.get("protocol_version"))
         if status == False:
             raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")
+        metadata.pop("protocol_version", None)
+
+        a = Content(**metadata["body"])
 
         # make content object and pass it
         metadata.update({
-            "body": Content.fromDict(metadata.get("body")),
-            "attachments": [Atttachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
+            "body": Content(**metadata["body"]),
+            "attachments": [Attachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
         })
 
         if v is PROTOCOL_VERSION.V1:
-            return EmailV1(MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV1(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V2:
-            return EmailV2(MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV2(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V3:
-            return EmailV3(MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
-            return EmailV4(MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")

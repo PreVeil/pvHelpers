@@ -1,9 +1,10 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
-from ..misc import MergeDicts, b64enc
+from ..misc import MergeDicts, b64enc, NOT_ASSIGNED
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
+import email.utils
 
 
 # Using this with the flanker MIME class forces it to always reparse the
@@ -16,53 +17,12 @@ class EmailV1(EmailHelpers, EmailBase):
     protocol_version = PROTOCOL_VERSION.V1
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id):
-        if not isinstance(sender, dict):
-            raise EmailException(u"EmailV1.__init__: sender must be of type dict")
-        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
-            raise EmailException(u"EmailV1.__init__: sender['user_id']/sender['display_name'] must exist and be of type unicode")
-        self.named_sender = sender
-        if not isinstance(tos, list):
-            raise EmailException(u"EmailV1.__init__: tos must be of type list")
-        for to in tos:
-            if not isinstance(to, dict):
-                raise EmailException(u"EmailV1.__init__: tos element must be of type dict")
-            if not isinstance(to.get("user_id"), unicode) or not isinstance(to.get("display_name"), unicode):
-                raise EmailException(u"EmailV1.__init__: to['user_id']/to['display_name'] must exist and be of type unicode")
-        self.named_tos = tos
-
-        if not isinstance(ccs, list):
-            raise EmailException(u"EmailV1.__init__: ccs must be of type list")
-        for cc in ccs:
-            if not isinstance(cc, dict):
-                raise EmailException(u"EmailV1.__init__: ccs element must be of type dict")
-            if not isinstance(cc.get("user_id"), unicode) or not isinstance(cc.get("display_name"), unicode):
-                raise EmailException(u"EmailV1.__init__: cc['user_id']/cc['display_name'] must exist and be of type unicode")
-        self.named_ccs = ccs
-
-        if not isinstance(bccs, list):
-            raise EmailException(u"EmailV1.__init__: bccs must be of type list")
-        for bcc in bccs:
-            if not isinstance(bcc, dict):
-                raise EmailException(u"EmailV1.__init__: bccs element must be of type dict")
-            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
-                raise EmailException(u"EmailV1.__init__: bcc['user_id']/bcc['display_name'] must exist and be of type unicode")
-        self.named_bccs = bccs
-
-        if not isinstance(reply_tos, list):
-            raise EmailException(u"EmailV1.__init__: reply_tos must be of type list")
-        self.named_reply_tos = []
-        for rpt in reply_tos:
-            if not isinstance(rpt, dict):
-                continue
-            if not isinstance(rpt.get("user_id"), unicode) or not isinstance(rpt.get("display_name"), unicode):
-                continue
-            self.named_reply_tos.append(rpt)
+                 body, attachments, references, in_reply_to, message_id, snippet=None):
 
         super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, [t["user_id"] for t in self.named_tos], \
                                       [c["user_id"] for c in self.named_ccs], [b["user_id"] for b in self.named_bccs], \
                                       self.named_sender["user_id"], [rpt["user_id"] for rpt in self.named_reply_to], subject, body, \
-                                      attachments, references, in_reply_to, message_id)
+                                      attachments, references, in_reply_to, message_id, snippet)
 
     @classmethod
     def fromMime(cls, mime_string, flags, sender):
@@ -113,7 +73,8 @@ class EmailV1(EmailHelpers, EmailBase):
             content = Content(att_part.to_string(), None, None)
             attachments.append(Attachment(metadata, content))
 
-        return cls(cls.protocol_version, flags, named_tos, named_ccs, named_bccs, named_sender, \
+
+        return cls(NOT_ASSIGNED(), cls.protocol_version, flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_to, subject, body, attachments, references, in_reply_to)
 
 
@@ -140,20 +101,20 @@ class EmailV1(EmailHelpers, EmailBase):
     def toBrowser(self, with_body=False):
         # check loaded!?
         o = {}
-        # o["unique_id"] = self.server_id
-        # o["uid"] = self.uid
-        # o["thread_id"] = self.thread_id
-        # o["mailbox_name"] = getMailboxAlias(self.mailbox_name)
-        # o["mailbox_id"] = self.mailbox_server_id
+        o["unique_id"] = self.server_attr.server_id
+        o["uid"] = self.server_attr.uid
+        o["thread_id"] = self.server_attr.thread_id
+        o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
+        o["mailbox_id"] = self.server_attr.mailbox_server_id
         o["flags"] = self.flags
         o["snippet"] = self.snippet()
-        o["date"] = email.utils.formatdate(self.server_time)
+        o["date"] = email.utils.formatdate(self.server_attr.server_time)
         o["subject"] = self.subjects
         # THis needs fixing, get names from server
-        o["sender"] = {"address": self.named_sender["user_id"], "name": self.named_sender["display_name"]}
-        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.named_tos]
-        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.named_ccs]
-        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.named_bccs]
+        o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
+        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
+        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.ccs]
+        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
         o["reply_to"] = [{"address": rpt["user_id"], "name": rpt["display_name"]} for rpt in self.reply_tos]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
@@ -221,26 +182,28 @@ class EmailV1(EmailHelpers, EmailBase):
             raise EmailException(u"EmailV1.convertStringToMime: flanker exception {}".format(e))
 
     def snippet(self):
-        plain_string = None
-        # only using plain/text parts for snippet generation.
-        # TODO: add a HTML stripper and use plain/html parts if
-        # there are no plain/text alternatives
-        for part in self.raw_body.walk(with_self=True):
-            if part.content_type == "text/plain":
-                if plain_string is None:
-                    plain_string = part.body
-                else:
-                    plain_string += u"\n" + part.body
+        if self._snippet is None:
+            plain_string = None
+            # only using plain/text parts for snippet generation.
+            # TODO: add a HTML stripper and use plain/html parts if
+            # there are no plain/text alternatives
+            for part in self.raw_body.walk(with_self=True):
+                if part.content_type == "text/plain":
+                    if plain_string is None:
+                        plain_string = part.body
+                    else:
+                        plain_string += u"\n" + part.body
 
-        if plain_string is None:
-            return u""
+            if plain_string is None:
+                return u""
 
-        snippet = plain_string[:1024]
-        if len(plain_string) > len(snippet):
-            snippet += u"..."
+            snippet = plain_string[:1024]
+            if len(plain_string) > len(snippet):
+                snippet += u"..."
 
-        return snippet
+            return snippet
 
+        return self._snippet
 
     def separateAttachments(msg):
         msg = mime.create.from_string(msg.to_string())

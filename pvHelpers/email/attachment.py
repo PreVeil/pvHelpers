@@ -1,6 +1,8 @@
-from ..misc import ASCIIToUnicode, unicodeIfUnicodeElseDecode
+from ..misc import ASCIIToUnicode, unicodeIfUnicodeElseDecode, g_log
 from .email_helpers import EmailHelpers, EmailException
 from .content import Content
+from flanker import mime, addresslib
+import types
 
 class AttachmentMetadata(object):
     def __init__(self, filename=None, content_type=None, content_disposition=u"attachment", content_id=None):
@@ -72,18 +74,14 @@ class Attachment(object):
         if status == False:
             raise EmailException(u"fromFileStorage: content_type str to unicode failed")
 
-        content = Content(content, None, None)
-        return Attachment(None, AttachmentMetadata(_file.filename, content_type), content)
+        return Attachment(AttachmentMetadata(_file.filename, content_type), Content(content, None, None))
 
     @staticmethod
     def fromDict(data):
         metadata = data.get("metadata")
         metadata = AttachmentMetadata(metadata.get("filename"), metadata.get("content_type"), metadata.get("content_disposition"), metadata.get("content_id"))
 
-        content = data.get("content", None)
-
-        content = Content(content.get("content"), content.get("referece_id"), content.get("blo"))
-        return Attachment(metadata, content)
+        return Attachment(metadata, Content(**data.get("content")))
 
     # should use Email.fromDict() unless certain about types
     def __init__(self, metadata, content):

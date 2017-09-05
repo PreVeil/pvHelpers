@@ -2,7 +2,7 @@ import types
 from .email_helpers import EmailException
 
 class Content(object):
-    def __init__(self, content, reference_id, block_ids):
+    def __init__(self, content=None, reference_id=None, block_ids=None):
         if not isinstance(content, (bytes, str, types.NoneType)):
             raise EmailException(u"Content.__init__: content must be of type bytes/str/None")
         self.content = content
@@ -19,19 +19,6 @@ class Content(object):
             "reference_id": self.reference_id,
             "block_ids": self.block_ids
         }
-
-    @classmethod
-    def fromDict(cls, _dict):
-        if not isinstance(_dict, dict):
-            raise EmailException(u"Content.fromDict: _dict must be of type dict")
-        if _dict.get("content") is None:
-            raise EmailException(u"Content.fromDict: _dict missing `content` key")
-        if _dict.get("block_ids") is None:
-            raise EmailException(u"Content.fromDict: _dict missing `block_ids` key")
-        if _dict.get("reference_id") is None:
-            raise EmailException(u"Content.fromDict: _dict missing `reference_id` key")
-
-        return cls(content, reference_id, block_ids)
 
     def isLoaded(self):
         return self.content != None
