@@ -33,7 +33,7 @@ def getdir(path):
 
 def resolvePreVeilMode(mode_file_path):
     if not isinstance(mode_file_path, unicode):
-        print u"error, determineCurrentMode: mode_file_path must be unicode"
+        g_log.error(u"resolvePreVeilMode: mode_file_path must be unicode")
         return False, None
 
     # Precedence
@@ -44,7 +44,7 @@ def resolvePreVeilMode(mode_file_path):
     if mode != None:
         status, mode = unicodeIfUnicodeElseDecode(mode)
         if status == False:
-            print u"error, determineCurrentMode: unicodeIfUnicodeElseDecode failed"
+            g_log.error(u"resolvePreVeilMode: unicodeIfUnicodeElseDecode failed")
             return False, None
         return True, mode
 
@@ -53,7 +53,7 @@ def resolvePreVeilMode(mode_file_path):
             mode = f.read().strip()
         status, mode = ASCIIToUnicode(mode)
         if status == False:
-            print u"error, determineCurrentMode: ASCIIToUnicode failed"
+            g_log.error(u"resolvePreVeilMode: ASCIIToUnicode failed")
         return True, mode
     except IOError:
         pass

@@ -5,7 +5,7 @@ from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
 import email.utils, types, libnacl
-
+from .parsers import parseMime
 
 # Using this with the flanker MIME class forces it to always reparse the
 # entire object before outputting it in the to_string() method.  This is
@@ -100,14 +100,15 @@ class EmailV1(EmailHelpers, EmailBase):
     def toBrowser(self, with_body=False):
         # check loaded!?
         o = {}
-        o["unique_id"] = self.server_attr.server_id
-        o["uid"] = self.server_attr.uid
-        o["thread_id"] = self.server_attr.thread_id
-        o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
-        o["mailbox_id"] = self.server_attr.mailbox_server_id
+        if not isinstance(self.server_attr, NOT_ASSIGNED):
+            o["unique_id"] = self.server_attr.server_id
+            o["uid"] = self.server_attr.uid
+            o["thread_id"] = self.server_attr.thread_id
+            o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
+            o["mailbox_id"] = self.server_attr.mailbox_server_id
+            o["date"] = email.utils.formatdate(self.server_attr.server_time)
         o["flags"] = self.flags
         o["snippet"] = self.snippet()
-        o["date"] = email.utils.formatdate(self.server_attr.server_time)
         o["subject"] = self.subject
         # THis needs fixing, get names from server
         o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
@@ -117,15 +118,15 @@ class EmailV1(EmailHelpers, EmailBase):
         o["reply_to"] = [{"address": rpt["user_id"], "name": rpt["display_name"]} for rpt in self.reply_tos]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
+        o["message_id"] = self.message_id
 
         if with_body:
             try:
                 message = self.toMime()
-                text, html, attachments = EmailHelpers.parseMIME(message)
+                o["text"], o["html"], attachments = parseMime(message)
             except mime.MimeError as e:
                 raise EmailException(u"EmailV1.toBrowser: exception {}".format(e))
 
-            body = {"text": text, "html": html}
             browser_atts = []
             for att in attachments:
                 status, encoded = b64enc(att.content.content)
@@ -141,8 +142,6 @@ class EmailV1(EmailHelpers, EmailBase):
                     "content_id": att.metadata.content_id
                 })
 
-            o["html"] = body.get("html")
-            o["text"] = body.get("text")
             o["attachments"] = browser_atts
         else:
             o["html"] = None
@@ -159,16 +158,21 @@ class EmailV1(EmailHelpers, EmailBase):
         return o
 
     def toDict(self):
-        return MergeDicts(
-            super(EmailV1, self).toDict(),
-            {
-                "message_id":  self.message_id,
-                "snippet": self.snippet(),
-                "named_tos": self.named_tos,
-                "named_ccs": self.named_ccs,
-                "named_bccs": self.named_bccs,
-            }
-        )
+        return {
+            "flags": self.flags,
+            "subject": self.subject,
+            "sender": self.sender,
+            "tos": self.tos,
+            "ccs": self.ccs,
+            "bccs" : self.bccs,
+            "in_reply_to" : self.in_reply_to,
+            "reply_tos": self.reply_tos,
+            "references" : self.references,
+            "attachments" : self.attachments,
+            "body": self.body,
+            "message_id": self.message_id,
+            "server_attr": self.server_attr
+        }
 
     @staticmethod
     def convertStringToMime(message):
@@ -182,11 +186,7 @@ class EmailV1(EmailHelpers, EmailBase):
 
     def snippet(self):
         if self._snippet is None:
-            try:
-                raw_mime = self.toMime()
-            except EmailException as e:
-                g_log.debug(u"EmailV1.snippet: {}".format(e))
-                return u""
+            raw_mime = self.toMime()
 
             plain_string = None
             # only using plain/text parts for snippet generation.
