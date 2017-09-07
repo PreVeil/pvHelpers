@@ -14,6 +14,7 @@ def was_changed_always(self, ignore_prepends=False):
     return True
 
 class EmailV1(EmailHelpers, EmailBase):
+    """Production version: Protocol version 1 is mime based email entity"""
     protocol_version = PROTOCOL_VERSION.V1
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
@@ -22,7 +23,7 @@ class EmailV1(EmailHelpers, EmailBase):
         super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, tos, \
                                       ccs, bccs, sender, reply_tos, subject, body, \
                                       attachments, references, in_reply_to, message_id, snippet)
-
+        # TODO: check body content mime validity
 
     @classmethod
     def fromMime(cls, mime_string, flags, sender):
@@ -76,6 +77,124 @@ class EmailV1(EmailHelpers, EmailBase):
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)
 
+    @staticmethod
+    def convertStringToMime(message):
+        if not isinstance(message, (str, bytes)):
+            raise EmailException(TypeError(u"message must be of type str/bytes"))
+
+        try:
+            return mime.create.from_string(message)
+        except mime.MimeError as e:
+            raise EmailException(u"EmailV1.convertStringToMime: flanker exception {}".format(e))
+
+    @staticmethod
+    def separateAttachments(msg):
+        msg = mime.create.from_string(msg.to_string())
+        if msg.content_type.is_multipart():
+            # An email is a tree consisting of interior nodes, which have
+            # Content-Type: multipart/*, and leaf nodes (bodies, attachments)
+            new_parts = []
+            attachments = []
+            for p in msg.parts:
+                new_p, atts = EmailV1.separateAttachments(p)
+                new_parts.append(new_p)
+                attachments += atts
+            msg.parts = new_parts
+            # HACK: Must be set on the MIMEPart that has been modified
+            msg.was_changed = types.MethodType(was_changed_always, msg)
+            return msg, attachments
+
+        t, o = msg.content_disposition
+        if t not in ("attachment", "inline"):
+            return msg, []
+        else:
+            att_hash = libnacl.encode.hex_encode(libnacl.crypto_hash(msg.to_string()))
+            # Insert a dummy node into the message tree so we know where to insert
+            # this attachment when reconstructing the email
+            placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)
+            return placeholder, [msg]
+
+    @staticmethod
+    def restoreAttachments(msg, atts):
+        if msg.content_type.is_multipart():
+            new_parts = []
+            for x in msg.parts:
+                status, new_part = EmailV1.restoreAttachments(x, atts)
+                if status == False:
+                    return False, None
+                new_parts.append(new_part)
+            msg.parts = new_parts
+            # HACK: Must be set on the MIMEPart that has been modified
+            msg.was_changed = types.MethodType(was_changed_always, msg)
+            return True, msg
+        if msg.content_type == DUMMY_CONTENT_TYPE:
+            t, o = msg.content_disposition
+            att_id = o.get("filename")
+            if att_id is None or att_id not in atts:
+                return False, None
+            return True, atts[att_id]
+        else:
+            return True, msg
+
+    @staticmethod
+    def replaceDummyReferences(message, reference_map):
+        if not isinstance(message, mime.message.part.MimePart):
+            return False, None
+        for part in message.walk(with_self=True):
+            if part.content_type == DUMMY_CONTENT_TYPE:
+                t, o = part.content_disposition
+                filename = o.get("filename")
+                if filename in reference_map:
+                    part.content_disposition.params["filename"] = reference_map[filename]
+                # HACK: Must be set on the MIMEPart that has been modified
+                part.was_changed = types.MethodType(was_changed_always, part)
+        message.was_changed = types.MethodType(was_changed_always, message)
+        return True, mime.from_string(message.to_string())
+
+    @staticmethod
+    def setMIMEBcc(message, bccs):
+        if not isinstance(message, mime.message.part.MimePart):
+            return False, None
+        if not isinstance(bccs, list):
+            return False, None
+        for bcc in bccs:
+            if not isinstance(bcc, dict):
+                return False, None
+            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
+                return False, None
+
+        if len(bccs) == 0:
+            message.remove_headers("Bcc")
+        else:
+            message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
+
+        return True, mime.from_string(message.to_string())
+
+    def snippet(self):
+        if self._snippet is None:
+            raw_mime = self.toMime()
+
+            plain_string = None
+            # only using plain/text parts for snippet generation.
+            # TODO: add a HTML stripper and use plain/html parts if
+            # there are no plain/text alternatives
+            for part in raw_mime.walk(with_self=True):
+                if part.content_type == "text/plain":
+                    if plain_string is None:
+                        plain_string = part.body
+                    else:
+                        plain_string += u"\n" + part.body
+
+            if plain_string is None:
+                return u""
+
+            snippet = plain_string[:1024]
+            if len(plain_string) > len(snippet):
+                snippet += u"..."
+
+            return snippet
+
+        return self._snippet
 
     def toMime(self):
         if not self.body.isLoaded() or (len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
@@ -173,122 +292,3 @@ class EmailV1(EmailHelpers, EmailBase):
             "message_id": self.message_id,
             "server_attr": self.server_attr
         }
-
-    @staticmethod
-    def convertStringToMime(message):
-        if not isinstance(message, (str, bytes)):
-            raise EmailException(TypeError(u"message must be of type str/bytes"))
-
-        try:
-            return mime.create.from_string(message)
-        except mime.MimeError as e:
-            raise EmailException(u"EmailV1.convertStringToMime: flanker exception {}".format(e))
-
-    def snippet(self):
-        if self._snippet is None:
-            raw_mime = self.toMime()
-
-            plain_string = None
-            # only using plain/text parts for snippet generation.
-            # TODO: add a HTML stripper and use plain/html parts if
-            # there are no plain/text alternatives
-            for part in raw_mime.walk(with_self=True):
-                if part.content_type == "text/plain":
-                    if plain_string is None:
-                        plain_string = part.body
-                    else:
-                        plain_string += u"\n" + part.body
-
-            if plain_string is None:
-                return u""
-
-            snippet = plain_string[:1024]
-            if len(plain_string) > len(snippet):
-                snippet += u"..."
-
-            return snippet
-
-        return self._snippet
-
-    @staticmethod
-    def separateAttachments(msg):
-        msg = mime.create.from_string(msg.to_string())
-        if msg.content_type.is_multipart():
-            # An email is a tree consisting of interior nodes, which have
-            # Content-Type: multipart/*, and leaf nodes (bodies, attachments)
-            new_parts = []
-            attachments = []
-            for p in msg.parts:
-                new_p, atts = EmailV1.separateAttachments(p)
-                new_parts.append(new_p)
-                attachments += atts
-            msg.parts = new_parts
-            # HACK: Must be set on the MIMEPart that has been modified
-            msg.was_changed = types.MethodType(was_changed_always, msg)
-            return msg, attachments
-
-        t, o = msg.content_disposition
-        if t not in ("attachment", "inline"):
-            return msg, []
-        else:
-            att_hash = libnacl.encode.hex_encode(libnacl.crypto_hash(msg.to_string()))
-            # Insert a dummy node into the message tree so we know where to insert
-            # this attachment when reconstructing the email
-            placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)
-            return placeholder, [msg]
-
-    @staticmethod
-    def restoreAttachments(msg, atts):
-        if msg.content_type.is_multipart():
-            new_parts = []
-            for x in msg.parts:
-                status, new_part = EmailV1.restoreAttachments(x, atts)
-                if status == False:
-                    return False, None
-                new_parts.append(new_part)
-            msg.parts = new_parts
-            # HACK: Must be set on the MIMEPart that has been modified
-            msg.was_changed = types.MethodType(was_changed_always, msg)
-            return True, msg
-        if msg.content_type == DUMMY_CONTENT_TYPE:
-            t, o = msg.content_disposition
-            att_id = o.get("filename")
-            if att_id is None or att_id not in atts:
-                return False, None
-            return True, atts[att_id]
-        else:
-            return True, msg
-
-    @staticmethod
-    def replaceDummyReferences(message, reference_map):
-        if not isinstance(message, mime.message.part.MimePart):
-            return False, None
-        for part in message.walk(with_self=True):
-            if part.content_type == DUMMY_CONTENT_TYPE:
-                t, o = part.content_disposition
-                filename = o.get("filename")
-                if filename in reference_map:
-                    part.content_disposition.params["filename"] = reference_map[filename]
-                # HACK: Must be set on the MIMEPart that has been modified
-                part.was_changed = types.MethodType(was_changed_always, part)
-        message.was_changed = types.MethodType(was_changed_always, message)
-        return True, mime.from_string(message.to_string())
-
-    @staticmethod
-    def setMIMEBcc(message, bccs):
-        if not isinstance(message, mime.message.part.MimePart):
-            return False, None
-        if not isinstance(bccs, list):
-            return False, None
-        for bcc in bccs:
-            if not isinstance(bcc, dict):
-                return False, None
-            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
-                return False, None
-
-        if len(bccs) == 0:
-            message.remove_headers("Bcc")
-        else:
-            message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
-
-        return True, mime.from_string(message.to_string())

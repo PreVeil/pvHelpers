@@ -9,6 +9,7 @@ from ..misc import NOT_ASSIGNED
 #########################################
 class EmailBase(object):
     __initialized = False
+
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs, sender, reply_tos, \
                  subject, body,  attachments, references, in_reply_to, message_id, snippet):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
@@ -113,17 +114,20 @@ class EmailBase(object):
             raise KeyError(u"EmailBase has not attribute {}".format(key))
         object.__setattr__(self, key, value)
 
-    def snippet(self):
-        raise EmailException(NotImplemented(u"EmailBase.snippet: snippet getter not implemented"))
-
     def __deepcopy__(self, memo):
         return self.__class__(**copy.deepcopy(self.toDict()))
+
+    def snippet(self):
+        raise EmailException(NotImplemented(u"EmailBase.snippet: snippet getter not implemented"))
 
     def toBrowser(self):
         raise EmailException(NotImplemented(u"EmailBase.toBrowser: toBrowser must be implemented by children classes"))
 
     def toMime(self):
         raise EmailException(NotImplemented(u"EmailBase.toMime: toMime must be implemented by children classes"))
+
+    def toDict(self):
+        raise EmailException(NotImplemented(u"EmailBase.toDict: toDict must be implemented by children classes"))
 
     def loadBody(self, content):
         self.body.content = content

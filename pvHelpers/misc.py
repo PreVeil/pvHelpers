@@ -12,6 +12,7 @@ import types
 import struct
 import collections
 import copy
+import StringIO
 
 from sqlalchemy import create_engine, event, orm
 
@@ -255,6 +256,8 @@ def getBodyFromFlankerMessage(message, flanker_from_string):
         tmp = flanker_from_string(message.to_string())
         tmp.remove_headers(*tmp.headers.keys())
         return True, tmp.to_string()
+    elif message.content_type.is_message_container():
+        return True, message.enclosed.to_string()
     else:
         return False, None
 
@@ -532,3 +535,10 @@ def MergeDicts(*args):
             raise TypeError(u"MergeDicts: Arguments must be of type dict")
         ret.update(_dict)
     return ret
+
+def randStr(length = 20):
+    GLYPHS = u'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+    return u''.join(random.choice(GLYPHS) for _ in range(length))
+
+def randStream(size=1024):
+    return StringIO.StringIO(os.urandom(size))

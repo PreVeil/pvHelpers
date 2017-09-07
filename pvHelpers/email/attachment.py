@@ -2,12 +2,11 @@ from ..misc import ASCIIToUnicode, unicodeIfUnicodeElseDecode, g_log, encodeCont
 import email_helpers
 import content as cnt
 from flanker import mime, addresslib
-import types
+import types, copy
 
 class AttachmentType(object):
     INLINE = u"inline"
     ATTACHMENT = u"attachment"
-    ATTACHLINE = u"attachline"
 
 class AttachmentMetadata(object):
     __initialized = False
@@ -75,6 +74,7 @@ class Attachment(object):
         status, content = encodeContentIfUnicode(content)
         if status == False:
             raise email_helpers.EmailException(u"fromFileStorage: Failed to encode content")
+
         # flanker defaults the mime header to (application/octet-stream) if c-t not specified
         # it also makes some assumptions based on filename if c-t is (application/octet-stream)
         # so keeping our object consistent with the MIME which is going to be generated
@@ -84,11 +84,7 @@ class Attachment(object):
         except mime.MimeError as e:
             raise email_helpers.EmailException(u"fromFileStorage: flanker exception, value: {}".format(e))
 
-        status, content_type = unicodeIfUnicodeElseDecode(_file.content_type)
-        if status == False:
-            raise email_helpers.EmailException(u"fromFileStorage: content_type str to unicode failed")
-
-        return Attachment(AttachmentMetadata(_file.filename, content_type), cnt.Content(content, None, None))
+        return Attachment(AttachmentMetadata(_file.filename, _file.content_type), cnt.Content(content, None, None))
 
     @staticmethod
     def fromDict(data):

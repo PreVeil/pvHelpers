@@ -2,9 +2,12 @@ from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
 from ..misc import b64enc, g_log, NOT_ASSIGNED
 import email.utils
-from .parsers import createMime
+from .parsers import createMime, parseMime
+from flanker import mime, addresslib
+from .content import Content
 
 class EmailV2(EmailHelpers, EmailBase):
+    """Production version: Protocol version 2 is json based email entity"""
     protocol_version = PROTOCOL_VERSION.V2
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
@@ -127,3 +130,51 @@ class EmailV2(EmailHelpers, EmailBase):
             "message_id": self.message_id,
             "server_attr": self.server_attr
         }
+
+
+    #TODO: get tos ccs and ...
+    @classmethod
+    def fromMime(cls, mime_string, flags, sender):
+        if not isinstance(mime_string, (str, bytes)):
+            raise EmailException(u"EmailV1.fromMime: mime_string must be of type str/bytes")
+
+        if not isinstance(sender, dict):
+            raise EmailException(u"EmailV1.fromMime: sender must be of type dict")
+        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
+            raise EmailException(u"EmailV1.fromMime: sender['user_id']/sender['display_name'] must exist and be of type unicode")
+
+        named_sender = sender
+
+        try:
+            raw_mime = mime.create.from_string(mime_string)
+        except mime.MimeError as e:
+            raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
+
+        message_id = raw_mime.headers.get("Message-Id")
+
+        tos = raw_mime.headers.get("To")
+        tos = addresslib.address.parse_list(tos)
+        named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
+        ccs = raw_mime.headers.get("Cc")
+        ccs = addresslib.address.parse_list(ccs)
+        named_ccs = [{"user_id": cc.address, "display_name": cc.display_name} for cc in ccs]
+        bccs = raw_mime.headers.get("Bcc")
+        bccs = addresslib.address.parse_list(bccs)
+        named_bccs = [{"user_id": bcc.address, "display_name": bcc.display_name} for bcc in bccs]
+        reply_to = raw_mime.headers.get("Reply-To")
+        reply_tos = addresslib.address.parse_list(reply_to)
+        named_reply_tos = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_tos]
+
+        references = [u"<{}>".format(ref) for ref in raw_mime.references]
+        in_reply_to = raw_mime.headers.get("In-Reply-To", None)
+        subject = raw_mime.headers.get("Subject", u"")
+
+        text, html, attachments = parseMime(raw_mime)
+
+        status, body = EmailHelpers.serializeBody({"text": text, "html":html})
+        if not status:
+            raise EmailException(u"failed serializeBody")
+        body = Content(body, None, None)
+
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)

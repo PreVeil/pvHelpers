@@ -10,7 +10,8 @@ class EmailFactory(object):
     def new(*args, **kwargs):
         v = kwargs.get("protocol_version", None)
         if v is None:
-            raise EmailException(u"EmailFactory.__init__: Missing protocol_version named argument")
+            raise EmailException(u"EmailFactory.new: Missing protocol_version named argument")
+
         kwargs.pop("protocol_version", None)
 
         if v is PROTOCOL_VERSION.V1:
@@ -18,13 +19,11 @@ class EmailFactory(object):
         elif v is PROTOCOL_VERSION.V2:
             return EmailV2(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V3:
-            raise EmailException("not now")
-            #return EmailV3(*args, **kwargs)
+            return EmailV3(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V4:
-            raise EmailException("not now")
-            #return EmailV4(*args, **kwargs)
+            return EmailV4(*args, **kwargs)
 
-        raise EmailException(u"EmailFactory.__init__: Unsupported protocol_version")
+        raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
     @staticmethod
     def fromDB(revision_id, version, server_id, metadata, server_time, flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
@@ -44,11 +43,9 @@ class EmailFactory(object):
         status, v = toInt(metadata.get("protocol_version"))
         if status == False:
             raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")
+
         metadata.pop("protocol_version", None)
 
-        a = Content(**metadata["body"])
-
-        # make content object and pass it
         metadata.update({
             "body": Content(**metadata["body"]),
             "attachments": [Attachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
@@ -59,11 +56,9 @@ class EmailFactory(object):
         elif v is PROTOCOL_VERSION.V2:
             return EmailV2(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V3:
-            raise EmailException("not now")
-            #return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
-            raise EmailException("not now")
-            #return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")

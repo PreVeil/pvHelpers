@@ -1,7 +1,7 @@
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
 from .email_helpers import EmailException, EmailHelpers
-from ..misc import encodeContentIfUnicode
+from ..misc import encodeContentIfUnicode, g_log
 import email.utils
 from flanker import mime, addresslib
 
@@ -15,12 +15,13 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
     for item in attachments:
         if not isinstance(item, Attachment):
             raise EmailException(u"createMime: attachment must be of type Attachment")
-
     inline_attachments = filter(lambda att: att.metadata.content_disposition == u"inline" , attachments)
     regular_attachments = filter(lambda att: att.metadata.content_disposition != u"inline" , attachments)
     try:
         #TODO: avoid receiving text from browser, just get html and build the text here
-        if html is u"":
+        if html is None:
+            if text is None:
+                text = u""
             body_shell = mime.create.text("plain", text)
         else:
             if inline_attachments:
@@ -33,7 +34,7 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             else:
                 html_part = mime.create.text("html", html)
 
-            if text != u"":
+            if text != None:
                 body_shell = mime.create.multipart("alternative")
                 body_shell.append(mime.create.text("plain", text), html_part)
             else:
@@ -84,79 +85,124 @@ def parseMime(raw_mime):
     if not isinstance(raw_mime, mime.message.part.MimePart):
         raise EmailException(u"parseMime: raw_mime must be of type MimePart")
 
-    text = None
-    html = None
+    # wrapping the inserted inline html elements in a distinct element
+    def wrapInlineForPV(element_str):
+        return u"<div data-preveil-inline>{}</div>".format(element_str)
+    def wrapTextForPV(string):
+        return u"<div data-preveil-text>{}</div>".format(string.replace("\n", "<br>"))
+
+    text = u""
+    html = u""
     attachments = []
+
+    # with_self == True so to get singlepart messages processed.
+    # skip_enclosed == True so to avoid processing if the message is another message wrapper
+    current_root_c_t_s, current_root_parts = None, []
     for part in raw_mime.walk(with_self=True, skip_enclosed=True):
         if part.content_type.is_multipart():
+            current_root_c_t_s, current_root_parts = part.content_type.value, list(part.parts)
             continue
-        t, o = part.content_disposition
-        filename = o.get("filename")
+
+        # Add test for this.
+        try:
+            current_root_parts.remove(part)
+        except ValueError:
+            current_root_c_t_s, current_root_parts = None, []
+
+        # https://www.ietf.org/rfc/rfc2183.txt has contetn disposition details
+        c_d, other_params = part.content_disposition
+        # flanker defaults parts c_t to `ContentType("text", "plain", {'charset': 'ascii'})` if not available
+        c_t_s = part.content_type.value
+
+        filename = other_params.get("filename")
         if filename == None:
             filename = u"untitled"
 
-        if part.content_type.is_message_container():
+        # `skip_enclosed` is not for inner message containers. i.e. inline `.eml` file.
+        # https://github.com/mailgun/flanker/blob/master/flanker/mime/message/part.py#L323-L325
+        if part.content_type.is_message_container(): # message/rfc, message/news
+            # part.enclosed.body will not have the enclosed message headers
+            # we want the entire enclosed message
             part_content = part.enclosed.to_string()
         else:
             part_content = part.body
 
-        if t == AttachmentType.ATTACHMENT:
+        if c_d == AttachmentType.ATTACHMENT:
+            # python type of the returned body varies
+            # depending ONLY on the content_type of the part
+            # it'll be `unicode` if content_type is `text/*`
+            # this is troublesome for attachment files of `.html` `.txt` `.py`
+            # hence should encode them if an attachment
             status, encoded = encodeContentIfUnicode(part_content)
             if status == False:
                 raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-            attachments.append(Attachment(AttachmentMetadata(filename, u"{}/{}".format(part.content_type.main, part.content_type.sub), AttachmentType.ATTACHMENT), Content(encoded, None, None)))
 
-        elif t == AttachmentType.INLINE or t is None: # presentation is inline
-            if part.content_type.value == u"text/plain":
-                if text is None:
+            attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHMENT), Content(encoded, None, None)))
+
+            #this is where I can add the `attachline` if macmail or ? when it is actually attachline
+        elif c_d == AttachmentType.INLINE or c_d is None: # requested presentation of this part is inline
+            if c_t_s == u"text/plain":
+                if text is u"":
                     text = part_content
                 else:
                     text = text + u"\n" + part_content
-            elif part.content_type.value == u"text/html":
-                if html is None:
+
+                if current_root_c_t_s != u"multipart/alternative":
+                    html_repr = wrapTextForPV(part_content)
+                    if html is u"":
+                        html = html_repr
+                    else:
+                        html = html + u"<br>" + html_repr
+
+            elif c_t_s == u"text/html":
+                if html is u"":
                     html = part_content
                 else:
                     html = html + u"<br>" + part_content
-            elif t == AttachmentType.INLINE:
+
+            # we regard rest of the content_types as attachments
+            elif c_d == AttachmentType.INLINE:
                 content_id = part.headers.get("Content-Id", None)
                 # Part with inline disposition preference and no content-id should be
                 # displayed where the part is located in the MIME per RFC
+                # for arbitrary non-displayable types use of icons is suggested/mentioned in rfc
                 if content_id is None:
+                    # rfc2392 https://tools.ietf.org/html/rfc2392 delves into details of content_id header formating
                     cid = EmailHelpers.newMessageId()
-                    # TODO: add when inline presentation ready on front end
-                    # if part.content_type.main == u"image":
-                    #     if html is None:
-                    #         html = u"<img src=\"cid:{}\">".format(cid)
-                    #     else:
-                    #         html = html + u"<br>" + u"<img src=\"cid:{}\">".format(cid)
-                    # else:
-                    #     if html is None:
-                    #         html = u"<object data=\"cid:{}\" type=\"{}\"></object>".format(cid, part.content_type.value)
-                    #     else:
-                    #         html = html + u"<br>" + u"<object data=\"cid:{}\" type=\"{}\"></object>".format(cid, part.content_type.value)
-
                     content_id = u"<{}>".format(cid)
+                    if part.content_type.main == u"image":
+                        element = wrapInlineForPV(u"<img src=\"cid:{}\">".format(cid))
+                    else:
+                        element = wrapInlineForPV(u"<object data=\"cid:{}\" type=\"{}\"></object>".format(cid, c_t_s))
+
+                    if html is u"":
+                        html = element
+                    else:
+                        html = html + u"<br>" + element
+
                 else:
                      # the content should already have a placeholder in the HTML
-                     # if it doesn't, it should show up as a normal attachments when being displayed
+                     # if it doesn't, it should show up as a normal attachments when displayed.
+                     #
+                     # message container parts also fall here message/rfc, message/news
                     pass
 
                 status, encoded = encodeContentIfUnicode(part_content)
                 if status == False:
                     raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-                attachments.append(Attachment(AttachmentMetadata(filename, u"{}/{}".format(part.content_type.main, part.content_type.sub), AttachmentType.INLINE, content_id), Content(encoded, None, None)))
+                attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.INLINE, content_id), Content(encoded, None, None)))
 
             else:
                 # this part has no info on it's presentation and is not text or html, hence, should default to attachment
                 status, encoded = encodeContentIfUnicode(part_content)
                 if status == False:
                     raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-                attachments.append(Attachment(AttachmentMetadata(filename, u"{}/{}".format(part.content_type.main, part.content_type.sub), AttachmentType.ATTACHLINE), Content(encoded, None, None)))
+                attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHMENT), Content(encoded, None, None)))
 
         else: # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
             status, encoded = encodeContentIfUnicode(part_content)
             if status == False:
                 raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-            attachments.append(Attachment(AttachmentMetadata(filename, part.content_type.value, AttachmentType.ATTACHLINE), Content(encoded, None, None)))
+            attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHMENT), Content(encoded, None, None)))
 
     return text, html, attachments
