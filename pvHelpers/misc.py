@@ -235,8 +235,8 @@ def jload(fp):
 def filesystemSafeBase64Encode(email):
     return b64enc(email.upper(), "()")
 
-def getTempFilePath():
-    return os.path.join(tempDir(),
+def getTempFilePath(mode):
+    return os.path.join(tempDir(mode),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
