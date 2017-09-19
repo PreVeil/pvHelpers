@@ -3,6 +3,7 @@ import types
 
 class ServerAttributes(object):
     __initialized = False
+
     def __init__(self, server_id, revision_id=None, mailbox_server_id=None, mailbox_name=None, version=None, uid=None, thread_id=None, server_time=None, expunged=None):
         if not isinstance(server_id, unicode):
             raise EmailException(u"ServerAttributes.__init__: server_id must be of type unicode")
@@ -46,3 +47,16 @@ class ServerAttributes(object):
         if self.__initialized and not hasattr(self, key):
             raise KeyError(u"ServerAttributes has not attribute {}".format(key))
         object.__setattr__(self, key, value)
+
+    def toDict(self):
+        return {
+            "server_id": self.server_id,
+            "revision_id": self.revision_id,
+            "mailbox_server_id": self.mailbox_server_id,
+            "mailbox_name": self.mailbox_name,
+            "version": self.version,
+            "uid": self.uid,
+            "thread_id": self.thread_id,
+            "server_time": self.server_time,
+            "expunged": self.expunged
+        }

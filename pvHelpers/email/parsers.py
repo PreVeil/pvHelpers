@@ -5,6 +5,8 @@ from ..misc import encodeContentIfUnicode, g_log
 import email.utils
 from flanker import mime, addresslib
 
+# Builder creates a simplified mime message that follows the following hierarchy
+# https://msdn.microsoft.com/en-us/library/office/aa563064(v=exchg.140).aspx
 def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None):
     if not isinstance(text, unicode):
         raise EmailException(u"createMime: text must be of type unicode")
@@ -19,26 +21,22 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
     regular_attachments = filter(lambda att: att.metadata.content_disposition != u"inline" , attachments)
     try:
         #TODO: avoid receiving text from browser, just get html and build the text here
-        if html is None:
-            if text is None:
-                text = u""
-            body_shell = mime.create.text("plain", text)
+        if inline_attachments:
+            html_part =  mime.create.multipart("related")
+            html_part.headers["Content-Type"].params["type"] = u"text/html"
+            html_text_part = mime.create.text("html", html)
+            html_part.append(html_text_part)
+            for att in inline_attachments:
+                html_part.append(att.toMime())
         else:
-            if inline_attachments:
-                html_part =  mime.create.multipart("related")
-                html_part.headers["Content-Type"].params["type"] = u"text/html"
-                html_text_part = mime.create.text("html", html)
-                html_part.append(html_text_part)
-                for att in inline_attachments:
-                    html_part.append(att.toMime())
-            else:
-                html_part = mime.create.text("html", html)
+            html_part = mime.create.text("html", html)
 
-            if text != None:
-                body_shell = mime.create.multipart("alternative")
-                body_shell.append(mime.create.text("plain", text), html_part)
-            else:
-                body_shell = html_part
+        body_shell = mime.create.multipart("alternative")
+
+        body_shell.append(
+            mime.create.text("plain", text),
+            html_part
+        )
 
         if len(regular_attachments) > 0:
             message = mime.create.multipart("mixed")
@@ -197,12 +195,12 @@ def parseMime(raw_mime):
                 status, encoded = encodeContentIfUnicode(part_content)
                 if status == False:
                     raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-                attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHMENT), Content(encoded, None, None)))
+                attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHLINE), Content(encoded, None, None)))
 
         else: # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
             status, encoded = encodeContentIfUnicode(part_content)
             if status == False:
                 raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-            attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHMENT), Content(encoded, None, None)))
+            attachments.append(Attachment(AttachmentMetadata(filename, c_t_s, AttachmentType.ATTACHLINE), Content(encoded, None, None)))
 
     return text, html, attachments

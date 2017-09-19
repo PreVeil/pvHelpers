@@ -1,11 +1,12 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
-from ..misc import MergeDicts, b64enc, NOT_ASSIGNED
+from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
 import email.utils, types, libnacl
 from .parsers import parseMime
+from ..keys import sha256
 
 # Using this with the flanker MIME class forces it to always reparse the
 # entire object before outputting it in the to_string() method.  This is
@@ -39,40 +40,40 @@ class EmailV1(EmailHelpers, EmailBase):
 
         try:
             raw_mime = mime.create.from_string(mime_string)
+
+            message_id = raw_mime.headers.get("Message-Id")
+
+            tos = raw_mime.headers.get("To")
+            tos = addresslib.address.parse_list(tos)
+            named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
+            ccs = raw_mime.headers.get("Cc")
+            ccs = addresslib.address.parse_list(ccs)
+            named_ccs = [{"user_id": cc.address, "display_name": cc.display_name} for cc in ccs]
+            bccs = raw_mime.headers.get("Bcc")
+            bccs = addresslib.address.parse_list(bccs)
+            named_bccs = [{"user_id": bcc.address, "display_name": bcc.display_name} for bcc in bccs]
+            reply_to = raw_mime.headers.get("Reply-To")
+            reply_tos = addresslib.address.parse_list(reply_to)
+            named_reply_tos = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_tos]
+
+            references = [u"<{}>".format(ref) for ref in raw_mime.references]
+            in_reply_to = raw_mime.headers.get("In-Reply-To", None)
+            subject = raw_mime.headers.get("Subject", u"")
+
+            message_body, att_parts = EmailV1.separateAttachments(raw_mime)
+            body = message_body.to_string()
+            body = Content(body, None, None)
+            attachments = []
+            for att_part in att_parts:
+                t, o = att_part.content_disposition
+                filename = o.get("filename")
+                if filename is None:
+                    filename = u"untitled"
+                metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None)
+                content = Content(att_part.to_string(), None, None)
+                attachments.append(Attachment(metadata, content))
         except mime.MimeError as e:
             raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
-
-        message_id = raw_mime.headers.get("Message-Id")
-
-        tos = raw_mime.headers.get("To")
-        tos = addresslib.address.parse_list(tos)
-        named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
-        ccs = raw_mime.headers.get("Cc")
-        ccs = addresslib.address.parse_list(ccs)
-        named_ccs = [{"user_id": cc.address, "display_name": cc.display_name} for cc in ccs]
-        bccs = raw_mime.headers.get("Bcc")
-        bccs = addresslib.address.parse_list(bccs)
-        named_bccs = [{"user_id": bcc.address, "display_name": bcc.display_name} for bcc in bccs]
-        reply_to = raw_mime.headers.get("Reply-To")
-        reply_tos = addresslib.address.parse_list(reply_to)
-        named_reply_tos = [{"user_id": rpt.address, "display_name": rpt.display_name} for rpt in reply_tos]
-
-        references = [u"<{}>".format(ref) for ref in raw_mime.references]
-        in_reply_to = raw_mime.headers.get("In-Reply-To", None)
-        subject = raw_mime.headers.get("Subject", u"")
-
-        message_body, att_parts = EmailV1.separateAttachments(raw_mime)
-        body = message_body.to_string()
-        body = Content(body, None, None)
-        attachments = []
-        for att_part in att_parts:
-            t, o = att_part.content_disposition
-            filename = o.get("filename")
-            if filename is None:
-                filename = u"untitled"
-            metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None)
-            content = Content(att_part.to_string(), None, None)
-            attachments.append(Attachment(metadata, content))
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)
@@ -108,7 +109,9 @@ class EmailV1(EmailHelpers, EmailBase):
         if t not in ("attachment", "inline"):
             return msg, []
         else:
-            att_hash = libnacl.encode.hex_encode(libnacl.crypto_hash(msg.to_string()))
+            status, att_hash = sha256(msg.to_string())
+            if status == False:
+                raise EmailException(u"Failed to hash msg")
             # Insert a dummy node into the message tree so we know where to insert
             # this attachment when reconstructing the email
             placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)
@@ -201,7 +204,7 @@ class EmailV1(EmailHelpers, EmailBase):
             raise EmailException(u"EmailV1.toMime: All content must be loaded!")
 
         try:
-            status, message = EmailV1.restoreAttachments(mime.create.from_string(self.body.content), {libnacl.encode.hex_encode(libnacl.crypto_hash(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
+            status, message = EmailV1.restoreAttachments(mime.create.from_string(self.body.content), {libnacl.encode.hex_encode(libnacl.crypto_hash_sha256(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
             if status == False:
                 raise EmailException(u"EmailV1.toMime: failed to restore atts")
             # Reporting the server reception time,

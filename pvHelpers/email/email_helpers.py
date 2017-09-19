@@ -10,6 +10,7 @@ class PROTOCOL_VERSION(object):
     V2 = 2
     V3 = 3
     V4 = 4
+    Latest = 4
 
 class EmailException(Exception):
     def __init__(self, message=u""):

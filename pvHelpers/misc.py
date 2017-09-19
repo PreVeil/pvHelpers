@@ -241,8 +241,8 @@ def jload(fp):
 def filesystemSafeBase64Encode(email):
     return b64enc(email.upper(), "()")
 
-def getTempFilePath(mode):
-    return os.path.join(tempDir(mode),
+def getTempFilePath():
+    return os.path.join(tempDir(),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
@@ -536,9 +536,12 @@ def MergeDicts(*args):
         ret.update(_dict)
     return ret
 
-def randStr(length = 20):
+def randUnicode(length=20):
     GLYPHS = u'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
     return u''.join(random.choice(GLYPHS) for _ in range(length))
 
+def randStr(size=1024):
+    return os.urandom(size)
+
 def randStream(size=1024):
-    return StringIO.StringIO(os.urandom(size))
+    return StringIO.StringIO(randStr(size))
