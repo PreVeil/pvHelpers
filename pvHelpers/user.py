@@ -149,7 +149,7 @@ def _fetchUsers(queries, client):
         return False, None
 
     text = resp.text
-    if resp.encoding != 'utf-8' or not isinstance(text, unicode):
+    if resp.encoding != "utf-8" or not isinstance(text, unicode):
         return False, None
     status, data = misc.jloads(text)
     if status == False:

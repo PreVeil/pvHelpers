@@ -107,8 +107,6 @@ class EmailBase(object):
             raise EmailException(u"EmailBase.__init__: snippet must be of type unicode")
         self._snippet = snippet
 
-        self.__initialized = True
-
     def __setattr__(self, key, value):
         if self.__initialized and not hasattr(self, key):
             raise KeyError(u"EmailBase has not attribute {}".format(key))

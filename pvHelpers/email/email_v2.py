@@ -11,7 +11,7 @@ class EmailV2(EmailHelpers, EmailBase):
     protocol_version = PROTOCOL_VERSION.V2
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id, snippet=None):
+                 body, attachments, references, in_reply_to, message_id, snippet=None, other_headers=None, **kwargs):
         super(EmailV2, self).__init__(server_attr, self.__class__.protocol_version, flags, \
                                       tos, ccs, bccs, sender, reply_tos, subject, \
                                       body,  attachments, references, in_reply_to, message_id, snippet)
@@ -23,6 +23,12 @@ class EmailV2(EmailHelpers, EmailBase):
                 raise EmailException(u"EmailV2.__init__: body must be of a serialized dict")
             if not isinstance(body.get("text"), unicode) or not isinstance(body.get("html"), unicode):
                 raise EmailException(u"EmailV2.__init__: body['text']/body['html'] must exist and be of type unicode")
+
+        self.other_headers = {} if other_headers is None else other_headers
+        if not isinstance(self.other_headers, dict):
+            raise EmailException(u"EmailV2.__init__: other_headers must be of type dict")
+
+        self.__initialized = True
 
     def snippet(self):
         if self._snippet is None:
@@ -49,7 +55,13 @@ class EmailV2(EmailHelpers, EmailBase):
         time = None
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
-        return createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
+
+        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
+
+        for key, value in self.other_headers.iteritems():
+            raw_mime.headers[key] = value
+
+        return mime.from_string(raw_mime.to_string())
 
     # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
@@ -128,9 +140,9 @@ class EmailV2(EmailHelpers, EmailBase):
             "attachments" : self.attachments,
             "body": self.body,
             "message_id": self.message_id,
-            "server_attr": self.server_attr
+            "server_attr": self.server_attr,
+            "other_headers": self.other_headers
         }
-
 
     #TODO: get tos ccs and ...
     @classmethod
@@ -169,12 +181,19 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
+        other_headers = {}
+        for key, value in raw_mime.headers.iteritems():
+            if key.startswith("X-"):
+                # str(value)?
+                other_headers[key] = value
+
         text, html, attachments = parseMime(raw_mime)
 
         status, body = EmailHelpers.serializeBody({"text": text, "html":html})
         if not status:
             raise EmailException(u"failed serializeBody")
+
         body = Content(body, None, None)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)

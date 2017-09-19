@@ -26,7 +26,7 @@ DATA_DIR_MODE = 0o750
 HTTP_TIMEOUT = 15
 
 def initRandom():
-    seed = struct.unpack('=I', os.urandom(4))[0]
+    seed = struct.unpack("=I", os.urandom(4))[0]
     random.seed(seed)
 
 def getdir(path):
@@ -41,7 +41,7 @@ def resolvePreVeilMode(mode_file_path):
     # 0. Env[PREVEIL_MODE]
     # 1. conf/default-mode
     # 2. 'dev'
-    mode = os.environ.get(u'PREVEIL_MODE')
+    mode = os.environ.get(u"PREVEIL_MODE")
     if mode != None:
         status, mode = unicodeIfUnicodeElseDecode(mode)
         if status == False:
@@ -50,7 +50,7 @@ def resolvePreVeilMode(mode_file_path):
         return True, mode
 
     try:
-        with open(mode_file_path, u'r') as f:
+        with open(mode_file_path, u"r") as f:
             mode = f.read().strip()
         status, mode = ASCIIToUnicode(mode)
         if status == False:
@@ -59,14 +59,14 @@ def resolvePreVeilMode(mode_file_path):
     except IOError:
         pass
 
-    return True, u'dev'
+    return True, u"dev"
 
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
         return False, None
 
     try:
-        with open(path, u'r') as f:
+        with open(path, u"r") as f:
             c = yaml.load(f.read())
             return True, c
     except IOError as e:
@@ -127,7 +127,7 @@ class _LogWrapper(object):
         # clients who put their computer to sleep at night will never get a log
         # rotation.  Just use RotatingFileHandler so we can avoid exploded logs.
         handler   = logging.handlers.RotatingFileHandler(logpath, maxBytes=1000000, backupCount=1000)
-        formatter = logging.Formatter('%(asctime)s %(levelname)s [%(filename)s,%(lineno)d]: %(message)s')
+        formatter = logging.Formatter("%(asctime)s %(levelname)s [%(filename)s,%(lineno)d]: %(message)s")
         handler.setFormatter(formatter)
         self.logobj.addHandler(handler)
 
@@ -145,19 +145,19 @@ def unicodeToASCII(s):
         return False, None
 
     try:
-        return True, s.encode('ascii')
+        return True, s.encode("ascii")
     except (UnicodeDecodeError, UnicodeEncodeError):
         return False, False
 
 def unicodeToASCIIWithReplace(s):
-    return s.encode('ascii', 'replace')
+    return s.encode("ascii", "replace")
 
 def ASCIIToUnicode(s):
     if not isinstance(s, str):
         return False, None
 
     try:
-        return True, s.encode('utf-8').decode('utf-8')
+        return True, s.encode("utf-8").decode("utf-8")
     except (UnicodeDecodeError, UnicodeEncodeError):
         return False, False
 
@@ -166,7 +166,7 @@ def utf8Encode(s):
         return False, None
 
     try:
-        return True, s.encode('utf-8')
+        return True, s.encode("utf-8")
     except (UnicodeDecodeError, UnicodeEncodeError):
         return False, False
 
@@ -175,7 +175,7 @@ def utf8Decode(s):
         return False, None
 
     try:
-        return True, s.decode('utf-8')
+        return True, s.decode("utf-8")
     except (UnicodeDecodeError, UnicodeEncodeError):
         return False, False
 
@@ -241,8 +241,8 @@ def jload(fp):
 def filesystemSafeBase64Encode(email):
     return b64enc(email.upper(), "()")
 
-def getTempFilePath():
-    return os.path.join(tempDir(),
+def getTempFilePath(mode):
+    return os.path.join(tempDir(mode),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
@@ -327,7 +327,7 @@ def isSameDirOrChild(directory, test_child):
     # os.path.join, appending nothing adds a trailing seperator;
     # we want to avoid issues like, /a/b matching as the parent of
     # /a/bee/c
-    directory = os.path.join(directory, '')
+    directory = os.path.join(directory, "")
 
     # return true, if the common prefix of both is equal to directory
     # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
@@ -537,8 +537,8 @@ def MergeDicts(*args):
     return ret
 
 def randUnicode(length=20):
-    GLYPHS = u'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-    return u''.join(random.choice(GLYPHS) for _ in range(length))
+    GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    return u"".join(random.choice(GLYPHS) for _ in range(length))
 
 def randStr(size=1024):
     return os.urandom(size)

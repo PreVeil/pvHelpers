@@ -19,12 +19,15 @@ class EmailV1(EmailHelpers, EmailBase):
     protocol_version = PROTOCOL_VERSION.V1
 
     def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id, snippet=None):
+                 body, attachments, references, in_reply_to, message_id, snippet=None, **kwargs):
 
         super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, tos, \
                                       ccs, bccs, sender, reply_tos, subject, body, \
                                       attachments, references, in_reply_to, message_id, snippet)
         # TODO: check body content mime validity
+
+
+        self.__initialized = True
 
     @classmethod
     def fromMime(cls, mime_string, flags, sender):
