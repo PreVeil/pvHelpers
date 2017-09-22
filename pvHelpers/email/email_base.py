@@ -130,6 +130,12 @@ class EmailBase(object):
     def loadBody(self, content):
         self.body.content = content
 
+    def indexableAttachmentNames(self):
+        raise EmailException(NotImplemented(u"EmailBase.indexableAttachmentNames: indexableAttachmentNames must be implemented by children classes"))
+
+    def indexableBody(self):
+        raise EmailException(NotImplemented(u"EmailBase.indexableBody: indexableBody must be implemented by children classes"))
+
     # def toDB(self):
     #     return {
     #         "server_id" : self.server_attr.server_id, "revision_id" : self.revision_id, "version" : self.server_attr.version,
