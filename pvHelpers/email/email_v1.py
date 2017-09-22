@@ -298,3 +298,11 @@ class EmailV1(EmailHelpers, EmailBase):
             "message_id": self.message_id,
             "server_attr": self.server_attr
         }
+
+    def indexableAttachmentNames(self):
+        # all att names separated by space
+        return u" ".join(map(lambda att: att.metadata.filename, filter(lambda att: att.metadata.filename != None or att.metadata.filename != u"untitled", self.attachments)))
+
+    def indexableBody(self):
+        text, _, _ = parseMime(self.toMime())
+        return text
