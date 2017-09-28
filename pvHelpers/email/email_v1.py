@@ -261,7 +261,7 @@ class EmailV1(EmailHelpers, EmailBase):
                 browser_atts.append({
                     "filename": att.metadata.filename,
                     "content_type": att.metadata.content_type,
-                    "size": len(att.content.content),
+                    "size": att.metadata.size,
                     "content_disposition": att.metadata.content_disposition,
                     "content": encoded,
                     "content_id": att.metadata.content_id
@@ -274,7 +274,7 @@ class EmailV1(EmailHelpers, EmailBase):
             o["attachments"] = [{
                 "filename": att.metadata.filename,
                 "content_type": att.metadata.content_type,
-                "size": None,
+                "size": att.metadata.size,
                 "content": None,
                 "content_disposition": att.metadata.content_disposition,
                 "content_id": att.metadata.content_id
