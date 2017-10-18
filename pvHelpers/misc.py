@@ -126,7 +126,7 @@ class _LogWrapper(object):
         # running at midnight (assuming a log per day). This means that
         # clients who put their computer to sleep at night will never get a log
         # rotation.  Just use RotatingFileHandler so we can avoid exploded logs.
-        handler   = logging.handlers.RotatingFileHandler(logpath, maxBytes=1000000, backupCount=1000)
+        handler   = logging.handlers.RotatingFileHandler(logpath, maxBytes=1000000, backupCount=100)
         formatter = logging.Formatter("%(asctime)s %(levelname)s [%(filename)s,%(lineno)d]: %(message)s")
         handler.setFormatter(formatter)
         self.logobj.addHandler(handler)
