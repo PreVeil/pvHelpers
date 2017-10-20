@@ -136,6 +136,9 @@ class EmailBase(object):
     def indexableBody(self):
         raise EmailException(NotImplemented(u"EmailBase.indexableBody: indexableBody must be implemented by children classes"))
 
+    def indexableRecipients(self):
+        raise EmailException(NotImplemented(u"EmailBase.indexableRecipients: indexableRecipients must be implemented by children classes"))
+
     # def toDB(self):
     #     return {
     #         "server_id" : self.server_attr.server_id, "revision_id" : self.revision_id, "version" : self.server_attr.version,
