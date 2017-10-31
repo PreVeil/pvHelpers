@@ -298,3 +298,15 @@ class EmailV1(EmailHelpers, EmailBase):
             "message_id": self.message_id,
             "server_attr": self.server_attr
         }
+
+    def indexableAttachmentNames(self):
+        return u" ".join(map(lambda att: att.metadata.filename, filter(lambda att: att.metadata.filename != None or att.metadata.filename != u"untitled", self.attachments)))
+
+    def indexableRecipients(self):
+        all_recips = [recip["display_name"] + u" " + recip["user_id"] for recip in [self.sender] + self.tos + self.ccs + self.bccs]
+        return u" ".join(all_recips)
+
+    def indexableBody(self):
+        # TODO: striphtml and search in html!
+        text, _, _ = parseMime(self.toMime())
+        return text
