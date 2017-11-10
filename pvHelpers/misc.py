@@ -472,8 +472,9 @@ class CaseInsensitiveSet(collections.Set):
         return len(self.data)
 
     def union(self, other):
-        if type(other) != list:
-            util.logRaise("bad type")
+        if not isinstance(other, list):
+            g_log.error(u"other must be of type list")
+            raise TypeError(u"other must be of type list")
         new = copy.deepcopy(self.data)
         for o in other:
             new[o.upper()] = o
@@ -481,8 +482,9 @@ class CaseInsensitiveSet(collections.Set):
         return CaseInsensitiveSet(new.values())
 
     def difference(self, other):
-        if type(other) != list:
-            util.logRaise("bad type")
+        if not isinstance(other, list):
+            g_log.error(u"other must be of type list")
+            raise TypeError(u"other must be of type list")
         new = copy.deepcopy(self.data)
         for o in other:
             if o.upper() in new:
