@@ -15,12 +15,11 @@ def __checkTAValidity(*t_as):
             for child_t_a in t_a:
                 __checkTAValidity(child_t_a)
         elif isinstance(t_a, set):
-            print t_a
-            if len(t_a) != 1:
-                raise TypeError(u"Invalid type annotation {}, only use one type in {{}}".format("{" + ", ".join(map(lambda t: t.__name__, t_a)) + "}"))
-                __checkTAValidity(dict_type)
+            for child_t_a in list(t_a):
+                __checkTAValidity(child_t_a)
+
         elif not inspect.isclass(t_a):
-            raise KeyError(u"`{}` is not a valid type".format(t_a))
+            raise TypeError(u"`{}` is not a valid type".format(t_a))
 
 def __checkParamValueValidity(value, type_annotation):
     if isinstance(type_annotation, dict):
@@ -31,7 +30,7 @@ def __checkParamValueValidity(value, type_annotation):
                 raise KeyError(u"`{}` missing key `{}`".format(value, param_name))
             __checkParamValueValidity(value[param_name], child_t_a)
     elif isinstance(type_annotation, (tuple, list)):
-        if not isinstance(value, type(type_annotation)):
+        if not isinstance(value, (tuple, list)):
             raise TypeError(u"`{}` is not type of `{}`".format(value, type(type_annotation).__name__))
 
         # [int], [dict] , [Class], [{"a": int}]
@@ -45,21 +44,33 @@ def __checkParamValueValidity(value, type_annotation):
             for element_value, element_type in zip(value, type_annotation):
                 __checkParamValueValidity(element_value, element_type)
     elif isinstance(type_annotation, set):
-        if not isinstance(value, dict):
-            raise TypeError(u"`{}` is not type of dict".format(value, type_annotation))
-        for param_name, element_value in value.iteritems():
-            if not isinstance(element_value, list(type_annotation)[0]):
-                raise TypeError(u"`{}` is not of type `{}`".format(element_value, list(type_annotation)[0].__name__))
+        if len(type_annotation) == 1:
+            if not isinstance(value, dict):
+                raise TypeError(u"`{}` is not type of dict".format(value, type_annotation))
+            for param_name, element_value in value.iteritems():
+                if not isinstance(element_value, list(type_annotation)[0]):
+                    raise TypeError(u"`{}` is not of type `{}`".format(element_value, list(type_annotation)[0].__name__))
+        else:
+            wrong_type_count = 0
+            for child_t_a in list(type_annotation):
+                try:
+                    __checkParamValueValidity(value, child_t_a)
+                except TypeError as e:
+                    wrong_type_count += 1
+
+            if len(type_annotation) == wrong_type_count:
+                raise TypeError(u"value `{}` is not of any of the types `{}`".format(value, map(lambda ta: ta.__name__, list(type_annotation))))
 
     elif not isinstance(value, type_annotation):
         raise TypeError(u"value `{}` is not of type `{}`".format(value, type_annotation.__name__))
 
 # simple decorator to check param types
-# A valid type annotation is considered anything that
-# conforms to `inspect.isclass()`
+# A valid type annotation is considered anything that conforms to `inspect.isclass()`
 # check is done recursively on `(list, tuple, dict, set)`
+# if you want dict of lists, use `()` and not `[]` => {(int)}
+# dict of multiple types is considered as an OR operator: `{int, long}` => either int or long
 # usage examples:
-# @params(int, float, bool, {int}, {"key": PrivateKey}, [{Email}])
+# @params(int, float, bool, {int}, {"key": PrivateKey}, [{Email}], {int, long})
 def params(*types):
     __checkTAValidity(*types)
     def decoratorInstance(fn):
@@ -84,12 +95,14 @@ def params(*types):
                 try:
                     __checkParamValueValidity(value, type_)
                 except (KeyError, TypeError) as e:
-                    raise TypeError(u"Invalid value for `{}`: {}".format(param_name, e))
+                    raise type(e)(u"Invalid value for `{}`: {}".format(param_name, e))
 
             for param_name, value in kwargs.iteritems():
                 type_ = types[func_signature.index(param_name)]
-                if not isinstance(value, type_):
-                    raise TypeError(u"value `{}` for `{}` is not of type `{}`".format(value, param_name, type_.__name__))
+                try:
+                    __checkParamValueValidity(value, type_)
+                except (TypeError, KeyError) as e:
+                    raise type(e)(u"Invalid value for keyword arg `{}`: {}".format(param_name, e))
 
             return fn(*args, **kwargs)
 
