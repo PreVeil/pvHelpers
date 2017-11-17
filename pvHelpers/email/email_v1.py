@@ -75,11 +75,13 @@ class EmailV1(EmailHelpers, EmailBase):
                 metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None)
                 content = Content(att_part.to_string(), None, None)
                 attachments.append(Attachment(metadata, content))
+
+            snippet = cls.getMimeSnippet(raw_mime)
         except mime.MimeError as e:
             raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id)
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, snippet)
 
     @staticmethod
     def convertStringToMime(message):
@@ -176,29 +178,34 @@ class EmailV1(EmailHelpers, EmailBase):
 
         return True, mime.from_string(message.to_string())
 
+    @staticmethod
+    def getMimeSnippet(raw_mime):
+        if not isinstance(raw_mime, mime.message.part.MimePart):
+            raise EmailException(u"raw_mime must be of type MimePart")
+
+        plain_string = None
+        # only using plain/text parts for snippet generation.
+        # TODO: add a HTML stripper and use plain/html parts if
+        # there are no plain/text alternatives
+        for part in raw_mime.walk(with_self=True):
+            if part.content_type == "text/plain":
+                if plain_string is None:
+                    plain_string = part.body
+                else:
+                    plain_string += u"\n" + part.body
+
+        if plain_string is None:
+            return u""
+
+        snippet = plain_string[:1024]
+        if len(plain_string) > len(snippet):
+            snippet += u"..."
+
+        return snippet
+
     def snippet(self):
         if self._snippet is None:
-            raw_mime = self.toMime()
-
-            plain_string = None
-            # only using plain/text parts for snippet generation.
-            # TODO: add a HTML stripper and use plain/html parts if
-            # there are no plain/text alternatives
-            for part in raw_mime.walk(with_self=True):
-                if part.content_type == "text/plain":
-                    if plain_string is None:
-                        plain_string = part.body
-                    else:
-                        plain_string += u"\n" + part.body
-
-            if plain_string is None:
-                return u""
-
-            snippet = plain_string[:1024]
-            if len(plain_string) > len(snippet):
-                snippet += u"..."
-
-            return snippet
+            return self.__class__.getMimeSnippet(self.toMime())
 
         return self._snippet
 
@@ -232,6 +239,7 @@ class EmailV1(EmailHelpers, EmailBase):
             o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
             o["mailbox_id"] = self.server_attr.mailbox_server_id
             o["date"] = email.utils.formatdate(self.server_attr.server_time)
+            o["rev_id"] = self.server_attr.revision_id
         o["flags"] = self.flags
         o["snippet"] = self.snippet()
         o["subject"] = self.subject
@@ -285,6 +293,7 @@ class EmailV1(EmailHelpers, EmailBase):
     def toDict(self):
         return {
             "flags": self.flags,
+            "snippet": self.snippet(),
             "subject": self.subject,
             "sender": self.sender,
             "tos": self.tos,
