@@ -429,6 +429,9 @@ def getUserDatabasePath(mode):
 def getMailDatabasePath(mode):
     return os.path.join(getModeDir(mode), "db.sqlite")
 
+def getActionsDatabasePath(mode):
+    return os.path.join(getModeDir(mode), "actions_db.sqlite")
+
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
 # owner:group
 #
