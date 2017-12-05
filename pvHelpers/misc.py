@@ -105,6 +105,12 @@ class _LogWrapper(object):
         else:
             print "{} ERROR: {}".format(self.__now(), string)
 
+    def exception(self, exception):
+        if self.logobj is not None:
+            self.logobj.exception(exception)
+        else:
+            print "{} ERROR: {}".format(self.__now(), exception)
+
     def __now(self):
         return datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
 
