@@ -1,18 +1,6 @@
-import os
-import yaml
-import sys
-import random
-import time
-import simplejson
-import datetime
-import base64
-import logging
-import logging.handlers
-import types
-import struct
-import collections
-import copy
-import StringIO
+import os, yaml, sys, random, time, simplejson
+import datetime, base64, logging, logging.handlers, types
+import struct, collections, copy, StringIO, itertools
 
 from sqlalchemy import create_engine, event, orm
 
@@ -556,3 +544,10 @@ def randStr(size=1024):
 
 def randStream(size=1024):
     return StringIO.StringIO(randStr(size))
+
+# https://docs.python.org/dev/library/itertools.html#itertools-recipes
+def partition(pred, iterable):
+    'Use a predicate to partition entries into false entries and true entries'
+    # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
+    t1, t2 = itertools.tee(iterable)
+    return filter(pred, t2), filter(lambda x: not pred(x), t1)

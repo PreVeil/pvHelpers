@@ -46,3 +46,7 @@ class EmailHelpers(object):
         if status == False:
             return False, None
         return jloads(body)
+
+    @staticmethod
+    def isLocalEmail(email_id):
+        return email_id.startswith(u"__local__")
