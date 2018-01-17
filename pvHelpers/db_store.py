@@ -73,6 +73,11 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
             self.session.close()
         super(GetDBSessionAsPreVeil, self).__exit__(type, value, traceback)
 
+class GetActionsDBSessionAsPreVeil(GetDBSessionAsPreVeil):
+    def __init__(self, mode):
+        self.mode = mode
+        super(GetActionsDBSessionAsPreVeil, self).__init__(misc.getActionsDatabasePath(mode))
+
 class GetMailDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode):
         self.mode = mode

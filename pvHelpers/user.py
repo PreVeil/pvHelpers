@@ -79,6 +79,8 @@ class UserData(object):
             "mail_cid" : self.mail_cid,
             "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
         }
+    def isClaimed(self):
+        return self.public_key is not None
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
@@ -126,13 +128,10 @@ def _materializeUserDatum(json_user, client):
         organiztion_info = OrganizationInfo(org_id, org_name, department, role)
 
     public_key = json_user.get("public_key")
-    if public_key == None:
-        # Account is not claimed yet.
-        return False, None
-
-    status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
-    if status == False:
-        return False, None
+    if public_key:
+        status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
+        if status == False:
+            return False, None
 
     return True, UserData(user_id, display_name, mail_cid, public_key, organiztion_info)
 

@@ -74,6 +74,7 @@ class EmailV2(EmailHelpers, EmailBase):
             o["mailbox_id"] = self.server_attr.mailbox_server_id
             o["date"] = email.utils.formatdate(self.server_attr.server_time)
             o["rev_id"] = self.server_attr.revision_id
+            o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["snippet"] = self.snippet()
         o["flags"] = self.flags
         o["subject"] = self.subject

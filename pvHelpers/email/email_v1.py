@@ -240,6 +240,7 @@ class EmailV1(EmailHelpers, EmailBase):
             o["mailbox_id"] = self.server_attr.mailbox_server_id
             o["date"] = email.utils.formatdate(self.server_attr.server_time)
             o["rev_id"] = self.server_attr.revision_id
+            o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["flags"] = self.flags
         o["snippet"] = self.snippet()
         o["subject"] = self.subject

@@ -85,8 +85,10 @@ def params(*types):
         # check default value types
         if default_values:
             for value, type_, param_name in zip(default_values, types[-1 * len(default_values):], func_signature[-1 * len(default_values):]):
-                if not isinstance(value, type_):
-                    raise TypeError(u"default value `{}` for `{}` is not of type `{}`".format(value, param_name, type_.__name__))
+                try:
+                    __checkParamValueValidity(value, type_)
+                except (TypeError, KeyError) as e:
+                    raise type(e)(u"Invalid default value for arg `{}`: {}".format(param_name, e))
 
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
