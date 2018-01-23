@@ -185,20 +185,20 @@ def getOrgInfo(org_id, client):
     try:
         resp = client.get("/users/orgs/{}".format(org_id))
     except requests.exceptions.RequestException as e:
-        g_log.error("getOrgInfo: request exception: %s" % e)
+        misc.g_log.exception(e)
         return False, None
 
     if resp.status_code != requests.codes.ok:
-        g_log.error("getOrgInfo: bad status code: %s" % resp.status_code)
+        misc.g_log.error("getOrgInfo: bad status code: %s" % resp.status_code)
         return False, None
 
     if resp.encoding != "utf-8" or not isinstance(resp.text, unicode):
-        g_log.error("getOrgInfo: bad encoding")
+        misc.g_log.error("getOrgInfo: bad encoding")
         return False, None
 
     status, data = misc.jloads(resp.text)
     if status == False:
-        g_log.error("getOrgInfo: invalid json response")
+        misc.g_log.error("getOrgInfo: invalid json response")
         return False, None
 
     return True, data
