@@ -125,6 +125,10 @@ class LUserInfoWin(LUserInfo):
     def __eq__(self, other):
         return self.sid == other.sid
 
+    @property
+    def uid(self):
+        return self.sid
+
 class LUserInfoUnix(LUserInfo):
     platform = "darwin"
 
