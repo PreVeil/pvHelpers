@@ -3,7 +3,7 @@ from .user import UserData, fetchUser, _fetchUsers, _materializeUserDatum, fetch
 from .apiclient import *
 from .email_factory import EmailFactory
 from .email import *
-from .keys import *
+from .crypto import *
 from .db_store import *
 from .retry import *
 from .luser_info import *
