@@ -1,7 +1,7 @@
 class USER_KEY_PROTOCOL_VERSION(object):
     V0 = 0
     V1 = 1
-    Latest = 1
+    Latest = 0
 
 class ASYMM_KEY_PROTOCOL_VERSION(object):
     V0 = 0

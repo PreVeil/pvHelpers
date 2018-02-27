@@ -5,7 +5,7 @@ from .utils import CryptoException, jloads
 
 class PVKeyFactory(object):
     @staticmethod
-    def newUserKey(key_version, protocol_version=USER_KEY_PROTOCOL_VERSION.V0, *args, **kwargs):
+    def newUserKey(key_version, protocol_version=USER_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
         if protocol_version == USER_KEY_PROTOCOL_VERSION.V0:
             return UserKeyV0(key_version, *args, **kwargs)
         elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:

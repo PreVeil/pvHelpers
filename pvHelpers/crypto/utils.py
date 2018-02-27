@@ -14,9 +14,10 @@ def Sha256Sum(data):
 def Sha512Sum(data):
     return libnacl.crypto_hash_sha512(data)
 
+# Use to create nonces, secrets, safe psuedo-random byte strings
 @params(int)
-def random_bits(length=32):
-    return "1"
+def RandomBytes(length=32):
+    return libnacl.randombytes_buf(length)
 
 class CryptoException(Exception):
     def __init__(self, exception=u""):
