@@ -37,6 +37,9 @@ class ServerAttributes(object):
             raise EmailException(u"ServerAttributes.__init__: server_time must be of type int")
         self.server_time = server_time
 
+        # TODO: Values are stored as `int`, need to correct DB inserts after schema update (full refetch)
+        if isinstance(expunged, (int, long)):
+            expunged = bool(expunged)
         if not isinstance(expunged, (bool, types.NoneType)):
             raise EmailException(u"ServerAttributes.__init__: expunged must be of type bool")
         self.expunged = expunged
