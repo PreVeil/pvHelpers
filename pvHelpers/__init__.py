@@ -8,6 +8,7 @@ from .db_store import *
 from .retry import *
 from .luser_info import *
 from .params import *
+from .hook_decorators import *
 
 import sys
 if sys.platform in ["win32"]:
