@@ -1,5 +1,5 @@
 import requests, types
-from . import keys
+from .crypto import PVKeyFactory
 from . import misc
 from . import apiclient
 from .luser_info import LUserInfo
@@ -129,10 +129,7 @@ def _materializeUserDatum(json_user, client):
 
     public_key = json_user.get("public_key")
     if public_key:
-        status, public_key = keys.PublicKey.deserialize(user_id, misc.jdumps(public_key))
-        if status == False:
-            return False, None
-
+        public_key = PVKeyFactory.deserializePublicUserKey(public_key)
     return True, UserData(user_id, display_name, mail_cid, public_key, organiztion_info)
 
 # You probably want to use fetchUsers().

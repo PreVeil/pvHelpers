@@ -4,9 +4,9 @@ from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
-import email.utils, types, libnacl
+import email.utils, types
 from .parsers import parseMime
-from ..keys import sha256
+from ..crypto import Sha256Sum, HexEncode
 
 # Using this with the flanker MIME class forces it to always reparse the
 # entire object before outputting it in the to_string() method.  This is
@@ -114,7 +114,7 @@ class EmailV1(EmailHelpers, EmailBase):
         if t not in ("attachment", "inline"):
             return msg, []
         else:
-            status, att_hash = sha256(msg.to_string())
+            status, att_hash = HexEncode(Sha256Sum(msg.to_string()))
             if status == False:
                 raise EmailException(u"Failed to hash msg")
             # Insert a dummy node into the message tree so we know where to insert
@@ -214,7 +214,7 @@ class EmailV1(EmailHelpers, EmailBase):
             raise EmailException(u"EmailV1.toMime: All content must be loaded!")
 
         try:
-            status, message = EmailV1.restoreAttachments(mime.create.from_string(self.body.content), {libnacl.encode.hex_encode(libnacl.crypto_hash_sha256(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
+            status, message = EmailV1.restoreAttachments(mime.create.from_string(self.body.content), {HexEncode(Sha256Sum(att.content.content)): mime.create.from_string(att.content.content) for att in self.attachments})
             if status == False:
                 raise EmailException(u"EmailV1.toMime: failed to restore atts")
             # Reporting the server reception time,

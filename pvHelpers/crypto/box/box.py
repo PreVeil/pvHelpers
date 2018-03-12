@@ -1,6 +1,6 @@
 import struct
 from ..asymm_key import AsymmKeyBase, PublicKeyBase
-from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum
+from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum, params
 
 # The first four bytes of encrypted data are reservered for internal use. When
 # packing our bits with the struct module, make sure to pick a byte order (eg, >)
