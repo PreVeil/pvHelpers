@@ -1,7 +1,9 @@
 from distutils.core import setup
 setup(name="pvHelpers",
-      version="1.70",
-      packages=["pvHelpers", "pvHelpers.email"],
+      version="1.80",
+      packages=["pvHelpers", "pvHelpers.email", "pvHelpers.crypto", "pvHelpers.crypto.asymm_key",
+                "pvHelpers.crypto.box", "pvHelpers.crypto.user_key", "pvHelpers.crypto.sign_key",
+                "pvHelpers.crypto.symm_key"],
       install_requires=[
         "PyYAML==3.11",
         "requests==2.7.0",

@@ -102,4 +102,5 @@ class UserAPIClient(PublicAPIClient):
         status, encoded_raw_body = misc.utf8Encode(raw_body)
         if status == False:
             raise requests.exceptions.RequestException("failed to utf8 encode request body")
+
         return url, encoded_raw_body, headers
