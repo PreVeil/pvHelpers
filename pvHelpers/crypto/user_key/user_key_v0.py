@@ -1,3 +1,4 @@
+import types
 from ..asymm_key import AsymmKeyV0, PublicKeyV0
 from ..sign_key import SignKeyV0, VerifyKeyV0
 from .user_key_base import *
@@ -6,9 +7,13 @@ from ..utils import params, b64dec, CryptoException, g_log
 class UserKeyV0(UserKeyBase):
     protocol_version = 0
 
-    @params(object, int, AsymmKeyV0, SignKeyV0)
-    def __init__(self, key_version, encryption_key=AsymmKeyV0(), signing_key=SignKeyV0()):
+    @params(object, int, {types.NoneType, AsymmKeyV0}, {types.NoneType, SignKeyV0})
+    def __init__(self, key_version, encryption_key=None, signing_key=None):
         super(UserKeyV0, self).__init__(self.protocol_version, key_version)
+        if not encryption_key:
+            encryption_key = AsymmKeyV0()
+        if not signing_key:
+            signing_key = SignKeyV0()
         self._encryption_key = encryption_key
         self._signing_key = signing_key
         self._public_user_key = PublicUserKeyV0(key_version, self._encryption_key.public_key, self._signing_key.verify_key)
@@ -36,6 +41,16 @@ class UserKeyV0(UserKeyBase):
             raise CryptoException("Failed to b64 decrypt signing_key_seed")
 
         return cls(key_dict["version"], AsymmKeyV0(private_key), SignKeyV0(signing_key_seed))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        return self.key_version == other.key_version and \
+            self.protocol_version == other.protocol_version and \
+            self._encryption_key == other.encryption_key and \
+            self._signing_key == other.signing_key
+
 
 class PublicUserKeyV0(PublicUserKeyBase):
     protocol_version = 0

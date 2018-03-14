@@ -114,9 +114,7 @@ class EmailV1(EmailHelpers, EmailBase):
         if t not in ("attachment", "inline"):
             return msg, []
         else:
-            status, att_hash = HexEncode(Sha256Sum(msg.to_string()))
-            if status == False:
-                raise EmailException(u"Failed to hash msg")
+            att_hash = HexEncode(Sha256Sum(msg.to_string()))
             # Insert a dummy node into the message tree so we know where to insert
             # this attachment when reconstructing the email
             placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)

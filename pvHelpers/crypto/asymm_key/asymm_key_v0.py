@@ -17,11 +17,15 @@ SECRET_BIT = 0x20
 class AsymmKeyV0(AsymmKeyBase):
     protocol_version = 0
 
-    @params(object, {bytes, types.NoneType, str})
+    @params(object, {bytes, types.NoneType})
     def __init__(self, enc_secret=None):
         super(AsymmKeyV0, self).__init__(self.protocol_version)
         self._key_pair = libnacl.public.SecretKey(enc_secret)
         self._public_key = PublicKeyV0(self._key_pair.pk)
+
+    @property
+    def sk(self):
+        return self._key_pair.sk
 
     @property
     def public_key(self):
@@ -64,6 +68,13 @@ class AsymmKeyV0(AsymmKeyBase):
             raise CryptoException("Failed to b46 encode private key")
         return b64_enc_private_key
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        return self.protocol_version == other.protocol_version and \
+            self._key_pair.sk == other.sk
+
 class PublicKeyV0(PublicKeyBase):
     protocol_version = 0
 
@@ -71,6 +82,10 @@ class PublicKeyV0(PublicKeyBase):
     def __init__(self, public_key):
         super(PublicKeyV0, self).__init__(self.protocol_version)
         self._public_key = libnacl.public.PublicKey(public_key)
+
+    @property
+    def pk(self):
+        return self._public_key.pk
 
     @params(object, bytes)
     def sealBinary(self, message):

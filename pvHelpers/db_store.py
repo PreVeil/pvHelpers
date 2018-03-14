@@ -68,10 +68,10 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
         self.session = self.getSession(self.db_path)
         return self.session
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         if self.session:
             self.session.close()
-        super(GetDBSessionAsPreVeil, self).__exit__(type, value, traceback)
+        super(GetDBSessionAsPreVeil, self).__exit__(type_, value, traceback)
 
 class GetActionsDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode):

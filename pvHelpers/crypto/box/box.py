@@ -1,4 +1,4 @@
-import struct
+import struct, libnacl
 from ..asymm_key import AsymmKeyBase, PublicKeyBase
 from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum, params
 

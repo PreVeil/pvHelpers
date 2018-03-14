@@ -16,6 +16,12 @@ class UserKeyBase(object):
     def public_user_key(self):
         raise NotImplementedError("children must have public_user_key property")
 
+    def __eq__(self, *args, **kwargs):
+        raise NotImplementedError("children must implement __eq__")
+
+    def __ne__(self, *args, **kwargs):
+        raise NotImplementedError("children must implement __ne__")
+
     def serialize(self):
         return jdumps({
             "private_key": self.encryption_key.serialize(),

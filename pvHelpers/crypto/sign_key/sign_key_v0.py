@@ -15,6 +15,10 @@ class SignKeyV0(SignKeyBase):
     def verify_key(self):
         return self._verify_key
 
+    @property
+    def seed(self):
+        return self._signer.seed
+
     def serialize(self):
         status, b64_enc_signing_seed = b64enc(self._signer.seed)
         if status == False:
@@ -36,6 +40,13 @@ class SignKeyV0(SignKeyBase):
             raise CryptoException("Failed to b64 encode signature")
         return b64_signature
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        return self.protocol_version == other.protocol_version and \
+            self._signer.seed == other.seed
+
 class VerifyKeyV0(VerifyKeyBase):
     protocol_version = 0
 
@@ -43,6 +54,10 @@ class VerifyKeyV0(VerifyKeyBase):
     def __init__(self, verifier_key):
         super(VerifyKeyV0, self).__init__(self.protocol_version)
         self._verifier = libnacl.sign.Verifier(HexEncode(verifier_key))
+
+    @property
+    def vk(self):
+        return self._verifier.vk
 
     @params(object, unicode, unicode)
     def verifyText(self, message, signature):

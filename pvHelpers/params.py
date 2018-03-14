@@ -24,14 +24,14 @@ def __checkTAValidity(*t_as):
 def __checkParamValueValidity(value, type_annotation):
     if isinstance(type_annotation, dict):
         if not isinstance(value, dict):
-            raise TypeError(u"`{}` is not type of `{}`".format(value, type_annotation))
+            raise TypeError(u"provided value is not type of `{}`".format(type_annotation))
         for param_name, child_t_a in type_annotation.iteritems():
             if param_name not in value:
                 raise KeyError(u"`{}` missing key `{}`".format(value, param_name))
             __checkParamValueValidity(value[param_name], child_t_a)
     elif isinstance(type_annotation, (tuple, list)):
         if not isinstance(value, (tuple, list)):
-            raise TypeError(u"`{}` is not type of `{}`".format(value, type(type_annotation).__name__))
+            raise TypeError(u"provided value is not type of `{}`".format(type(type_annotation).__name__))
 
         # [int], [dict] , [Class], [{"a": int}]
         if len(type_annotation) == 1:
@@ -40,16 +40,16 @@ def __checkParamValueValidity(value, type_annotation):
         # [int, str, {"c": [int, bool, [int]]}], ...
         else:
             if len(value) != len(type_annotation):
-                raise KeyError(u"value `{}` is not of type `{}`".format(value, type_annotation))
+                raise KeyError(u"provided value is not of type `{}`".format(type_annotation))
             for element_value, element_type in zip(value, type_annotation):
                 __checkParamValueValidity(element_value, element_type)
     elif isinstance(type_annotation, set):
         if len(type_annotation) == 1:
             if not isinstance(value, dict):
-                raise TypeError(u"`{}` is not type of dict".format(value, type_annotation))
+                raise TypeError(u"provided value is not type of dict")
             for param_name, element_value in value.iteritems():
                 if not isinstance(element_value, list(type_annotation)[0]):
-                    raise TypeError(u"`{}` is not of type `{}`".format(element_value, list(type_annotation)[0].__name__))
+                    raise TypeError(u"provided value is not of type `{}`".format(list(type_annotation)[0].__name__))
         else:
             wrong_type_count = 0
             for child_t_a in list(type_annotation):
@@ -59,10 +59,10 @@ def __checkParamValueValidity(value, type_annotation):
                     wrong_type_count += 1
 
             if len(type_annotation) == wrong_type_count:
-                raise TypeError(u"value `{}` is not of any of the types `{}`".format(value, map(lambda ta: ta.__name__, list(type_annotation))))
+                raise TypeError(u"provided value is not of any of the types `{}`".format(map(lambda ta: ta.__name__, list(type_annotation))))
 
     elif not isinstance(value, type_annotation):
-        raise TypeError(u"value `{}` is not of type `{}`".format(value, type_annotation.__name__))
+        raise TypeError(u"provided value is not of type `{}`".format(type_annotation.__name__))
 
 # simple decorator to check param types
 # A valid type annotation is considered anything that conforms to `inspect.isclass()`

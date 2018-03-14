@@ -16,6 +16,11 @@ class SignKeyBase(object):
     def serialize(self):
         raise NotImplementedError("serialize must be implemented by children")
 
+    def __eq__(self, *args, **kwargs):
+        raise NotImplementedError("children must implement __eq__")
+
+    def __ne__(self, *args, **kwargs):
+        raise NotImplementedError("children must implement __ne__")
 
 class VerifyKeyBase(object):
     def __init__(self, protocol_version):
