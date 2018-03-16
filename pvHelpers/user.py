@@ -72,6 +72,13 @@ class UserData(object):
         self.public_user_keys = public_user_keys
         self.org_info = organiztion_info
 
+    @property
+    def public_user_key(self):
+        if not self.public_user_keys:
+            raise ValueError("No Public user keys available!")
+
+        return sorted(self.public_user_keys, key=lambda k: k.key_version, reverse=True)[0]
+
     def toDict(self):
         return {
             "user_id" : self.user_id,
