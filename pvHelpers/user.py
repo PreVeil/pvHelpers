@@ -65,12 +65,19 @@ class UserDBNode(object):
         }
 
 class UserData(object):
-    def __init__(self, user_id, display_name, mail_cid, public_user_key, organiztion_info):
+    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organiztion_info):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
-        self.public_user_key = public_user_key
+        self.public_user_keys = public_user_keys
         self.org_info = organiztion_info
+
+    @property
+    def public_user_key(self):
+        if not self.public_user_keys:
+            raise ValueError("No Public user keys available!")
+
+        return sorted(self.public_user_keys, key=lambda k: k.key_version, reverse=True)[0]
 
     def toDict(self):
         return {
@@ -80,7 +87,7 @@ class UserData(object):
             "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
         }
     def isClaimed(self):
-        return self.public_user_key is not None
+        return len(self.public_user_keys) > 0
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
@@ -130,7 +137,7 @@ def _materializeUserDatum(json_user, client):
     public_user_key = json_user.get("public_key")
     if public_user_key:
         public_user_key = PVKeyFactory.deserializePublicUserKey(public_user_key)
-    return True, UserData(user_id, display_name, mail_cid, public_user_key, organiztion_info)
+    return True, UserData(user_id, display_name, mail_cid, [public_user_key], organiztion_info)
 
 # You probably want to use fetchUsers().
 def _fetchUsers(queries, client):
