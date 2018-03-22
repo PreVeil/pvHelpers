@@ -23,20 +23,9 @@ class PVKeyFactory(object):
         return SymmKeyV0.fromDict({"key": key})
 
     @staticmethod
-    def deserializeUserKey(json):
-        status, key_dict = jloads(json)
-        if status == False:
-            raise CryptoException("Failed to deserialize key json string")
-
-        protocol_version = key_dict.get("protocol_version")
-        if protocol_version is None or protocol_version == USER_KEY_PROTOCOL_VERSION.V0:
-            return UserKeyV0.fromDict(key_dict)
-        else:
-            raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+    def deserializeUserKey(key):
+        return UserKeyV0.deserialize(key)
 
     @staticmethod
     def deserializePublicUserKey(key):
-        if isinstance(key, dict):
-            return PublicUserKeyV0.fromDict(key)
-        else:
-            raise CryptoException("Invalid protocol_version")
+        return PublicUserKeyV0.deserialize(key)

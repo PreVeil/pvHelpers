@@ -2,7 +2,7 @@ import types
 from ..asymm_key import AsymmKeyV0, PublicKeyV0
 from ..sign_key import SignKeyV0, VerifyKeyV0
 from .user_key_base import *
-from ..utils import params, b64dec, CryptoException, g_log
+from ..utils import params, b64dec, CryptoException, g_log, utf8Encode, b64enc, utf8Decode, jloads
 
 class UserKeyV0(UserKeyBase):
     protocol_version = 0
@@ -31,8 +31,17 @@ class UserKeyV0(UserKeyBase):
         return self._public_user_key
 
     @classmethod
-    @params(object, {"private_key": unicode, "signing_key": unicode, "version": int})
-    def fromDict(cls, key_dict):
+    @params(object, unicode)
+    def deserialize(cls, b64):
+        status, encoded = b64dec(b64)
+        if not status:
+            raise CryptoException("Failed to b64 decode b64")
+        status, json_serialized = utf8Decode(encoded)
+        if not status:
+            raise CryptoException("Failed to utf8 decode encoded")
+        status, key_dict = jloads(json_serialized)
+        if not status:
+            raise CryptoException("Failed to jload json_serialized")
         status, private_key = b64dec(key_dict["private_key"])
         if not status:
             raise CryptoException("Failed to b64 decrypt private_key")
@@ -52,6 +61,45 @@ class UserKeyV0(UserKeyBase):
             self._signing_key == other.signing_key
 
 
+    def serialize(self):
+        json_serialized = jdumps({
+            "private_key": self.encryption_key.serialize(),
+            "signing_key": self.signing_key.serialize(),
+            "version": self.key_version,
+            "protocol_version": self.protocol_version
+        })
+        status, encoded = utf8Encode(json_serialized)
+        if not status:
+            raise CryptoException("Failed to utf8 encode json_serialized key")
+        status, b64 = b64enc(encoded)
+        if not status:
+            raise CryptoException("Failed to b64 encode encoded key")
+        return b64
+
+    def toDB(self):
+        return jdumps({
+            "private_key": self.encryption_key.serialize(),
+            "signing_key": self.signing_key.serialize(),
+            "version": self.key_version,
+            "protocol_version": self.protocol_version
+        })
+
+    @classmethod
+    def fromDB(cls, json_serialized):
+        status, key_dict = jloads(json_serialized)
+        if not status:
+            raise CryptoException("Failed to jload json_serialized")
+        status, private_key = b64dec(key_dict["private_key"])
+        if not status:
+            raise CryptoException("Failed to b64 decrypt private_key")
+        status, signing_key_seed = b64dec(key_dict["signing_key"])
+        if not status:
+            raise CryptoException("Failed to b64 decrypt signing_key_seed")
+
+        return cls(key_dict["version"], AsymmKeyV0(private_key), SignKeyV0(signing_key_seed))
+
+
+
 class PublicUserKeyV0(PublicUserKeyBase):
     protocol_version = 0
 
@@ -69,9 +117,21 @@ class PublicUserKeyV0(PublicUserKeyBase):
     def verify_key(self):
         return self._verify_key
 
+
+    def serialize(self):
+        return jdumps({
+            "public_key": self.public_key.serialize(),
+            "verify_key": self.verify_key.serialize(),
+            "version": self.key_version,
+            "protocol_version": self.protocol_version
+        })
+
     @classmethod
-    @params(object, {"public_key": unicode, "verify_key": unicode, "version": int})
-    def fromDict(cls, public_user_key_dict):
+    @params(object, unicode)
+    def deserialize(cls, json_serialized):
+        status, public_user_key_dict = jloads(json_serialized)
+        if not status:
+            raise CryptoException("Failed to jload json_serialized")
         status, public_key = b64dec(public_user_key_dict["public_key"])
         if not status:
             raise CryptoException("Failed to b64 decrypt public_key")

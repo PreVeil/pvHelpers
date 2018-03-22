@@ -136,7 +136,7 @@ def _materializeUserDatum(json_user, client):
 
     public_user_key = json_user.get("public_key")
     if public_user_key:
-        public_user_key = PVKeyFactory.deserializePublicUserKey(public_user_key)
+        public_user_key = PVKeyFactory.deserializePublicUserKey(misc.jdumps(public_user_key))
     return True, UserData(user_id, display_name, mail_cid, [public_user_key], organiztion_info)
 
 # You probably want to use fetchUsers().
