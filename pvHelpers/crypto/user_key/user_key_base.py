@@ -23,16 +23,11 @@ class UserKeyBase(object):
         raise NotImplementedError("children must implement __ne__")
 
     def serialize(self):
-        return jdumps({
-            "private_key": self.encryption_key.serialize(),
-            "signing_key": self.signing_key.serialize(),
-            "version": self.key_version,
-            "protocol_version": self.protocol_version
-        })
+        raise NotImplementedError("children must implement serialize")
 
     @classmethod
-    def fromDict(cls, *args, **kwargs):
-        raise NotImplementedError("children must implement fromDict")
+    def deserialize(cls, *args, **kwargs):
+        raise NotImplementedError("children must implement deserialize")
 
 class PublicUserKeyBase(object):
     def __init__(self, protocol_version, key_version):
@@ -48,13 +43,8 @@ class PublicUserKeyBase(object):
         raise NotImplementedError("children must have verify_key property")
 
     def serialize(self):
-        return jdumps({
-            "public_key": self.public_key.serialize(),
-            "verify_key": self.verify_key.serialize(),
-            "version": self.key_version,
-            "protocol_version": self.protocol_version
-        })
+        raise NotImplementedError("children must implement serialize")
 
     @classmethod
-    def fromDict(cls, *args, **kwargs):
-        raise NotImplementedError("children must implement fromDict")
+    def deserialize(cls, *args, **kwargs):
+        raise NotImplementedError("children must implement deserialize")
