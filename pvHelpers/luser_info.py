@@ -40,7 +40,9 @@ class LUserInfo(object):
 
     # Temp helper to unpack user_store value
     @staticmethod
-    def from_json(json_str):
+    def deserialize(json_str):
+        if json_str == str(misc.NOT_ASSIGNED()):
+            return misc.NOT_ASSIGNED()
         status, _dict = misc.jloads(json_str)
         if status == False:
             raise ValueError("Failed to deserialize json_str")
