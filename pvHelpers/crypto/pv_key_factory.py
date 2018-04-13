@@ -3,7 +3,7 @@ from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
 from .symm_key import SymmKeyV0
 from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2
 from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1
-from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec
+from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
 
 class PVKeyFactory(object):
     @staticmethod
@@ -72,7 +72,6 @@ class PVKeyFactory(object):
                 buffer = PublicUserKeyBuffer()
                 buffer.ParseFromString(serialized)
                 if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
-                    g_log.debug(buffer)
                     return PublicUserKeyV1(
                         buffer.key_version,
                         PVKeyFactory.publicKeyFromBuffer(buffer.public_key),
@@ -87,30 +86,35 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeUserKey(user_key, is_protobuf=True):
-        if is_protobuf:
-            status, serialized = b64dec(user_key)
-            if not status:
-                raise CryptoException(u"Failed to b64 dec key")
+        if not is_protobuf:
             try:
-                buffer = UserKeyBuffer()
-                buffer.ParseFromString(serialized)
-                if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
-                    return UserKeyV1(
-                        buffer.key_version,
-                        PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
-                        PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
-                    )
-                else:
-                    raise CryptoException(u"unsupported protocol_version")
-            except ProtobufErrors as e:
-                raise CryptoException(e)
-        else:
-            return UserKeyV0.deserialize(user_key)
+                return UserKeyV0.deserialize(user_key)
+            except CryptoException as e:
+                g_log.exception(e)
+                g_log.info("Trying protobuf")
+
+        status, serialized = b64dec(user_key)
+        if not status:
+            raise CryptoException(u"Failed to b64 dec key")
+        try:
+            buffer = UserKeyBuffer()
+            buffer.ParseFromString(serialized)
+            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
+                return UserKeyV1(
+                    buffer.key_version,
+                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
+                    PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
+                )
+            else:
+                raise CryptoException(u"unsupported protocol_version")
+        except ProtobufErrors as e:
+            raise CryptoException(e)
+
+
 
     @staticmethod
     def userKeyfromDB(key, is_protobuf=True):
         if is_protobuf:
-            g_log.debug(key)
             return PVKeyFactory.deserializeUserKey(key, True)
         else:
             return UserKeyV0.fromDB(key)

@@ -1,7 +1,7 @@
 from .user_key_v0 import PublicUserKeyV0, UserKeyV0
 from ..asymm_key import PublicKeyBase, AsymmKeyBase
 from ..sign_key import SignKeyBase, VerifyKeyBase
-from ..utils import params, UserKeyBuffer, PublicUserKeyBuffer, b64enc
+from ..utils import params, UserKeyBuffer, PublicUserKeyBuffer, b64enc, g_log, utf8Encode, jdumps
 
 class PublicUserKeyV1(PublicUserKeyV0):
     protocol_version = 1
@@ -12,11 +12,11 @@ class PublicUserKeyV1(PublicUserKeyV0):
 
     @property
     def buffer(self):
-        return UserKeyBuffer(
-            protocol_version = self.protocol_version,
-            key_version = self.key_version,
-            private_key=self._public_key.buffer,
-            signing_key=self._verify_key.buffer
+        return PublicUserKeyBuffer(
+            protocol_version=self.protocol_version,
+            key_version=self.key_version,
+            public_key=self.public_key.buffer,
+            verify_key=self.verify_key.buffer
         )
 
     def serialize(self):
@@ -40,8 +40,8 @@ class UserKeyV1(UserKeyV0):
         return UserKeyBuffer(
             protocol_version = self.protocol_version,
             key_version = self.key_version,
-            private_key=self._encryption_key.buffer,
-            signing_key=self._signing_key.buffer
+            private_key=self.encryption_key.buffer,
+            signing_key=self.signing_key.buffer
         )
 
     def serialize(self):
@@ -51,9 +51,30 @@ class UserKeyV1(UserKeyV0):
 
         return b64
 
+    def jsonSerialize(self):
+        json_serialized = jdumps({
+            "private_key": self.encryption_key.serialize(),
+            "signing_key": self.signing_key.serialize(),
+            "version": self.key_version
+        })
+        status, encoded = utf8Encode(json_serialized)
+        if not status:
+            raise CryptoException("Failed to utf8 encode json_serialized key")
+        status, b64 = b64enc(encoded)
+        if not status:
+            raise CryptoException("Failed to b64 encode encoded key")
+        return b64
+
     def toDB(self):
         return self.serialize()
 
-    @classmethod
-    def fromDB(cls, json_serialized):
-        return None
+    def __eq__(self, other):
+        if other.protocol_version == UserKeyV0.protocol_version:
+            return self.key_version == other.key_version and \
+                self._encryption_key == other.encryption_key and \
+                self._signing_key == other.signing_key
+
+        return self.key_version == other.key_version and \
+            self.protocol_version == other.protocol_version and \
+            self._encryption_key == other.encryption_key and \
+            self._signing_key == other.signing_key

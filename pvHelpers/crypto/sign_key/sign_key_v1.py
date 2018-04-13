@@ -28,3 +28,10 @@ class SignKeyV1(SignKeyV0):
             protocol_version=self.protocol_version,
             key=self.seed
         )
+
+    def __eq__(self, other):
+        if other.protocol_version == SignKeyV0.protocol_version:
+            return self._signer.seed == other.seed
+
+        return self.protocol_version == other.protocol_version and \
+            self._signer.seed == other.seed

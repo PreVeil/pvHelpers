@@ -40,3 +40,13 @@ class AsymmKeyV2(AsymmKeyV0):
             protocol_version=self.protocol_version,
             key=self._seed
         )
+
+    @property
+    def seed(self):
+        return self._seed
+
+    def __eq__(self, other):
+        if other.protocol_version == AsymmKeyV0.protocol_version:
+            return self._key_pair.sk == other.sk
+        return self.protocol_version == other.protocol_version and \
+            self._key_pair.sk == other.sk
