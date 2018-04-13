@@ -1,22 +1,63 @@
 import types
-from ..asymm_key import AsymmKeyV0, PublicKeyV0
-from ..sign_key import SignKeyV0, VerifyKeyV0
+from ..asymm_key import AsymmKeyV0, PublicKeyV0, AsymmKeyBase, PublicKeyBase
+from ..sign_key import SignKeyV0, VerifyKeyV0, SignKeyBase, VerifyKeyBase
 from .user_key_base import *
 from ..utils import params, b64dec, CryptoException, g_log, utf8Encode, b64enc, utf8Decode, jloads
 
-class UserKeyV0(UserKeyBase):
+
+
+class PublicUserKeyV0(PublicUserKeyBase):
     protocol_version = 0
 
-    @params(object, int, {types.NoneType, AsymmKeyV0}, {types.NoneType, SignKeyV0})
-    def __init__(self, key_version, encryption_key=None, signing_key=None):
+    @params(object, {int, long}, PublicKeyBase, VerifyKeyBase)
+    def __init__(self, key_version, public_key, verify_key):
+        super(PublicUserKeyV0, self).__init__(self.protocol_version, key_version)
+        self._public_key = public_key
+        self._verify_key = verify_key
+
+    @property
+    def public_key(self):
+        return self._public_key
+
+    @property
+    def verify_key(self):
+        return self._verify_key
+
+
+    def serialize(self):
+        return jdumps({
+            "public_key": self.public_key.serialize(),
+            "verify_key": self.verify_key.serialize(),
+            "version": self.key_version,
+            "protocol_version": self.protocol_version
+        })
+
+    @classmethod
+    @params(object, unicode)
+    def deserialize(cls, json_serialized):
+        status, public_user_key_dict = jloads(json_serialized)
+        if not status:
+            raise CryptoException("Failed to jload json_serialized")
+        status, public_key = b64dec(public_user_key_dict["public_key"])
+        if not status:
+            raise CryptoException("Failed to b64 decrypt public_key")
+        status, verify_key = b64dec(public_user_key_dict["verify_key"])
+        if not status:
+            raise CryptoException("Failed to b64 decrypt verify_key")
+
+        return cls(public_user_key_dict["version"], PublicKeyV0(public_key), VerifyKeyV0(verify_key))
+
+
+class UserKeyV0(UserKeyBase):
+    protocol_version = 0
+    public_side_model = PublicUserKeyV0
+
+    @params(object, {int, long}, AsymmKeyBase, SignKeyBase)
+    def __init__(self, key_version, encryption_key, signing_key):
         super(UserKeyV0, self).__init__(self.protocol_version, key_version)
-        if not encryption_key:
-            encryption_key = AsymmKeyV0()
-        if not signing_key:
-            signing_key = SignKeyV0()
         self._encryption_key = encryption_key
         self._signing_key = signing_key
-        self._public_user_key = PublicUserKeyV0(key_version, self._encryption_key.public_key, self._signing_key.verify_key)
+        self._public_user_key = self.public_side_model(key_version, self._encryption_key.public_key, self._signing_key.verify_key)
 
     @property
     def encryption_key(self):
@@ -97,46 +138,3 @@ class UserKeyV0(UserKeyBase):
             raise CryptoException("Failed to b64 decrypt signing_key_seed")
 
         return cls(key_dict["version"], AsymmKeyV0(private_key), SignKeyV0(signing_key_seed))
-
-
-
-class PublicUserKeyV0(PublicUserKeyBase):
-    protocol_version = 0
-
-    @params(object, int, PublicKeyV0, VerifyKeyV0)
-    def __init__(self, key_version, public_key, verify_key):
-        super(PublicUserKeyV0, self).__init__(self.protocol_version, key_version)
-        self._public_key = public_key
-        self._verify_key = verify_key
-
-    @property
-    def public_key(self):
-        return self._public_key
-
-    @property
-    def verify_key(self):
-        return self._verify_key
-
-
-    def serialize(self):
-        return jdumps({
-            "public_key": self.public_key.serialize(),
-            "verify_key": self.verify_key.serialize(),
-            "version": self.key_version,
-            "protocol_version": self.protocol_version
-        })
-
-    @classmethod
-    @params(object, unicode)
-    def deserialize(cls, json_serialized):
-        status, public_user_key_dict = jloads(json_serialized)
-        if not status:
-            raise CryptoException("Failed to jload json_serialized")
-        status, public_key = b64dec(public_user_key_dict["public_key"])
-        if not status:
-            raise CryptoException("Failed to b64 decrypt public_key")
-        status, verify_key = b64dec(public_user_key_dict["verify_key"])
-        if not status:
-            raise CryptoException("Failed to b64 decrypt verify_key")
-
-        return cls(public_user_key_dict["version"], PublicKeyV0(public_key), VerifyKeyV0(verify_key))

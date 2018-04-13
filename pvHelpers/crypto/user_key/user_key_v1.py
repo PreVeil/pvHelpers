@@ -1,40 +1,59 @@
-from ..asymm_key import AsymmKeyV1, PublicKeyV1
-from ..sign_key import SignKeyV0, VerifyKeyV0
-from .user_key_base import *
-from ..utils import params
+from .user_key_v0 import PublicUserKeyV0, UserKeyV0
+from ..asymm_key import PublicKeyBase, AsymmKeyBase
+from ..sign_key import SignKeyBase, VerifyKeyBase
+from ..utils import params, UserKeyBuffer, PublicUserKeyBuffer, b64enc
 
-class UserKeyV1(UserKeyBase):
+class PublicUserKeyV1(PublicUserKeyV0):
     protocol_version = 1
 
-    @params(object, int, AsymmKeyV1, SignKeyV0)
-    def __init__(self, key_version, encryption_key, signing_key):
-        super(UserKeyV0, self).__init__(self.protocol_version, key_version)
-        self._encryption_key = encryption_key
-        self._signing_key = signing_key
-
-    @property
-    def encryption_key(self):
-        return self._encryption_key
-
-    @property
-    def signing_key(self):
-        return self._signing_key
-
-    # @classmethod
-    # def deserialize(cls, data):
-    #     return cls(1, UserKeyV1)
-
-
-class PublicUserKeyV1(PublicUserKeyBase):
-    protocol_version = 1
-
-    @params(object, int, PublicKeyV1, VerifyKeyV0)
+    @params(object, {int, long}, PublicKeyBase, VerifyKeyBase)
     def __init__(self, key_version, public_key, verify_key):
-        super(UserPublicKeyV1, self).__init__(self.protocol_version, key_version)
-        self.public_key = public_key
-        self.verify_key = verify_key
+        super(PublicUserKeyV1, self).__init__(key_version, public_key, verify_key)
+
+    @property
+    def buffer(self):
+        return UserKeyBuffer(
+            protocol_version = self.protocol_version,
+            key_version = self.key_version,
+            private_key=self._public_key.buffer,
+            signing_key=self._verify_key.buffer
+        )
+
+    def serialize(self):
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64
+
+
+class UserKeyV1(UserKeyV0):
+    protocol_version = 1
+    public_side_model = PublicUserKeyV1
+
+    @params(object, {int, long}, AsymmKeyBase, SignKeyBase)
+    def __init__(self, key_version, encryption_key, signing_key):
+        super(UserKeyV1, self).__init__(key_version, encryption_key, signing_key)
+
+    @property
+    def buffer(self):
+        return UserKeyBuffer(
+            protocol_version = self.protocol_version,
+            key_version = self.key_version,
+            private_key=self._encryption_key.buffer,
+            signing_key=self._signing_key.buffer
+        )
+
+    def serialize(self):
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64
+
+    def toDB(self):
+        return self.serialize()
 
     @classmethod
-    @params(object, {"public_key": unicode, "verify_key": unicode, "version": int})
-    def deserialize(cls, public_user_key_dict):
-        pass
+    def fromDB(cls, json_serialized):
+        return None
