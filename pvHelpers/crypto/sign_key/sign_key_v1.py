@@ -1,5 +1,5 @@
 from .sign_key_v0 import SignKeyV0, VerifyKeyV0
-from ..utils import KeyBuffer
+from ..utils import KeyBuffer, b64enc
 
 class VerifyKeyV1(VerifyKeyV0):
     protocol_version = 1
@@ -28,10 +28,3 @@ class SignKeyV1(SignKeyV0):
             protocol_version=self.protocol_version,
             key=self.seed
         )
-
-    def __eq__(self, other):
-        if other.protocol_version == SignKeyV0.protocol_version:
-            return self._signer.seed == other.seed
-
-        return self.protocol_version == other.protocol_version and \
-            self._signer.seed == other.seed

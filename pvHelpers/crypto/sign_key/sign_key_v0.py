@@ -84,5 +84,4 @@ class SignKeyV0(SignKeyBase):
         return not self.__eq__(other)
 
     def __eq__(self, other):
-        return self.protocol_version == other.protocol_version and \
-            self._signer.seed == other.seed
+        return self._signer.seed == other.seed

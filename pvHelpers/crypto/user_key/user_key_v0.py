@@ -97,7 +97,6 @@ class UserKeyV0(UserKeyBase):
 
     def __eq__(self, other):
         return self.key_version == other.key_version and \
-            self.protocol_version == other.protocol_version and \
             self._encryption_key == other.encryption_key and \
             self._signing_key == other.signing_key
 

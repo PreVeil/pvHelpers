@@ -64,25 +64,29 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializePublicUserKey(public_user_key, is_protobuf=True):
-        if is_protobuf:
-            status, serialized = b64dec(public_user_key)
-            if not status:
-                raise CryptoException(u"Failed to b64 dec key")
+        if not is_protobuf:
             try:
-                buffer = PublicUserKeyBuffer()
-                buffer.ParseFromString(serialized)
-                if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
-                    return PublicUserKeyV1(
-                        buffer.key_version,
-                        PVKeyFactory.publicKeyFromBuffer(buffer.public_key),
-                        PVKeyFactory.verifyKeyFromBuffer(buffer.verify_key)
-                    )
-                else:
-                    raise CryptoException(u"unsupported protocol_version")
-            except ProtobufErrors as e:
-                raise CryptoException(e)
-        else:
-            return PublicUserKeyV0.deserialize(public_user_key)
+                return PublicUserKeyV0.deserialize(public_user_key)
+            except CryptoException as e:
+                g_log.exception(e)
+                g_log.info("Falling to protobuf")
+
+        status, serialized = b64dec(public_user_key)
+        if not status:
+            raise CryptoException(u"Failed to b64 dec key")
+        try:
+            buffer = PublicUserKeyBuffer()
+            buffer.ParseFromString(serialized)
+            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
+                return PublicUserKeyV1(
+                    buffer.key_version,
+                    PVKeyFactory.publicKeyFromBuffer(buffer.public_key),
+                    PVKeyFactory.verifyKeyFromBuffer(buffer.verify_key)
+                )
+            else:
+                raise CryptoException(u"unsupported protocol_version")
+        except ProtobufErrors as e:
+            raise CryptoException(e)
 
     @staticmethod
     def deserializeUserKey(user_key, is_protobuf=True):
@@ -91,7 +95,7 @@ class PVKeyFactory(object):
                 return UserKeyV0.deserialize(user_key)
             except CryptoException as e:
                 g_log.exception(e)
-                g_log.info("Trying protobuf")
+                g_log.info("Falling to protobuf")
 
         status, serialized = b64dec(user_key)
         if not status:

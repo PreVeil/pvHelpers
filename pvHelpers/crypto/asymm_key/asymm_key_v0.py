@@ -119,5 +119,4 @@ class AsymmKeyV0(AsymmKeyBase):
         return not self.__eq__(other)
 
     def __eq__(self, other):
-        return self.protocol_version == other.protocol_version and \
-            self._key_pair.sk == other.sk
+        return self._key_pair.sk == other.sk
