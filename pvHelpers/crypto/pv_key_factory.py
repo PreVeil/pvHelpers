@@ -1,7 +1,7 @@
 from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, USER_KEY_PROTOCOL_VERSION, SIGN_KEY_PROTOCOL_VERSION
 from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
 from .symm_key import SymmKeyV0
-from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2
+from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2, AsymmKeyV1, PublicKeyV1
 from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
 
@@ -36,7 +36,9 @@ class PVKeyFactory(object):
 
     @staticmethod
     def asymmKeyFromBuffer(buffer):
-        if buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
+        if buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:
+            return AsymmKeyV1(buffer.key)
+        elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
             return AsymmKeyV2(buffer.key)
         else:
             raise CryptoException(u"not supported protocol_version")
@@ -50,7 +52,9 @@ class PVKeyFactory(object):
 
     @staticmethod
     def publicKeyFromBuffer(buffer):
-        if buffer.protocol_version in [ASYMM_KEY_PROTOCOL_VERSION.V1, ASYMM_KEY_PROTOCOL_VERSION.V2]:
+        if buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:
+            return PublicKeyV1(buffer.key)
+        elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
             return PublicKeyV2(buffer.key)
         else:
             raise CryptoException(u"not supported protocol_version")
@@ -121,4 +125,5 @@ class PVKeyFactory(object):
         if is_protobuf:
             return PVKeyFactory.deserializeUserKey(key, True)
         else:
-            return UserKeyV0.fromDB(key)
+            key = UserKeyV0.fromDB(key)
+            return PVKeyFactory.newUserKey(key.key_version, USER_KEY_PROTOCOL_VERSION.V1, AsymmKeyV1(key.encryption_key.sk), SignKeyV1(key.signing_key.seed))
