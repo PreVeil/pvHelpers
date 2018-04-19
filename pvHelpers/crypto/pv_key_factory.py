@@ -2,7 +2,7 @@ from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION
 from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
 from .symm_key import SymmKeyV0
 from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2, AsymmKeyV1, PublicKeyV1
-from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1
+from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
 
 class PVKeyFactory(object):
@@ -29,10 +29,6 @@ class PVKeyFactory(object):
             return SymmKeyV0(*args, **kwargs)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
-
-    @staticmethod
-    def deserializeSymmKey(key):
-        return SymmKeyV0.fromDict({"key": key})
 
     @staticmethod
     def asymmKeyFromBuffer(buffer):
@@ -65,6 +61,25 @@ class PVKeyFactory(object):
             return VerifyKeyV1(buffer.key)
         else:
             raise CryptoException(u"not supported protocol_version")
+
+    @staticmethod
+    def deserializeSymmKey(key):
+        return SymmKeyV0.fromDict({"key": key})
+
+    @staticmethod
+    def deserializeVerifyKey(verify_key):
+        status, verify_key = b64dec(verify_key)
+        if not status:
+            raise CryptoException(u"Failed b64 dec")
+        try:
+            buffer = KeyBuffer()
+            buffer.ParseFromString(verify_key)
+            return PVKeyFactory.verifyKeyFromBuffer(buffer)
+        except (ProtobufErrors, CryptoException) as e:
+            g_log.exception(e)
+            g_log.info(u"Falling back to protocol_version 0")
+
+        return VerifyKeyV0(verify_key)
 
     @staticmethod
     def deserializePublicUserKey(public_user_key, is_protobuf=True):
