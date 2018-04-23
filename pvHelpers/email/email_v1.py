@@ -1,6 +1,6 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
-from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log
+from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
@@ -260,19 +260,42 @@ class EmailV1(EmailHelpers, EmailBase):
                 raise EmailException(u"EmailV1.toBrowser: exception {}".format(e))
 
             browser_atts = []
-            for att in attachments:
-                status, encoded = b64enc(att.content.content)
-                if status == False:
-                    continue
+            for att in self.attachments:
+                att_mime = mime.create.from_string(att.content.content)
+                # https://www.ietf.org/rfc/rfc2183.txt has contetn disposition details
+                c_d, c_d_other_params = att_mime.content_disposition
+                # flanker defaults parts c_t to `ContentType("text", "plain", {'charset': 'ascii'})` if not available
+                c_t, c_t_other_params = att_mime.content_type
 
+                filename = c_d_other_params.get("filename") or c_t_other_params.get("name")
+                if filename == None:
+                    filename = u"untitled"
+                # `skip_enclosed` is not for inner message containers. i.e. inline `.eml` file.
+                # https://github.com/mailgun/flanker/blob/master/flanker/mime/message/part.py#L323-L325
+                if att_mime.content_type.is_message_container(): # message/rfc, message/news
+                    # part.enclosed.body will not have the enclosed message headers
+                    # we want the entire enclosed message
+                    part_content = att_mime.enclosed.to_string()
+                else:
+                    part_content = att_mime.body
+
+                content_id = att_mime.headers.get("Content-Id", None)
+                status, encoded = encodeContentIfUnicode(part_content)
+                if status == False:
+                    g_log.error("encodeContentIfUnicode")
+                    continue
+                status, b64encoded = b64enc(encoded)
+                if status == False:
+                    g_log.error("b64")
+                    continue
                 browser_atts.append({
-                    "filename": att.metadata.filename,
-                    "content_type": att.metadata.content_type,
-                    "size": att.metadata.size,
-                    "content_disposition": att.metadata.content_disposition,
+                    "filename": filename,
+                    "content_type": c_t,
+                    "size": len(encoded),
+                    "content_disposition": c_d,
                     "content_reference_id": att.content.reference_id,
-                    "content": encoded,
-                    "content_id": att.metadata.content_id
+                    "content": b64encoded,
+                    "content_id": content_id
                 })
 
             o["attachments"] = browser_atts
