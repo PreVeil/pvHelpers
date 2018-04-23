@@ -165,3 +165,6 @@ class Attachment(object):
 
     def isLoaded(self):
         return self.content.isLoaded()
+
+    def isInline(self):
+        return self.metadata.content_disposition == AttachmentType.INLINE
