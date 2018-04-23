@@ -270,6 +270,7 @@ class EmailV1(EmailHelpers, EmailBase):
                     "content_type": att.metadata.content_type,
                     "size": att.metadata.size,
                     "content_disposition": att.metadata.content_disposition,
+                    "content_reference_id": att.content.reference_id,
                     "content": encoded,
                     "content_id": att.metadata.content_id
                 })
@@ -282,6 +283,7 @@ class EmailV1(EmailHelpers, EmailBase):
                 "filename": att.metadata.filename,
                 "content_type": att.metadata.content_type,
                 "size": att.metadata.size,
+                "content_reference_id": att.content.reference_id,
                 "content": None,
                 "content_disposition": att.metadata.content_disposition,
                 "content_id": att.metadata.content_id
