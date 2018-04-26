@@ -3,7 +3,7 @@ import requests
 
 from . import misc
 
-BACKEND_API_VERSION = "v2"
+BACKEND_API_VERSION = "v3"
 
 # If no authentication method is given with the auth argument, Requests will
 # attempt to get the authentication credentials for the URL's hostname from

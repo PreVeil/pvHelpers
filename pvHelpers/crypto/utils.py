@@ -1,7 +1,7 @@
 import libnacl
 from ..params import params
 from ..misc import jdumps, utf8Encode, b64enc, b64dec, jloads, utf8Decode, g_log
-
+from ..protos import UserKey as UserKeyBuffer, PublicUserKey as PublicUserKeyBuffer, Key as KeyBuffer, ProtobufErrors
 @params(bytes)
 def HexEncode(data):
     return libnacl.encode.hex_encode(data)

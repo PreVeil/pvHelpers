@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package PVKeys;
+
+message Key {
+  optional uint64 protocol_version = 1;
+  optional bytes key = 2;
+}
+
+message UserKey {
+  optional uint64 protocol_version = 1;
+  optional uint64 key_version = 2;
+  optional Key private_key = 3;
+  optional Key signing_key = 4;
+}
+
+message PublicUserKey {
+  optional uint64 protocol_version = 1;
+  optional uint64 key_version = 2;
+  optional Key public_key = 3;
+  optional Key verify_key = 4;
+}
