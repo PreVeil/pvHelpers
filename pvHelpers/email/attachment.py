@@ -105,7 +105,7 @@ class Attachment(object):
             raise EmailException(u"fromFileStorage: flanker exception, value: {}".format(e))
 
         metadata.size = len(content)
-        return Attachment(metadata, cnt.ServerContent(content, None, None))
+        return Attachment(metadata, cnt.Content(content))
 
     @staticmethod
     def fromDict(data):
@@ -117,7 +117,7 @@ class Attachment(object):
             metadata.get("content_id"),
             metadata.get("size")
         )
-        return Attachment(metadata, cnt.ServerContent(**data.get("content")))
+        return Attachment(metadata, cnt.Content(**data.get("content")))
 
     # should use Email.fromDict() unless certain about types
     def __init__(self, metadata, content):

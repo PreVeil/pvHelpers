@@ -4,7 +4,7 @@ from ..misc import b64enc, g_log, NOT_ASSIGNED
 import email.utils
 from .parsers import createMime, parseMime
 from flanker import mime, addresslib
-from .content import ServerContent
+from .content import Content
 
 class EmailV2(EmailHelpers, EmailBase):
     """Production version: Protocol version 2 is json based email entity"""
@@ -198,7 +198,7 @@ class EmailV2(EmailHelpers, EmailBase):
         if not status:
             raise EmailException(u"failed serializeBody")
 
-        body = ServerContent(body, None, None)
+        body = Content(body)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)

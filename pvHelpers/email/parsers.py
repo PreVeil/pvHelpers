@@ -1,5 +1,5 @@
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
-from .content import ServerContent
+from .content import Content
 from .email_helpers import EmailException, EmailHelpers
 from ..misc import encodeContentIfUnicode, g_log
 import email.utils
@@ -142,7 +142,7 @@ def parseMime(raw_mime):
             if status == False:
                 raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
 
-            attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), ServerContent(encoded, None, None)))
+            attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
         elif c_d == AttachmentType.INLINE or c_d is None: # requested presentation of this part is inline
             if c_t == u"text/plain":
@@ -193,19 +193,19 @@ def parseMime(raw_mime):
                 status, encoded = encodeContentIfUnicode(part_content)
                 if status == False:
                     raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-                attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.INLINE, content_id), ServerContent(encoded, None, None)))
+                attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.INLINE, content_id), Content(encoded)))
 
             else:
                 # this part has no info on it's presentation and is not text or html, hence, should default to attachment
                 status, encoded = encodeContentIfUnicode(part_content)
                 if status == False:
                     raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-                attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), ServerContent(encoded, None, None)))
+                attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
         else: # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
             status, encoded = encodeContentIfUnicode(part_content)
             if status == False:
                 raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
-            attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), ServerContent(encoded, None, None)))
+            attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
     return text, html, attachments

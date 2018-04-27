@@ -2,12 +2,18 @@ import types
 import email_helpers
 from ..params import params
 
-class ServerContent(object):
+
+class Content(object):
     __initialized = False
-    @params(object, {bytes, str, types.NoneType}, {[unicode], types.NoneType})
-    def __init__(self, content=None, block_ids=None):
+    @params(object, {bytes, str, types.NoneType}, [unicode], {unicode, types.NoneType}, {int, long, types.NoneType})
+    def __init__(self, content=None, block_ids=[], wrapped_key=None, key_version=None):
         self.content = content
         self.block_ids = block_ids
+        self.wrapped_key = wrapped_key
+        self.key_version = key_version
+        if content is None:
+            if len(block_ids) == 0 or wrapped_key is None or key_version is None:
+                raise email_helpers.EmailException(u"Contet should either have data or the associated block_ids/wrapped_key/key_version")
         self.__initialized = True
 
     def __setattr__(self, key, value):
@@ -18,30 +24,15 @@ class ServerContent(object):
     def toDict(self):
         return {
             "content": self.content,
-            "block_ids": self.block_ids
+            "block_ids": self.block_ids,
+            "wrapped_key": self.wrapped_key,
+            "key_version": self.key_version
         }
 
-    def isLoaded(self):
-        return self.content != None
+    @property
+    def reference_id(self):
+        return None if len(self.block_ids) == 0 else u",".join(self.block_ids)
 
-class LocalContent(object):
-    __initialized = False
-    @params(object, {bytes, str, types.NoneType}, {unicode, types.NoneType})
-    def __init__(self, content=None, reference_id=None):
-        self.content = content
-        self.reference_id = reference_id
-        self.__initialized = True
-
-    def __setattr__(self, key, value):
-        if self.__initialized and not hasattr(self, key):
-            raise KeyError(u"Content has not attribute {}".format(key))
-        object.__setattr__(self, key, value)
-
-    def toDict(self):
-        return {
-            "content": self.content,
-            "reference_id": self.reference_id
-        }
 
     def isLoaded(self):
         return self.content != None
