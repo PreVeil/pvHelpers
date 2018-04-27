@@ -1,4 +1,4 @@
-from .email import EmailException, PROTOCOL_VERSION, Content,\
+from .email import EmailException, PROTOCOL_VERSION, ServerContent,\
                    EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt, g_log
 
@@ -47,7 +47,7 @@ class EmailFactory(object):
         metadata.pop("protocol_version", None)
 
         metadata.update({
-            "body": Content(**metadata["body"]),
+            "body": ServerContent(**metadata["body"]),
             "attachments": [Attachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
         })
 

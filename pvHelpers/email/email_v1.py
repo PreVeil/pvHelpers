@@ -3,7 +3,7 @@ from .email_base import EmailBase
 from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
-from .content import Content
+from .content import ServerContent
 import email.utils, types
 from .parsers import parseMime
 from ..crypto import Sha256Sum, HexEncode
@@ -65,7 +65,7 @@ class EmailV1(EmailHelpers, EmailBase):
 
             message_body, att_parts = EmailV1.separateAttachments(raw_mime)
             body = message_body.to_string()
-            body = Content(body, None, None)
+            body = ServerContent(body, None, None)
             attachments = []
             for att_part in att_parts:
                 t, o = att_part.content_disposition
@@ -73,7 +73,7 @@ class EmailV1(EmailHelpers, EmailBase):
                 if filename is None:
                     filename = u"untitled"
                 metadata = AttachmentMetadata(filename, u"{}/{}".format(att_part.content_type.main, att_part.content_type.sub), t, None)
-                content = Content(att_part.to_string(), None, None)
+                content = ServerContent(att_part.to_string(), None, None)
                 attachments.append(Attachment(metadata, content))
 
             snippet = cls.getMimeSnippet(raw_mime)
