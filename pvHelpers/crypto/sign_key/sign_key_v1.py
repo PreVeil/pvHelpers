@@ -14,13 +14,12 @@ class VerifyKeyV1(VerifyKeyV0):
             key=self.vk
         )
 
-    # TODO: implement serialize and deserialzie in phase 2 for protobuf
-    # def serialize(self):
-    #     status, b64 = b64enc(self.buffer.SerializeToString())
-    #     if not status:
-    #         raise CryptoException(u"Failed to b64 encode serialzied key")
-    #
-    #     return b64
+    def serialize(self):
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64
 
 class SignKeyV1(SignKeyV0):
     protocol_version = 1
