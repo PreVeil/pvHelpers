@@ -47,7 +47,7 @@ class EmailFactory(object):
         metadata.pop("protocol_version", None)
 
         metadata.update({
-            "body": Content(**metadata["body"]),
+            "body": Content(block_ids=metadata["body"]["block_ids"], wrapped_key=metadata["body"]["wrapped_key"], key_version=metadata["body"]["key_version"]),
             "attachments": [Attachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
         })
 

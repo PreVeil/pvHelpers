@@ -105,7 +105,7 @@ class Attachment(object):
             raise EmailException(u"fromFileStorage: flanker exception, value: {}".format(e))
 
         metadata.size = len(content)
-        return Attachment(metadata, cnt.Content(content, None, None))
+        return Attachment(metadata, cnt.Content(content))
 
     @staticmethod
     def fromDict(data):
@@ -165,3 +165,6 @@ class Attachment(object):
 
     def isLoaded(self):
         return self.content.isLoaded()
+
+    def isInline(self):
+        return self.metadata.content_disposition == AttachmentType.INLINE

@@ -107,6 +107,7 @@ class EmailV2(EmailHelpers, EmailBase):
                     "content_type": att.metadata.content_type,
                     "size": att.metadata.size,
                     "content_disposition": att.metadata.content_disposition,
+                    "content_reference_id": att.content.reference_id,
                     "content": encoded,
                     "content_id": att.metadata.content_id,
                 })
@@ -121,6 +122,7 @@ class EmailV2(EmailHelpers, EmailBase):
                 "filename": att.metadata.filename,
                 "content_type": att.metadata.content_type,
                 "size": att.metadata.size,
+                "content_reference_id": att.content.reference_id,
                 "content": None,
                 "content_disposition": att.metadata.content_disposition,
                 "content_id": att.metadata.content_id
@@ -196,7 +198,7 @@ class EmailV2(EmailHelpers, EmailBase):
         if not status:
             raise EmailException(u"failed serializeBody")
 
-        body = Content(body, None, None)
+        body = Content(body)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)

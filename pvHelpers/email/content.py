@@ -1,19 +1,19 @@
 import types
 import email_helpers
+from ..params import params
+
 
 class Content(object):
     __initialized = False
-    def __init__(self, content=None, reference_id=None, block_ids=None):
-        if not isinstance(content, (bytes, str, types.NoneType)):
-            raise email_helpers.EmailException(u"Content.__init__: content must be of type bytes/str/None")
+    @params(object, {bytes, str, types.NoneType}, [unicode], {unicode, types.NoneType}, {int, long, types.NoneType})
+    def __init__(self, content=None, block_ids=[], wrapped_key=None, key_version=None):
         self.content = content
-        if not isinstance(reference_id, (unicode, types.NoneType)):
-            raise email_helpers.EmailException(u"Content.__init__: reference_id must be of type unicode/None")
-        self.reference_id = reference_id
-        if not isinstance(block_ids, (list, types.NoneType)):
-            raise email_helpers.EmailException(u"Content.__init__: block_ids must be of type list")
         self.block_ids = block_ids
-
+        self.wrapped_key = wrapped_key
+        self.key_version = key_version
+        if content is None:
+            if len(block_ids) == 0 or wrapped_key is None or key_version is None:
+                raise email_helpers.EmailException(u"Contet should either have data or the associated block_ids/wrapped_key/key_version")
         self.__initialized = True
 
     def __setattr__(self, key, value):
@@ -24,42 +24,15 @@ class Content(object):
     def toDict(self):
         return {
             "content": self.content,
-            "reference_id": self.reference_id,
-            "block_ids": self.block_ids
+            "block_ids": self.block_ids,
+            "wrapped_key": self.wrapped_key,
+            "key_version": self.key_version
         }
+
+    @property
+    def reference_id(self):
+        return None if len(self.block_ids) == 0 else u",".join(self.block_ids)
+
 
     def isLoaded(self):
         return self.content != None
-
-# class ServerContent(object):
-#     def __init__(self, block_ids, fetcher_handle):
-#         if not isinstance(block_ids, list):
-#             raise TypeError(u"block_ids must be of type list")
-#         for _id in block_ids:
-#             if not isinstance(_id, unicode):
-#                 raise TypeError(u"block_id must be of type unicode")
-#         self.block_ids = block_ids
-#
-#         # fetcher's supposed to take the block_ids and return the content
-#         if not isinstance(fetcher_handle, callable):
-#             raise TypeError(u"fetcher_handle must be of type callable")
-#         self._handle = fetcher_handle
-#
-#     def content(self):
-#         # this should possibly to the decryption and ...
-#         return self._handle(self.block_ids)
-#
-#
-# class LocalContent(object):
-#     def __init__(self, referece_id, fetcher_handle):
-#         if not isinstance(referece_id, unicode):
-#             raise TypeError(u"referece_id must be of type unicode")
-#         self.referece_id = referece_id
-#
-#         # fetcher's supposed to take the block_ids and return the content
-#         if not isinstance(fetcher_handle, callable):
-#             raise TypeError(u"fetcher_handle must be of type callable")
-#         self._handle = fetcher_handle
-#
-#     def content(self):
-#         return self._handle(self.referece_id)
