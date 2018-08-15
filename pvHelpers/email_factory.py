@@ -1,6 +1,8 @@
-from .email import EmailException, PROTOCOL_VERSION, Content,\
+from .email import EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata, \
                    EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt, g_log
+from .params import params
+from .crypto import SymmKeyBase
 
 #########################################
 ######### Email Entity Factory ##########
@@ -62,3 +64,42 @@ class EmailFactory(object):
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
+
+    @staticmethod
+    # TODO: give required props. in params
+    @params(dict, unicode, int, object)
+    def fromServerMessage(msg, wrapped_key, key_version, mailbox):
+        email_dict = {
+            "server_attr": ServerAttributes(
+                msg["id"], msg["rev_id"], msg["mailbox_id"], mailbox.name, msg["version"], msg["uid"],
+                msg["thread_id"], msg["timestamp"], msg["is_deleted"]
+            ),
+            "flags": msg["flags"],
+            "body": Content(None, map(lambda b: b["id"], msg["body"]["blocks"]), wrapped_key, key_version),
+            "sender": {"user_id": msg["private_metadata"]["sender"], "display_name": msg["private_metadata"]["sender"]},
+            "tos": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["tos"]),
+            "ccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["ccs"]),
+            "bccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["bccs"]),
+            "subject": msg["private_metadata"]["subject"],
+            "attachments": [Attachment(
+                AttachmentMetadata(att["metadata"].get("name"), att["metadata"].get("content_type"), att["metadata"].get("content_disposition"), att["metadata"].get("content_id"), att["metadata"].get("size")),
+                Content(None, map(lambda b: b["id"], att["blocks"]), wrapped_key, key_version)
+            ) for att in msg["attachments"]],
+            "message_id": msg["message_id"],
+            "snippet": msg["body"].get("snippet"),
+            "in_reply_to": msg["in_reply_to"],
+            "references": msg["references"],
+            "reply_tos": [],
+            "protocol_version": msg["protocol_version"],
+            "other_headers": None if msg["protocol_version"] != PROTOCOL_VERSION.V4 else msg["private_metadata"]["other_headers"]
+        }
+        if msg["protocol_version"] is PROTOCOL_VERSION.V1:
+            return EmailV1(**email_dict)
+        elif msg["protocol_version"] is PROTOCOL_VERSION.V2:
+            return EmailV2(**email_dict)
+        elif msg["protocol_version"] is PROTOCOL_VERSION.V3:
+            return EmailV3(**email_dict)
+        elif msg["protocol_version"] is PROTOCOL_VERSION.V4:
+            return EmailV4(**email_dict)
+
+        raise EmailException("Unsupported protocol version {}".format(msg["protocol_version"]))

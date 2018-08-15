@@ -133,9 +133,8 @@ class _LogWrapper(object):
         handler.setFormatter(formatter)
         self.logobj.addHandler(handler)
 
-        if sys.platform in ["darwin", "linux2"]:
-            sys.stdout.flush()
-            sys.stderr.flush()
+        sys.stdout.flush()
+        sys.stderr.flush()
         sys.stderr = StdOutErrRedirect(self.error)
         sys.stdout = StdOutErrRedirect(self.info)
 
