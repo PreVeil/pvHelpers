@@ -82,7 +82,7 @@ class EmailFactory(object):
             "bccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["bccs"]),
             "subject": msg["private_metadata"]["subject"],
             "attachments": [Attachment(
-                AttachmentMetadata(att["metadata"].get("name"), att["metadata"].get("content_type"), att["metadata"].get("content_disposition"), att["metadata"].get("content_id"), att["metadata"].get("size")),
+                AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get("content_disposition"), att["metadata"].get("content_id"), att["size"]),
                 Content(None, map(lambda b: b["id"], att["blocks"]), wrapped_key, key_version)
             ) for att in msg["attachments"]],
             "message_id": msg["message_id"],
