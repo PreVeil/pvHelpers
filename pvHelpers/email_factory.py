@@ -1,3 +1,4 @@
+import types
 from .email import EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata, \
                    EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt, g_log
@@ -67,11 +68,11 @@ class EmailFactory(object):
 
     @staticmethod
     # TODO: give required props. in params
-    @params(dict, unicode, int, object)
+    @params(dict, unicode, int, {object, types.NoneType})
     def fromServerMessage(msg, wrapped_key, key_version, mailbox):
         email_dict = {
             "server_attr": ServerAttributes(
-                msg["id"], msg["rev_id"], msg["mailbox_id"], mailbox.name, msg["version"], msg["uid"],
+                msg["id"], msg["rev_id"], msg["mailbox_id"], mailbox.name if mailbox else u"Unfetched", msg["version"], msg["uid"],
                 msg["thread_id"], msg["timestamp"], msg["is_deleted"]
             ),
             "flags": msg["flags"],
