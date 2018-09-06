@@ -78,7 +78,7 @@ class EmailFactory(object):
             "flags": msg["flags"],
             "body": Content(None, map(lambda b: b["id"], msg["body"]["blocks"]), wrapped_key, key_version),
             "sender": {"user_id": msg["private_metadata"]["sender"], "display_name": msg["private_metadata"]["sender"]},
-            "tos": map(lambda u: {"user_id": u["user_id"], "display_name": u}, msg["private_metadata"]["tos"]) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"]["tos"],
+            "tos": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["tos"]) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"]["tos"],
             "ccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"].get("ccs", [])) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"].get("ccs", []),
             "bccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"].get("bccs", [])) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"].get("bccs", []),
             "subject": msg["private_metadata"]["subject"],
