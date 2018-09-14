@@ -3,6 +3,7 @@ from .crypto import PVKeyFactory
 from . import misc
 from . import apiclient
 from .luser_info import LUserInfo
+from .params import params
 
 class OrganizationInfo(object):
     def __init__(self, organiztion_id, organiztion_name, department_name, role):
@@ -88,6 +89,13 @@ class UserData(object):
         }
     def isClaimed(self):
         return len(self.public_user_keys) > 0
+
+    @params(object, {int, long})
+    def getPublicUserKeyWithVersion(self, version=-1):
+        if version == -1:
+            return self.public_user_key
+        return next(k for k in self.public_user_keys if k.key_version == version)
+
 
 def fetchUser(user_id, client, key_version=-1):
     if not isinstance(user_id, unicode):
