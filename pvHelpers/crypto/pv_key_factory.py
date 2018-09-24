@@ -82,6 +82,22 @@ class PVKeyFactory(object):
         return VerifyKeyV0(verify_key)
 
     @staticmethod
+    def userKeyFromSerializedBuffer(serialized_buffer):
+        try:
+            buffer = UserKeyBuffer()
+            buffer.ParseFromString(serialized_buffer)
+            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
+                return UserKeyV1(
+                    buffer.key_version,
+                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
+                    PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
+                )
+            else:
+                raise CryptoException(u"unsupported protocol_version")
+        except ProtobufErrors as e:
+            raise CryptoException(e)
+
+    @staticmethod
     def deserializePublicUserKey(public_user_key, is_protobuf=True):
         if not is_protobuf:
             try:
@@ -119,21 +135,7 @@ class PVKeyFactory(object):
         status, serialized = b64dec(user_key)
         if not status:
             raise CryptoException(u"Failed to b64 dec key")
-        try:
-            buffer = UserKeyBuffer()
-            buffer.ParseFromString(serialized)
-            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
-                return UserKeyV1(
-                    buffer.key_version,
-                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
-                    PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
-                )
-            else:
-                raise CryptoException(u"unsupported protocol_version")
-        except ProtobufErrors as e:
-            raise CryptoException(e)
-
-
+        return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
 
     @staticmethod
     def userKeyfromDB(key, is_protobuf=True):
