@@ -12,8 +12,8 @@ class Content(object):
         self.wrapped_key = wrapped_key
         self.key_version = key_version
         if content is None:
-            if len(block_ids) == 0 or wrapped_key is None or key_version is None:
-                raise email_helpers.EmailException(u"Contet should either have data or the associated block_ids/wrapped_key/key_version")
+            if wrapped_key is None or key_version is None:
+                raise email_helpers.EmailException(u"Contet should either have data or the associated wrapped_key/key_version")
         self.__initialized = True
 
     def __setattr__(self, key, value):
@@ -31,7 +31,7 @@ class Content(object):
 
     @property
     def reference_id(self):
-        return None if len(self.block_ids) == 0 else u",".join(self.block_ids)
+        return u"" if len(self.block_ids) == 0 else u",".join(self.block_ids)
 
 
     def isLoaded(self):
