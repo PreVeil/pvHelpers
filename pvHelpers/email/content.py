@@ -31,8 +31,7 @@ class Content(object):
 
     @property
     def reference_id(self):
-        return u"" if len(self.block_ids) == 0 else u",".join(self.block_ids)
-
+        return u",".join(self.block_ids)
 
     def isLoaded(self):
         return self.content != None
