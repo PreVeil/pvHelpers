@@ -61,12 +61,16 @@ def readYAMLConfig(path):
         return False, None
 
 class StdOutErrRedirect(object):
-    def __init__(self, log_handle):
+    def __init__(self, sys_file, log_handle):
         self.handle = log_handle
+        self.sys_file = sys_file
 
     def write(self, str):
-        for l in str.rstrip().splitlines():
-            self.handle(l)
+        try:
+            self.handle(str)
+        except Exception as e:
+            # self.sys_file.write(str(e))
+            self.sys_file.write(str)
 
 class _LogWrapper(object):
     def __init__(self):
@@ -136,8 +140,8 @@ class _LogWrapper(object):
         if sys.platform in ["darwin", "linux2"]:
             sys.stdout.flush()
             sys.stderr.flush()
-        sys.stderr = StdOutErrRedirect(self.error)
-        sys.stdout = StdOutErrRedirect(self.info)
+        sys.stderr = StdOutErrRedirect(sys.stderr, self.error)
+        sys.stdout = StdOutErrRedirect(sys.stdout, self.info)
 
         if extra_logger is not None:
             extra_logger.addHandler(handler)
