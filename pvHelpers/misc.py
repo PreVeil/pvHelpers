@@ -60,14 +60,6 @@ def readYAMLConfig(path):
     except IOError as e:
         return False, None
 
-class StdOutErrRedirect(object):
-    def __init__(self, log_handle):
-        self.handle = log_handle
-
-    def write(self, str):
-        for l in str.rstrip().splitlines():
-            self.handle(l)
-
 class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
@@ -132,12 +124,6 @@ class _LogWrapper(object):
         formatter = logging.Formatter("%(asctime)s %(levelname)s [%(filename)s,%(lineno)d]: %(message)s")
         handler.setFormatter(formatter)
         self.logobj.addHandler(handler)
-
-        if sys.platform in ["darwin", "linux2"]:
-            sys.stdout.flush()
-            sys.stderr.flush()
-        sys.stderr = StdOutErrRedirect(self.error)
-        sys.stdout = StdOutErrRedirect(self.info)
 
         if extra_logger is not None:
             extra_logger.addHandler(handler)
@@ -414,7 +400,7 @@ def daemonDataDir(mode):
     return os.path.join(preveilDataDir(mode), "daemon")
 
 def logsDir(mode):
-    return os.path.join(daemonDataDir(mode), "logs")
+    return os.path.join(getModeDir(mode), "logs")
 
 def tempDir(mode):
     return os.path.join(daemonDataDir(mode), "temp")
@@ -453,10 +439,10 @@ def initDaemonDataDirs(mode):
 
     quiet_mkdir(preveilDataDir(mode))
     quiet_mkdir(daemonDataDir(mode))
-    quiet_mkdir(logsDir(mode))
-    quiet_mkdir(tempDir(mode))
     quiet_mkdir(modesDir(mode))
     quiet_mkdir(getModeDir(mode))
+    quiet_mkdir(logsDir(mode))
+    quiet_mkdir(tempDir(mode))
 
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")

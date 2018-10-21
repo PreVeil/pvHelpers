@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name="pvHelpers",
-      version="3.40",
+      version="3.50",
       packages=["pvHelpers", "pvHelpers.email", "pvHelpers.crypto", "pvHelpers.crypto.asymm_key",
                 "pvHelpers.crypto.box", "pvHelpers.crypto.user_key", "pvHelpers.crypto.sign_key",
                 "pvHelpers.crypto.symm_key", "pvHelpers.protos"],
