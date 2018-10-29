@@ -1,7 +1,7 @@
+
 import os, yaml, sys, random, time, simplejson
 import datetime, base64, logging, logging.handlers, types
 import struct, collections, copy, StringIO, itertools
-
 from sqlalchemy import create_engine, event, orm
 
 if sys.platform in ["darwin", "linux2"]:
@@ -60,6 +60,7 @@ def readYAMLConfig(path):
     except IOError as e:
         return False, None
 
+# TODO: handle deadlock
 class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
@@ -107,7 +108,7 @@ class _LogWrapper(object):
     # the PreVeil directories exist, we can start logging to disk instead of
     # stdout.
     # <mode> only determines the application directory to use, `PreVeilData` or `PreVeilBleedData`
-    def startFileSystemWrites(self, name, mode, twisted_observer_fn=None, extra_logger=None):
+    def startFileSystemWrites(self, name, log_dir, twisted_observer_fn=None, extra_logger=None):
         if not isinstance(twisted_observer_fn, types.NoneType):
             if not (callable(twisted_observer_fn) and twisted_observer_fn.__name__ == "PythonLoggingObserver"):
                 return False
@@ -115,7 +116,7 @@ class _LogWrapper(object):
         self.logobj = logging.getLogger(name)
         self.logobj.setLevel(logging.DEBUG)
 
-        logpath = os.path.join(logsDir(mode), "{}.log".format(name))
+        logpath = os.path.join(log_dir, "{}.log".format(name))
         # TimedRotatingFileHandler will only rotate the logs if the process is
         # running at midnight (assuming a log per day). This means that
         # clients who put their computer to sleep at night will never get a log
@@ -235,8 +236,8 @@ def jload(fp):
 def filesystemSafeBase64Encode(email):
     return b64enc(email.upper(), "()")
 
-def getTempFilePath(mode):
-    return os.path.join(tempDir(mode),
+def getTempFilePath(mode_dir):
+    return os.path.join(tempDir(mode_dir),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
@@ -342,83 +343,32 @@ def quiet_mkdir(path):
         if not os.path.isdir(path):
             raise
 
-def quietMakedirsInPreVeilDataDir(path):
-    if isSameDirOrChild(preveilDataDir(), path) is False:
-        raise Exception("path is not in data dir: %s" % path)
-
-    with DoAsPreVeil() as _:
-        if sys.platform in ["darwin", "linux2"]:
-            mask = os.umask(0o777)
-            os.umask(mask)
-            if (DATA_DIR_MODE & (~ mask)) != DATA_DIR_MODE:
-                raise Exception("bad umask: %s" % mask)
-        else:
-            pass
-
-        try:
-            os.makedirs(path, DATA_DIR_MODE)
-        except OSError:
-            if not os.path.isdir(path):
-                raise
-
-def quietMkdirInPreVeilDataDir(path):
-    if isSameDirOrChild(preveilDataDir(), path) is False:
-        raise Exception("path is not in data dir: %s" % path)
-
-    with DoAsPreVeil() as _:
-        if sys.platform in ["darwin", "linux2"]:
-            mask = os.umask(0o777)
-            os.umask(mask)
-            if (DATA_DIR_MODE & (~ mask)) != DATA_DIR_MODE:
-                raise Exception("bad umask: %s" % mask)
-        else:
-            pass
-
-        try:
-            os.mkdir(path, DATA_DIR_MODE)
-        except OSError:
-            if not os.path.isdir(path):
-                raise
-
 def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
 
-def preveilDataDir(app_mode):
-    dirName = "preveil"
-    winDirName = "PreVeilData"
-    if app_mode == "bleed":
-        dirName = "preveil_bleed"
-        winDirName = "PreVeilBleedData"
-    if sys.platform in ["darwin", "linux2"]:
-        return os.path.join("/", "var", dirName)
-    elif "win32" == sys.platform:
-        return os.path.join(os.getenv("SystemDrive") + "\\", winDirName)
-    else:
-        raise Exception("preveilDataDir: Unsupported platform")
+def daemonDataDir(wd):
+    return os.path.join(wd, "daemon")
 
-def daemonDataDir(mode):
-    return os.path.join(preveilDataDir(mode), "daemon")
+def modesDir(wd):
+    return os.path.join(daemonDataDir(wd), "modes")
 
-def logsDir(mode):
-    return os.path.join(getModeDir(mode), "logs")
+def getModeDir(wd, mode):
+    return os.path.join(modesDir(wd), mode)
 
-def tempDir(mode):
-    return os.path.join(daemonDataDir(mode), "temp")
+def logsDir(mode_dir):
+    return os.path.join(mode_dir, "logs")
 
-def modesDir(mode):
-    return os.path.join(daemonDataDir(mode), "modes")
+def tempDir(mode_dir):
+    return os.path.join(mode_dir, "temp")
 
-def getModeDir(mode):
-    return os.path.join(modesDir(mode), mode)
+def getUserDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "user_db.sqlite")
 
-def getUserDatabasePath(mode):
-    return os.path.join(getModeDir(mode), "user_db.sqlite")
+def getMailDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "db.sqlite")
 
-def getMailDatabasePath(mode):
-    return os.path.join(getModeDir(mode), "db.sqlite")
-
-def getActionsDatabasePath(mode):
-    return os.path.join(getModeDir(mode), "actions_db.sqlite")
+def getActionsDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "actions_db.sqlite")
 
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
 # owner:group
@@ -428,7 +378,7 @@ def getActionsDatabasePath(mode):
 # correct owner:group.  This guarentee is easier to provide if all processes
 # only create these directories (or change their permissions) with this
 # function.
-def initDaemonDataDirs(mode):
+def initDaemonDataDirs(wd, mode):
     if sys.platform in ["darwin", "linux2"]:
         mask = os.umask(0o777)
         os.umask(mask)
@@ -437,20 +387,23 @@ def initDaemonDataDirs(mode):
     else:
         pass
 
-    quiet_mkdir(preveilDataDir(mode))
-    quiet_mkdir(daemonDataDir(mode))
-    quiet_mkdir(modesDir(mode))
-    quiet_mkdir(getModeDir(mode))
-    quiet_mkdir(logsDir(mode))
-    quiet_mkdir(tempDir(mode))
+    quiet_mkdir(wd)
+    quiet_mkdir(daemonDataDir(wd))
+    quiet_mkdir(modesDir(wd))
+    mode_dir = getModeDir(wd, mode)
+    quiet_mkdir(mode_dir)
+    quiet_mkdir(logsDir(mode_dir))
+    quiet_mkdir(tempDir(mode_dir))
 
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
         preveil_uid = preveil_pwuid.pw_uid
         preveil_gid = preveil_pwuid.pw_gid
-        recur_chown(preveilDataDir(mode), preveil_uid, preveil_gid)
+        recur_chown(wd, preveil_uid, preveil_gid)
     else:
         pass
+
+    return mode_dir
 
 class CaseInsensitiveSet(collections.Set):
     def __init__(self, lyst):
