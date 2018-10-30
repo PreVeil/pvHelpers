@@ -60,6 +60,7 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
             # autocommit=True will let developer to begin() a transaction manually
             # have to be deliberate with begin()/ commit() when doing DDL transactions
             cls.__session_factory[path] = {"engine": engine, "factory": orm.session.sessionmaker(bind=engine, autocommit=True)}
+            # cls.__session_factory[path]["factory"]().execute("select * from store")
 
         return cls.__session_factory[path]["factory"]()
 
@@ -74,19 +75,16 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
         super(GetDBSessionAsPreVeil, self).__exit__(type_, value, traceback)
 
 class GetActionsDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode):
-        self.mode = mode
-        super(GetActionsDBSessionAsPreVeil, self).__init__(misc.getActionsDatabasePath(mode))
+    def __init__(self, mode_dir):
+        super(GetActionsDBSessionAsPreVeil, self).__init__(misc.getActionsDatabasePath(mode_dir))
 
 class GetMailDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode):
-        self.mode = mode
-        super(GetMailDBSessionAsPreVeil, self).__init__(misc.getMailDatabasePath(mode))
+    def __init__(self, mode_dir):
+        super(GetMailDBSessionAsPreVeil, self).__init__(misc.getMailDatabasePath(mode_dir))
 
 class GetUserDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode):
-        self.mode = mode
-        super(GetUserDBSessionAsPreVeil, self).__init__(misc.getUserDatabasePath(mode))
+    def __init__(self, mode_dir):
+        super(GetUserDBSessionAsPreVeil, self).__init__(misc.getUserDatabasePath(mode_dir))
 
 class DBException(Exception):
     def __init__(self, message="DBException"):
