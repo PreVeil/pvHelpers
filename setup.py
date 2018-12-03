@@ -6,7 +6,7 @@ setup(name="pvHelpers",
                 "pvHelpers.crypto.symm_key", "pvHelpers.protos"],
       install_requires=[
         "PyYAML==3.11",
-        "requests==2.7.0",
+        "requests==2.20.1",
         "simplejson==3.8.2",
         "SQLAlchemy==1.1.5.dev0",
         "Werkzeug==0.11.4",
