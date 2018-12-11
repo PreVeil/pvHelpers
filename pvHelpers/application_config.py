@@ -34,6 +34,26 @@ class ApplicationConfig(object):
         if self.initialized:
             return
 
+        if master_port is None and mode is None:
+            raise ValueError(u"Process needs to be initialized either as `MASTER` or `Replica`")
+
+        if mode:
+            self.mode = mode
+            # HACK: just a work around for current installation method
+            # ideally, `MASTER_PORT` should be provided on process invocation
+            if mode == u"prod":
+                 master_port = 4002
+            elif mode == u"staging":
+                master_port = 6002
+            elif mode in [u"test2_dkr", u"ansible_local_test2", u"test2"]:
+                master_port = 2012
+            elif mode in ["ansible_local_test", "dev", "test"]:
+                master_port = 2002
+            else:
+                for k in self.config_keys:
+                    self.__config__[k] = os.environ[k.replace("-", "_").upper()]
+
+
         if master_port:
             self.master_port = master_port
             def _fetchConfigFromMaster():
@@ -51,14 +71,6 @@ class ApplicationConfig(object):
                     time.sleep(random.randrange(1, MAX_WAIT_TIME))
                 else:
                     break
-
-        elif mode:
-            self.mode = mode
-            for k in self.config_keys:
-                self.__config__[k] = os.environ[k.replace("-", "_").upper()]
-
-        else:
-            raise ValueError(u"Master process needs to be initialized with `mode`")
 
         self.initialized = True
 
