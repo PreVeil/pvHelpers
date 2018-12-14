@@ -477,8 +477,12 @@ class CaseInsensitiveDict(dict):
 class NOT_ASSIGNED(object):
     def __init__(self):
         pass
+
     def __str__(self):
         return u"__NOT_ASSIGNED__"
+
+    def serialize(self):
+        return self.__str__()
 
 def MergeDicts(*args):
     ret = {}
