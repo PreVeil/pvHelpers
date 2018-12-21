@@ -274,7 +274,7 @@ def checkRunningAsRoot():
 
 class DoAsPreVeil(object):
     def __init__(self):
-        pass
+        self._noop = True
 
     def __enter__(self):
         if sys.platform in ["darwin", "linux2"]:
@@ -284,18 +284,23 @@ class DoAsPreVeil(object):
             preveil_pwuid = pwd.getpwnam("preveil")
             if self.original_egid == preveil_pwuid.pw_gid and   \
                     self.original_euid == preveil_pwuid.pw_uid:
-                self.noop = True
+                self._noop = True
                 return
 
-            self.noop = False
-            os.setegid(preveil_pwuid.pw_gid)
-            os.seteuid(preveil_pwuid.pw_uid)
+            try:
+                # seteuid/gid fails unless process is running as `root`
+                # Tests do not run as `root`
+                os.setegid(preveil_pwuid.pw_gid)
+                os.seteuid(preveil_pwuid.pw_uid)
+                self._noop = False
+            except OSError as e:
+                print e
         else:
             pass
 
     def __exit__(self, type, value, traceback):
         if sys.platform in ["darwin", "linux2"]:
-            if self.noop is False:
+            if self._noop is False:
                 os.setegid(self.original_egid)
                 os.seteuid(self.original_euid)
         else:
