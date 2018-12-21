@@ -294,7 +294,7 @@ class DoAsPreVeil(object):
                 os.seteuid(preveil_pwuid.pw_uid)
                 self._noop = False
             except OSError as e:
-                print e
+                pass
         else:
             pass
 
