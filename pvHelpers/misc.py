@@ -378,7 +378,7 @@ def getActionsDatabasePath(mode_dir):
 # correct owner:group.  This guarentee is easier to provide if all processes
 # only create these directories (or change their permissions) with this
 # function.
-def initDaemonDataDirs(wd, mode):
+def initDaemonDataDirs(wd, mode, is_test=False):
     if sys.platform in ["darwin", "linux2"]:
         mask = os.umask(0o777)
         os.umask(mask)
@@ -395,13 +395,14 @@ def initDaemonDataDirs(wd, mode):
     quiet_mkdir(logsDir(mode_dir))
     quiet_mkdir(tempDir(mode_dir))
 
-    if sys.platform in ["darwin", "linux2"]:
-        preveil_pwuid = pwd.getpwnam("preveil")
-        preveil_uid = preveil_pwuid.pw_uid
-        preveil_gid = preveil_pwuid.pw_gid
-        recur_chown(wd, preveil_uid, preveil_gid)
-    else:
-        pass
+    if is_test == False:
+        if sys.platform in ["darwin", "linux2"]:
+            preveil_pwuid = pwd.getpwnam("preveil")
+            preveil_uid = preveil_pwuid.pw_uid
+            preveil_gid = preveil_pwuid.pw_gid
+            recur_chown(wd, preveil_uid, preveil_gid)
+        else:
+            pass
 
     return mode_dir
 
