@@ -3,7 +3,6 @@ import os, yaml, sys, random, time, simplejson
 import datetime, base64, logging, logging.handlers, types
 import struct, collections, copy, StringIO, itertools
 from sqlalchemy import create_engine, event, orm
-from loguru import logger as loguru_logger
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
