@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name="pvHelpers",
-      version="4.05",
+      version="4.10",
       packages=["pvHelpers", "pvHelpers.email", "pvHelpers.crypto", "pvHelpers.crypto.asymm_key",
                 "pvHelpers.crypto.box", "pvHelpers.crypto.user_key", "pvHelpers.crypto.sign_key",
                 "pvHelpers.crypto.symm_key", "pvHelpers.protos"],
@@ -14,6 +14,7 @@ setup(name="pvHelpers",
         "flanker==0.4.40+preveil1.10",
         "pysqlite==2.8.3.1",
         "semver==2.7.7",
-        "protobuf==3.5.2.post1"
+        "protobuf==3.5.2.post1",
+        "fipscrypto==0.1"
       ],
 )

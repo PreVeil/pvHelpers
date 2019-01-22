@@ -1,8 +1,8 @@
 from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, USER_KEY_PROTOCOL_VERSION, SIGN_KEY_PROTOCOL_VERSION
 from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
 from .symm_key import SymmKeyV0
-from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2, AsymmKeyV1, PublicKeyV1
-from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0
+from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV2, AsymmKeyV1, PublicKeyV1
+from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
 
 class PVKeyFactory(object):
@@ -16,10 +16,34 @@ class PVKeyFactory(object):
             return UserKeyV0(key_version, encryption_key, signing_key)
         elif protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
             if not encryption_key:
-                encryption_key = AsymmKeyV2()
+                encryption_key = PVKeyFactory.newAsymmKey()
             if not signing_key:
-                signing_key = SignKeyV1()
+                signing_key = PVKeyFactory.newSignKey()
             return UserKeyV1(key_version, encryption_key, signing_key)
+        else:
+            raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+
+    @staticmethod
+    def newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.Latest):
+        if protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V0:
+            return AsymmKeyV0()
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:
+            return AsymmKeyV1()
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
+            return AsymmKeyV2()
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
+            return AsymmKeyV3()
+        else:
+            raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+
+    @staticmethod
+    def newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.Latest):
+        if protocol_version == SIGN_KEY_PROTOCOL_VERSION.V0:
+            return SignKeyV0()
+        elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V1:
+            return SignKeyV1()
+        elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
+            return SignKeyV3()
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 
