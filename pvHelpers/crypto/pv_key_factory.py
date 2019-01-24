@@ -9,6 +9,7 @@ class PVKeyFactory(object):
     @staticmethod
     def newUserKey(key_version, protocol_version=USER_KEY_PROTOCOL_VERSION.Latest, encryption_key=None, signing_key=None):
         if protocol_version == USER_KEY_PROTOCOL_VERSION.V0:
+            # UserKeyV0 is tied to EncryptionKeyV0, SignKeyV0 due to legacy reasons
             if not encryption_key:
                 encryption_key = AsymmKeyV0()
             if not signing_key:
@@ -24,15 +25,16 @@ class PVKeyFactory(object):
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 
     @staticmethod
-    def newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.Latest):
+    def newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
+        print protocol_version
         if protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V0:
-            return AsymmKeyV0()
+            return AsymmKeyV0(*args, **kwargs)
         elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:
-            return AsymmKeyV1()
+            return AsymmKeyV1(*args, **kwargs)
         elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
-            return AsymmKeyV2()
+            return AsymmKeyV2(*args, **kwargs)
         elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
-            return AsymmKeyV3()
+            return AsymmKeyV3(*args, **kwargs)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 

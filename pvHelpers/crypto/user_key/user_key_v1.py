@@ -61,7 +61,8 @@ class UserKeyV1(UserKeyV0):
         json_serialized = jdumps({
             "private_key": b64_enc_private_key,
             "signing_key": b64_enc_signing_seed,
-            "version": self.key_version
+            "version": self.key_version ,
+            'p': self.protocol_version
         })
         status, encoded = utf8Encode(json_serialized)
         if not status:
