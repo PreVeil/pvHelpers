@@ -7,6 +7,10 @@ class SignKeyBase(object):
     def verify_key(self):
         raise NotImplementedError("children must have verifier property")
 
+    @property
+    def buffer(self):
+        raise NotImplementedError("children must have buffer property")
+
     def signText(self, *args, **kwargs):
         raise NotImplementedError("signText must be implemented by children")
 
@@ -25,6 +29,10 @@ class SignKeyBase(object):
 class VerifyKeyBase(object):
     def __init__(self, protocol_version):
         self.protocol_version = protocol_version
+
+    @property
+    def buffer(self):
+        raise NotImplementedError("children must have buffer property")
 
     def verifyText(self, *args, **kwargs):
         raise NotImplementedError("verifyText must be implemented by children")

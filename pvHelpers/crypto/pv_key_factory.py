@@ -39,13 +39,13 @@ class PVKeyFactory(object):
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 
     @staticmethod
-    def newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.Latest):
+    def newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
         if protocol_version == SIGN_KEY_PROTOCOL_VERSION.V0:
-            return SignKeyV0()
+            return SignKeyV0(*args, **kwargs)
         elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V1:
-            return SignKeyV1()
+            return SignKeyV1(*args, **kwargs)
         elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
-            return SignKeyV3()
+            return SignKeyV3(*args, **kwargs)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 
