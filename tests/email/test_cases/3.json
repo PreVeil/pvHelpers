@@ -1,0 +1,23 @@
+{
+  "html" : "<html><head></head><body dir=\"auto\" style=\"word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;\"><object height=\"320\" width=\"240\" apple-width=\"yes\" apple-height=\"yes\" type=\"application/x-apple-msg-attachment\" data=\"cid:F3D57993-7955-477B-A5A5-3BF9E26CC78F@hsd1.ma.comcast.net.\" apple-inline=\"yes\" id=\"1269EB81-ACA1-4366-957D-6B2C86BA7BFE\"></object><object height=\"9\" width=\"23\" apple-width=\"yes\" apple-height=\"yes\" type=\"application/x-apple-msg-attachment\" data=\"cid:92B3D80B-DA21-4A78-9F49-66D3145F7EC9@hsd1.ma.comcast.net.\" apple-inline=\"yes\" id=\"A5CFC343-DDEB-41C4-89D5-82C451F0CA38\"></object></body></html>",
+  "attachments" : [
+    {
+      "filename": "index.html",
+      "content_type": "text/html",
+      "content_disposition": "attachment",
+      "content_reference_id": "",
+      "content": "PGh0bWw+DQo8Ym9keT4NCiAgPGlmcmFtZSBzYW5kYm94PSJhbGxvdy1zYW1lLW9yaWdpbiIgc3JjZG9jPSI8Ym9keSBzdHlsZT0nY29sb3I6cmVkOyc+aGVsbG88L2JvZHk+Ij48L2lmcmFtZT4NCiAgPGRpdiBpZD0icmVzIj48L2Rpdj4NCjwvYm9keT4NCjxzY3JpcHQ+DQooKGRvY3VtZW50KSA9PiB7DQogIGxldCBpZnJhbWUgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCdpZnJhbWUnKTsNCiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3JlcycpLmlubmVySFRNTCArPSAiPHA+IiArIHR5cGVvZiBpZnJhbWVbJ3NyY2RvYyddICsgIjwvcD4iOw0KDQp9KShkb2N1bWVudCk7DQo8L3NjcmlwdD4NCjwvaHRtbD4NCg==",
+      "content_id": "<502ABE90-453C-435C-A102-024167F6364A@hsd1.ma.comcast.net.>",
+      "size": 349
+    },
+    {
+      "filename": "zzzz.txt",
+      "content_type": "text/plain",
+      "content_disposition": "attachment",
+      "content": "SGVsbG8gUmFuZHl5eXkK",
+      "content_reference_id": "",
+      "content_id": "<8C125058-75D2-4A6D-B7D0-F39B71F8FEE0@hsd1.ma.comcast.net.>",
+      "size": 15
+    }
+  ]
+}

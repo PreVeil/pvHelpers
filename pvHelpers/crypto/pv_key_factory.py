@@ -1,6 +1,6 @@
 from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, USER_KEY_PROTOCOL_VERSION, SIGN_KEY_PROTOCOL_VERSION
 from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
-from .symm_key import SymmKeyV0
+from .symm_key import SymmKeyV0, SymmKeyV1
 from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV2, AsymmKeyV1, PublicKeyV1
 from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
@@ -53,6 +53,8 @@ class PVKeyFactory(object):
     def newSymmKey(protocol_version=SYMM_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
         if protocol_version == SYMM_KEY_PROTOCOL_VERSION.V0:
             return SymmKeyV0(*args, **kwargs)
+        elif protocol_version == SYMM_KEY_PROTOCOL_VERSION.V1:
+            return SymmKeyV1(*args, **kwargs)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 

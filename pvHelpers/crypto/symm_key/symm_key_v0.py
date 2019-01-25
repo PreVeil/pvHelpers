@@ -21,6 +21,7 @@ class SymmKeyV0(SymmKeyBase):
     def __init__(self, secret=None):
         super(SymmKeyV0, self).__init__(self.protocol_version)
         self._box = libnacl.secret.SecretBox(secret)
+        self._secret = self._box.sk
 
     def serialize(self):
         status, b64 = b64enc(self._box.sk)
@@ -124,3 +125,10 @@ class SymmKeyV0(SymmKeyBase):
             raise CryptoException("Invalid header byte {}".format(header_byte))
 
         return message[4:]
+
+    def __eq__(self, other):
+        return self.protocol_version == other.protocol_version and \
+            self._secret == other._secret
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

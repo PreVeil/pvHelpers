@@ -1,0 +1,37 @@
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="Apple-Mail=_6E0B618F-B1CF-4E5B-8149-3C2A04D41E7D"
+Subject:
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+X-Apple-Base-Url: x-msg://1/
+X-Universally-Unique-Identifier: CD5A5DA8-89E4-450B-A3AF-0A77C294A213
+X-Apple-Mail-Remote-Attachments: YES
+From: samanrtehrani@gmail.com
+X-Apple-Windows-Friendly: 1
+Date: Mon, 27 Mar 2017 10:08:08 -0400
+X-Apple-Mail-Signature:
+Message-Id: <A149C9BF-8CAB-436B-8E82-4B15256812F0@gmail.com>
+X-Uniform-Type-Identifier: com.apple.mail-draft
+
+
+--Apple-Mail=_6E0B618F-B1CF-4E5B-8149-3C2A04D41E7D
+Content-Transfer-Encoding: 7bit
+Content-Type: text/html;
+	charset=us-ascii
+
+<html><head></head><body dir="auto" style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><object height="86" width="91" apple-width="yes" apple-height="yes" type="application/x-apple-msg-attachment" data="cid:AACD41BE-7F02-43D2-834E-587DB84DAB42@hsd1.ma.comcast.net." apple-inline="no" id="251C55BF-F963-480F-B214-48A20D5FE94C"></object></body></html>
+--Apple-Mail=_6E0B618F-B1CF-4E5B-8149-3C2A04D41E7D
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+Content-Type: text/csv;
+	x-unix-mode=0644;
+	name="CSVFILE.csv"
+Content-Id: <AACD41BE-7F02-43D2-834E-587DB84DAB42@hsd1.ma.comcast.net.>
+
+this,it=0D
+is,should=0D
+a,break=0D
+csv,some=0D
+file,stuff=
+
+--Apple-Mail=_6E0B618F-B1CF-4E5B-8149-3C2A04D41E7D--

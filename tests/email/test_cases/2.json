@@ -1,0 +1,14 @@
+{
+  "html" : "<html><head></head><body dir=\"auto\" style=\"word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;\"><object height=\"320\" width=\"240\" apple-width=\"yes\" apple-height=\"yes\" type=\"application/x-apple-msg-attachment\" data=\"cid:F3D57993-7955-477B-A5A5-3BF9E26CC78F@hsd1.ma.comcast.net.\" apple-inline=\"yes\" id=\"1269EB81-ACA1-4366-957D-6B2C86BA7BFE\"></object><object height=\"9\" width=\"23\" apple-width=\"yes\" apple-height=\"yes\" type=\"application/x-apple-msg-attachment\" data=\"cid:92B3D80B-DA21-4A78-9F49-66D3145F7EC9@hsd1.ma.comcast.net.\" apple-inline=\"yes\" id=\"A5CFC343-DDEB-41C4-89D5-82C451F0CA38\"></object></body></html>",
+  "attachments" : [
+    {
+      "filename": "CSVFILE.csv",
+      "content_type": "text/csv",
+      "content_disposition": "attachment",
+      "content_reference_id": "",
+      "content": "dGhpcyxpdA0KaXMsc2hvdWxkDQphLGJyZWFrDQpjc3Ysc29tZQ0KZmlsZSxzdHVmZg==",
+      "content_id": "<AACD41BE-7F02-43D2-834E-587DB84DAB42@hsd1.ma.comcast.net.>",
+      "size": 49
+    }
+  ]
+}
