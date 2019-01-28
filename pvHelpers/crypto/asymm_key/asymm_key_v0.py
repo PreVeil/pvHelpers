@@ -1,18 +1,7 @@
 import struct, types, libnacl, libnacl.public
 from .asymm_key_base import *
 from ..utils import CryptoException, b64dec, b64enc, params, g_log, utf8Encode, utf8Decode
-
-# The first four bytes of encrypted data are reservered for internal use. When
-# packing our bits with the struct module, make sure to pick a byte order (eg, >)
-# otherwise python will choose native ordering and it might do something weird
-# with alignment.
-# The most sig bit of the first byte is the 'text' bit.
-BINARY_BIT = 0x00
-TEXT_BIT = 0x80
-# The next three bits indicate encryption 'type'
-ASYMM_BIT = 0x00
-SEAL_BIT = 0x10
-SECRET_BIT = 0x20
+from ..header_bytes import TEXT_BIT, BINARY_BIT, SEAL_BIT, HEADER_LENGTH
 
 class PublicKeyV0(PublicKeyBase):
     protocol_version = 0
@@ -87,10 +76,10 @@ class AsymmKeyV0(AsymmKeyBase):
             message_with_header = self._key_pair.seal_open(cipher)
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (BINARY_BIT | SEAL_BIT):
             raise CryptoException(u"Invalid header bytes")
-        return message_with_header[4:]
+        return message_with_header[HEADER_LENGTH:]
 
     @params(object, unicode)
     def unsealText(self, cipher):
@@ -101,10 +90,10 @@ class AsymmKeyV0(AsymmKeyBase):
             message_with_header = self._key_pair.seal_open(cipher)
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (TEXT_BIT | SEAL_BIT):
             raise CryptoException(u"Invalid header bytes")
-        status, message = utf8Decode(message_with_header[4:])
+        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
         if not status:
             raise CryptoException(u"Failed to utf8 decode message")
         return message

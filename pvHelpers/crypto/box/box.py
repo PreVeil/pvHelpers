@@ -1,18 +1,7 @@
 import struct, libnacl
 from ..asymm_key import AsymmKeyBase, PublicKeyBase
 from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum, params
-
-# The first four bytes of encrypted data are reservered for internal use. When
-# packing our bits with the struct module, make sure to pick a byte order (eg, >)
-# otherwise python will choose native ordering and it might do something weird
-# with alignment.
-# The most sig bit of the first byte is the 'text' bit.
-BINARY_BIT = 0x00
-TEXT_BIT = 0x80
-# The next three bits indicate encryption 'type'
-ASYMM_BIT = 0x00
-SEAL_BIT = 0x10
-SECRET_BIT = 0x20
+from ..header_bytes import ASYMM_BIT, BINARY_BIT, TEXT_BIT, HEADER_LENGTH
 
 #TODO: add protocol_version to this module
 class AsymmBox(object):
@@ -50,11 +39,11 @@ class AsymmBox(object):
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
 
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (TEXT_BIT | ASYMM_BIT):
             raise CryptoException("Invalid header byte {}".format(header))
 
-        status, message = utf8Decode(message_with_header[4:])
+        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
         if not status:
             raise CryptoException("Failed to utf8 decode message")
         return message
@@ -83,11 +72,11 @@ class AsymmBox(object):
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
 
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (BINARY_BIT | ASYMM_BIT):
             raise CryptoException("Invalid header byte {}".format(header))
 
-        return message_with_header[4:]
+        return message_with_header[HEADER_LENGTH:]
 
     def getPin(self):
         secret = self.__box._k

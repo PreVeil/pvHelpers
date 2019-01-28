@@ -26,7 +26,6 @@ class PVKeyFactory(object):
 
     @staticmethod
     def newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
-        print protocol_version
         if protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V0:
             return AsymmKeyV0(*args, **kwargs)
         elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:

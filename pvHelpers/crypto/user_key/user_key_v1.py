@@ -51,26 +51,5 @@ class UserKeyV1(UserKeyV0):
 
         return b64
 
-    def jsonSerialize(self):
-        status, b64_enc_private_key = b64enc(self.encryption_key.sk)
-        if status == False:
-            raise CryptoException("Failed to b46 encode private key")
-        status, b64_enc_signing_seed = b64enc(self.signing_key.seed)
-        if status == False:
-            raise CryptoException("Failed to b46 enc signing seed")
-        json_serialized = jdumps({
-            "private_key": b64_enc_private_key,
-            "signing_key": b64_enc_signing_seed,
-            "version": self.key_version ,
-            'p': self.protocol_version
-        })
-        status, encoded = utf8Encode(json_serialized)
-        if not status:
-            raise CryptoException("Failed to utf8 encode json_serialized key")
-        status, b64 = b64enc(encoded)
-        if not status:
-            raise CryptoException("Failed to b64 encode encoded key")
-        return b64
-
     def toDB(self):
         return self.serialize()

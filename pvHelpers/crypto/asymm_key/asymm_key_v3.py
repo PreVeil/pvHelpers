@@ -1,7 +1,7 @@
 import types, struct
 from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer
 from .asymm_key_base import PublicKeyBase, AsymmKeyBase
-from .asymm_key_v0 import BINARY_BIT, TEXT_BIT, ASYMM_BIT, SEAL_BIT
+from ..header_bytes import BINARY_BIT, TEXT_BIT, ASYMM_BIT, SEAL_BIT, HEADER_LENGTH
 import fipscrypto as FC
 
 class PublicKeyV3(PublicKeyBase):
@@ -80,10 +80,10 @@ class AsymmKeyV3(AsymmKeyBase):
         if not status:
             raise CryptoException("Failed to b64 decode cipher")
         message_with_header = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (BINARY_BIT | SEAL_BIT):
             raise CryptoException(u"Invalid header bytes")
-        return message_with_header[4:]
+        return message_with_header[HEADER_LENGTH:]
 
     @params(object, unicode)
     def unsealText(self, cipher):
@@ -91,10 +91,10 @@ class AsymmKeyV3(AsymmKeyBase):
         if not status:
             raise CryptoException("Failed to b64 decode cipher")
         message_with_header = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (TEXT_BIT | SEAL_BIT):
             raise CryptoException(u"Invalid header bytes")
-        status, message = utf8Decode(message_with_header[4:])
+        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
         if not status:
             raise CryptoException(u"Failed to utf8 decode message")
         return message

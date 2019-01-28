@@ -3,7 +3,7 @@ import types, struct
 import fipscrypto as FC
 
 from .symm_key_base import SymmKeyBase
-from .symm_key_v0 import BINARY_BIT, TEXT_BIT, SECRET_BIT
+from ..header_bytes import BINARY_BIT, TEXT_BIT, SECRET_BIT, HEADER_LENGTH
 from ..utils import params, RandomBytes, KeyBuffer, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, HexEncode, Sha256Sum, jloads
 
 class SymmKeyV1(SymmKeyBase):
@@ -54,11 +54,11 @@ class SymmKeyV1(SymmKeyBase):
         cipher = raw_cipher[:-(FC.AES_TAG_LENGTH + FC.IV_LENGTH)]
 
         message_with_header = FC.aes_decrypt(self._secret, cipher, tag, iv)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (TEXT_BIT | SECRET_BIT):
             raise CryptoException("Invalid header byte {}".format(header))
 
-        status, message = utf8Decode(message_with_header[4:])
+        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
         if not status:
             raise CryptoException("Failed to utf8 message")
 
@@ -90,11 +90,11 @@ class SymmKeyV1(SymmKeyBase):
         cipher = raw_cipher[:-(FC.AES_TAG_LENGTH + FC.IV_LENGTH)]
 
         message_with_header = FC.aes_decrypt(self._secret, cipher, tag, iv)
-        header_byte = struct.unpack(">BBBB", message_with_header[:4])[0]
+        header_byte = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])[0]
         if header_byte != (BINARY_BIT | SECRET_BIT):
             raise CryptoException("Invalid header byte {}".format(header_byte))
 
-        return message_with_header[4:]
+        return message_with_header[HEADER_LENGTH:]
 
 
     def __eq__(self, other):

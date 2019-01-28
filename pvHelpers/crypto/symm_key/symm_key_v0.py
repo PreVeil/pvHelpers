@@ -1,18 +1,7 @@
 import types, libnacl, struct
 from .symm_key_base import *
 from ..utils import params, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, HexEncode, Sha256Sum, jloads
-
-# The first four bytes of encrypted data are reservered for internal use. When
-# packing our bits with the struct module, make sure to pick a byte order (eg, >)
-# otherwise python will choose native ordering and it might do something weird
-# with alignment.
-# The most sig bit of the first byte is the 'text' bit.
-BINARY_BIT = 0x00
-TEXT_BIT = 0x80
-# The next three bits indicate encryption 'type'
-ASYMM_BIT = 0x00
-SEAL_BIT = 0x10
-SECRET_BIT = 0x20
+from ..header_bytes import TEXT_BIT, SECRET_BIT, BINARY_BIT, HEADER_LENGTH
 
 class SymmKeyV0(SymmKeyBase):
     protocol_version = 0
@@ -85,11 +74,11 @@ class SymmKeyV0(SymmKeyBase):
             message_with_header = self._box.decrypt(raw_cipher)
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
-        header = struct.unpack(">BBBB", message_with_header[:4])
+        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
         if header[0] != (TEXT_BIT | SECRET_BIT):
             raise CryptoException("Invalid header byte {}".format(header))
 
-        status, message = utf8Decode(message_with_header[4:])
+        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
         if not status:
             raise CryptoException("Failed to utf8 message")
 
@@ -120,11 +109,11 @@ class SymmKeyV0(SymmKeyBase):
             message = self._box.decrypt(raw_cipher)
         except (libnacl.CryptError, ValueError) as e:
             raise CryptoException(e)
-        header_byte = struct.unpack(">BBBB", message[:4])[0]
+        header_byte = struct.unpack(">BBBB", message[:HEADER_LENGTH])[0]
         if header_byte != (BINARY_BIT | SECRET_BIT):
             raise CryptoException("Invalid header byte {}".format(header_byte))
 
-        return message[4:]
+        return message[HEADER_LENGTH:]
 
     def __eq__(self, other):
         return self.protocol_version == other.protocol_version and \
