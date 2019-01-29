@@ -124,23 +124,27 @@ class PVKeyFactory(object):
             raise CryptoException(e)
 
     @staticmethod
-    def deserializeUserKey(user_key, is_protobuf=True):
-        if not is_protobuf:
-            try:
-                return UserKeyV0.deserialize(user_key)
-            except CryptoException as e:
-                g_log.exception(e)
-                g_log.info("Falling to protobuf")
+    def deserializeUserKey(user_key):
+        try:
+            status, serialized = b64dec(user_key)
+            if not status:
+                raise CryptoException(u"Failed to b64 dec key")
+            return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
+        except CryptoException as e:
+            g_log.exception(e)
+            g_log.info("Fall back to json")
 
-        status, serialized = b64dec(user_key)
-        if not status:
-            raise CryptoException(u"Failed to b64 dec key")
-        return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
+        return UserKeyV0.deserialize(user_key)
 
     @staticmethod
-    def userKeyfromDB(key, is_protobuf=True):
-        if is_protobuf:
-            return PVKeyFactory.deserializeUserKey(key, True)
-        else:
-            key = UserKeyV0.fromDB(key)
-            return PVKeyFactory.newUserKey(key.key_version, USER_KEY_PROTOCOL_VERSION.V1, AsymmKeyV1(key.encryption_key.sk), SignKeyV1(key.signing_key.seed))
+    def userKeyfromDB(key):
+        try:
+            return PVKeyFactory.deserializeUserKey(key)
+        except CryptoException as e:
+            g_log.exception(e)
+            g_log.info("Fall back to json")
+
+        key = UserKeyV0.fromDB(key)
+        return PVKeyFactory.newUserKey(
+            key.key_version, USER_KEY_PROTOCOL_VERSION.V1,
+            AsymmKeyV1(key.encryption_key.sk), SignKeyV1(key.signing_key.seed))

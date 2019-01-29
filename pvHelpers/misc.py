@@ -452,7 +452,13 @@ class CaseInsensitiveSet(collections.Set):
 class CaseInsensitiveDict(dict):
     @classmethod
     def _k(cls, key):
-        return key.lower() if isinstance(key, basestring) else key
+        if isinstance(key, basestring):
+            return key.lower()
+        elif isinstance(key, tuple):
+            return tuple([cls._k(i) for i in key])
+        else:
+            return key
+
     def __init__(self, *args, **kwargs):
         super(CaseInsensitiveDict, self).__init__(*args, **kwargs)
         self._convert_keys()
