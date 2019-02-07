@@ -12,6 +12,10 @@ class SymmKeyV0(SymmKeyBase):
         self._box = libnacl.secret.SecretBox(secret)
         self._secret = self._box.sk
 
+    @property
+    def secret(self):
+        return self._box.sk
+
     def serialize(self):
         status, b64 = b64enc(self._box.sk)
         if not status:
@@ -28,12 +32,9 @@ class SymmKeyV0(SymmKeyBase):
 
 
     @classmethod
-    @params(object, {"key": unicode})
+    @params(object, {"key": bytes})
     def fromDict(cls, key_dict):
-        status, key = b64dec(key_dict["key"])
-        if not status:
-            raise CryptoException("Failed to b64 decode key")
-        status, key = utf8Decode(key)
+        status, key = utf8Decode(key_dict["key"])
         if not status:
             raise CryptoException("Failed to utf8 decode key")
         status, key = jloads(key)

@@ -11,6 +11,10 @@ class VerifyKeyV0(VerifyKeyBase):
         self._verifier = libnacl.sign.Verifier(HexEncode(verifier_key))
 
     @property
+    def key(self):
+        return self._verifier.vk
+
+    @property
     def vk(self):
         return self._verifier.vk
 
@@ -46,10 +50,14 @@ class SignKeyV0(SignKeyBase):
     public_side_model = VerifyKeyV0
 
     @params(object, {bytes, types.NoneType})
-    def __init__(self, seed=None):
+    def __init__(self, key=None):
         super(SignKeyV0, self).__init__(self.protocol_version)
-        self._signer = libnacl.sign.Signer(seed)
+        self._signer = libnacl.sign.Signer(key)
         self._verify_key = self.public_side_model(self._signer.vk)
+
+    @property
+    def key(self):
+        return self._signer.seed
 
     @property
     def verify_key(self):

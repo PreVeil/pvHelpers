@@ -8,6 +8,10 @@ class VerifyKeyV1(VerifyKeyV0):
         super(VerifyKeyV1, self).__init__(*args, **kwargs)
 
     @property
+    def key(self):
+        return self.vk
+
+    @property
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
@@ -25,8 +29,12 @@ class SignKeyV1(SignKeyV0):
     protocol_version = 1
     public_side_model = VerifyKeyV1
 
-    def __init__(self, seed=None):
-        super(SignKeyV1, self).__init__(seed)
+    def __init__(self, key=None):
+        super(SignKeyV1, self).__init__(key)
+
+    @property
+    def key(self):
+        return self.seed
 
     @property
     def buffer(self):
@@ -34,3 +42,10 @@ class SignKeyV1(SignKeyV0):
             protocol_version=self.protocol_version,
             key=self.seed
         )
+
+    def serialize(self):
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64

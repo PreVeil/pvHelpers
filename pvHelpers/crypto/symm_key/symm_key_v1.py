@@ -1,10 +1,10 @@
-import types, struct
+import types
 
 import fipscrypto as FC
 
 from .symm_key_base import SymmKeyBase
-from ..header_bytes import BINARY_BIT, TEXT_BIT, SECRET_BIT, HEADER_LENGTH
-from ..utils import params, RandomBytes, KeyBuffer, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, HexEncode, Sha256Sum, jloads
+from ..utils import params, RandomBytes, KeyBuffer, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, \
+    HexEncode, Sha256Sum, jloads
 
 class SymmKeyV1(SymmKeyBase):
     protocol_version = 1
@@ -18,6 +18,10 @@ class SymmKeyV1(SymmKeyBase):
         self._secret = secret or RandomBytes(length=FC.AES_KEY_LENGTH)
 
     @property
+    def secret(self):
+        return self._secret
+
+    @property
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
@@ -25,16 +29,17 @@ class SymmKeyV1(SymmKeyBase):
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
-
+        status, key = b64enc(self.buffer.SerializeToString())
+        if status == False:
+            raise CryptoException("Failed to b46 encode key")
+        return key
 
     @params(object, unicode)
     def encryptText(self, message):
         status, raw_message = utf8Encode(message)
         if not status:
             raise CryptoException("Failed to utf8 encode message")
-        message_with_header = struct.pack(">BBBB", TEXT_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + raw_message
-        cipher, tag, iv = FC.aes_encrypt(self._secret, message_with_header)
+        cipher, tag, iv = FC.aes_encrypt(self._secret, raw_message)
         cipher = cipher + iv + tag
 
         status, b64_cipher = b64enc(cipher)
@@ -53,12 +58,9 @@ class SymmKeyV1(SymmKeyBase):
         iv = raw_cipher[-(FC.AES_TAG_LENGTH + FC.IV_LENGTH):-(FC.AES_TAG_LENGTH)]
         cipher = raw_cipher[:-(FC.AES_TAG_LENGTH + FC.IV_LENGTH)]
 
-        message_with_header = FC.aes_decrypt(self._secret, cipher, tag, iv)
-        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
-        if header[0] != (TEXT_BIT | SECRET_BIT):
-            raise CryptoException("Invalid header byte {}".format(header))
+        raw_message = FC.aes_decrypt(self._secret, cipher, tag, iv)
 
-        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
+        status, message = utf8Decode(raw_message)
         if not status:
             raise CryptoException("Failed to utf8 message")
 
@@ -67,9 +69,7 @@ class SymmKeyV1(SymmKeyBase):
 
     @params(object, bytes)
     def encryptBinary(self, message):
-        message_with_header = struct.pack(">BBBB", BINARY_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + message
-
-        cipher, tag, iv = FC.aes_encrypt(self._secret, message_with_header)
+        cipher, tag, iv = FC.aes_encrypt(self._secret, message)
         cipher = cipher + iv + tag
 
         status, b64_cipher = b64enc(cipher)
@@ -89,12 +89,7 @@ class SymmKeyV1(SymmKeyBase):
         iv = raw_cipher[-(FC.AES_TAG_LENGTH + FC.IV_LENGTH):-(FC.AES_TAG_LENGTH)]
         cipher = raw_cipher[:-(FC.AES_TAG_LENGTH + FC.IV_LENGTH)]
 
-        message_with_header = FC.aes_decrypt(self._secret, cipher, tag, iv)
-        header_byte = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])[0]
-        if header_byte != (BINARY_BIT | SECRET_BIT):
-            raise CryptoException("Invalid header byte {}".format(header_byte))
-
-        return message_with_header[HEADER_LENGTH:]
+        return FC.aes_decrypt(self._secret, cipher, tag, iv)
 
 
     def __eq__(self, other):

@@ -27,8 +27,7 @@ def test_signing_key_v3():
 
 
     k2 = PVKeyFactory.newSignKey(
-        protocol_version=SIGN_KEY_PROTOCOL_VERSION.V3,
-        curve25519_secret=k._curve25519_secret, p256_secret=k._p256_secret)
+        protocol_version=SIGN_KEY_PROTOCOL_VERSION.V3, key=k.key)
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
     assert k2.verify_key.verifyBinary(
         plaintext,

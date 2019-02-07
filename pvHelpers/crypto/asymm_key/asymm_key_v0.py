@@ -12,6 +12,10 @@ class PublicKeyV0(PublicKeyBase):
         self._public_key = libnacl.public.PublicKey(public_key)
 
     @property
+    def key(self):
+        return self._public_key.pk
+
+    @property
     def pk(self):
         return self._public_key.pk
 
@@ -54,10 +58,14 @@ class AsymmKeyV0(AsymmKeyBase):
     public_side_model = PublicKeyV0
 
     @params(object, {bytes, types.NoneType})
-    def __init__(self, enc_secret=None):
+    def __init__(self, key=None):
         super(AsymmKeyV0, self).__init__(self.protocol_version)
-        self._key_pair = libnacl.public.SecretKey(enc_secret)
+        self._key_pair = libnacl.public.SecretKey(key)
         self._public_key = self.public_side_model(self._key_pair.pk)
+
+    @property
+    def key(self):
+        return self._key_pair.sk
 
     @property
     def sk(self):

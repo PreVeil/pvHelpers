@@ -3,7 +3,6 @@ from ..asymm_key import AsymmKeyBase, PublicKeyBase
 from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum, params
 from ..header_bytes import ASYMM_BIT, BINARY_BIT, TEXT_BIT, HEADER_LENGTH
 
-#TODO: add protocol_version to this module
 class AsymmBox(object):
     @params(object, AsymmKeyBase, PublicKeyBase)
     def __init__(self, private_key, public_key):

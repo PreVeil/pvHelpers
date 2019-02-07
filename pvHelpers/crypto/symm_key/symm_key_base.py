@@ -5,6 +5,10 @@ class SymmKeyBase(object):
     def __init__(self, protocol_version):
         self.protocol_version = protocol_version
 
+    @property
+    def secret(self):
+        raise NotImplementedError("secret must be implemented by children")
+
     def encryptText(self, message):
         raise NotImplementedError("encryptText must be implemented by children")
 

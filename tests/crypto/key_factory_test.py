@@ -37,7 +37,15 @@ def test_user_key_creation(protocol_version):
 ])
 def test_encryption_key_creation(protocol_version):
     k = PVKeyFactory.newAsymmKey(protocol_version)
+    k2 = PVKeyFactory.newAsymmKey(protocol_version=protocol_version, key=k.key)
+
+    assert k == k2
     assert k.protocol_version == protocol_version
+    assert k == PVKeyFactory.deserializeAsymmKey(k.serialize())
+
+    # unknown protocol_version
+    with pytest.raises(CryptoException) as ex:
+        PVKeyFactory.newAsymmKey(protocol_version=9999)
 
 
 @pytest.mark.parametrize('protocol_version', [
@@ -46,9 +54,20 @@ def test_encryption_key_creation(protocol_version):
     SIGN_KEY_PROTOCOL_VERSION.V3,
 ])
 def test_sign_key_creation(protocol_version):
-    k = PVKeyFactory.newAsymmKey(protocol_version)
-    assert k.protocol_version == protocol_version
+    k = PVKeyFactory.newSignKey(protocol_version)
+    k2 = PVKeyFactory.newSignKey(protocol_version=protocol_version, key=k.key)
 
+    assert k == k2
+    assert k.protocol_version == protocol_version
+    assert k == PVKeyFactory.deserializeSignKey(k.serialize())
+
+    # verify side
+    vk, vk2 = k.verify_key, k2.verify_key
+    assert vk2.serialize() == PVKeyFactory.deserializeVerifyKey(vk.serialize()).serialize()
+
+    # unknown protocol_version
+    with pytest.raises(CryptoException) as ex:
+        PVKeyFactory.newSignKey(protocol_version=9999)
 
 
 @pytest.mark.parametrize('protocol_version', [
@@ -57,4 +76,11 @@ def test_sign_key_creation(protocol_version):
 ])
 def test_symm_key_creation(protocol_version):
     k = PVKeyFactory.newSymmKey(protocol_version)
+    k2 = PVKeyFactory.newSymmKey(protocol_version=protocol_version, secret=k.secret)
     assert k.protocol_version == protocol_version
+    assert k == k2
+    assert k == PVKeyFactory.deserializeSymmKey(k2.serialize())
+
+    # unknown protocol_version
+    with pytest.raises(CryptoException) as ex:
+        PVKeyFactory.newSymmKey(protocol_version=9999)

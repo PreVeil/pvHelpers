@@ -1,17 +1,26 @@
 import types
 from .sign_key_base import SignKeyBase, VerifyKeyBase
-from ..utils import KeyBuffer, b64enc, params, b64dec, CryptoException, utf8Decode, utf8Encode
+from ..utils import KeyBuffer, b64enc, params, b64dec, CryptoException, utf8Decode, utf8Encode, \
+    EC_SECRET_LENGTH, NISTP256_PUB_KEY_LENGTH, CURVE25519_PUB_KEY_LENGTH
 import fipscrypto as FC
 
 
 class VerifyKeyV3(VerifyKeyBase):
     protocol_version = 3
 
-    @params(object, bytes, bytes)
-    def __init__(self, curve25519_pub, p256_pub):
+    @params(object, bytes)
+    def __init__(self, key):
         super(VerifyKeyV3, self).__init__(self.protocol_version)
-        self.curve25519_pub = curve25519_pub
-        self.p256_pub = p256_pub
+        if len(key) != CURVE25519_PUB_KEY_LENGTH + NISTP256_PUB_KEY_LENGTH:
+            raise CryptoException('invalid public `key` length {}'.format(len(key)))
+
+        self.curve25519_pub = key[:CURVE25519_PUB_KEY_LENGTH]
+        self.p256_pub = key[CURVE25519_PUB_KEY_LENGTH:]
+
+    @property
+    def key(self):
+        return self.curve25519_pub + self.p256_pub
+
 
     @params(object, bytes, unicode)
     def verifyBinary(self, message, signature):
@@ -32,21 +41,25 @@ class VerifyKeyV3(VerifyKeyBase):
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
-            key=self.curve25519_pub + self.p256_pub
+            key=self.key
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64
 
 
 class SignKeyV3(SignKeyBase):
     protocol_version = 3
     public_side_model = VerifyKeyV3
 
-    @params(object, {bytes, types.NoneType}, {bytes, types.NoneType})
-    def __init__(self, curve25519_secret=None, p256_secret=None):
+    @params(object, {bytes, types.NoneType})
+    def __init__(self, key=None):
         super(SignKeyV3, self).__init__(self.protocol_version)
-        if curve25519_secret is None and p256_secret is None:
+        if key is None:
             self._curve25519_secret, curve25519_pub = FC.generate_ec_key(
                 FC.EC_KEY_TYPE.CURVE_25519, FC.EC_KEY_USAGE.SIGNATURE_USAGE)
 
@@ -54,14 +67,21 @@ class SignKeyV3(SignKeyBase):
                 FC.EC_KEY_TYPE.NIST_P256, FC.EC_KEY_USAGE.SIGNATURE_USAGE)
 
         else:
-            self._curve25519_secret = curve25519_secret
+            if len(key) != 2 * EC_SECRET_LENGTH:
+                raise CryptoException('invalid `key` length {}'.format(len(key)))
+
+            self._curve25519_secret = key[:EC_SECRET_LENGTH]
             curve25519_pub = FC.ec_key_to_public(
                 self._curve25519_secret, FC.EC_KEY_TYPE.CURVE_25519, FC.EC_KEY_USAGE.SIGNATURE_USAGE)
-            self._p256_secret = p256_secret
+            self._p256_secret = key[EC_SECRET_LENGTH:]
             p256_pub = FC.ec_key_to_public(
                 self._p256_secret, FC.EC_KEY_TYPE.NIST_P256, FC.EC_KEY_USAGE.SIGNATURE_USAGE)
 
-        self._verify_key = self.public_side_model(curve25519_pub, p256_pub)
+        self._verify_key = self.public_side_model(curve25519_pub + p256_pub)
+
+    @property
+    def key(self):
+        return self._curve25519_secret + self._p256_secret
 
     @property
     def verify_key(self):
@@ -71,11 +91,15 @@ class SignKeyV3(SignKeyBase):
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
-            key=self._curve25519_secret + self._p256_secret
+            key=self.key
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
+        status, b64 = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException(u"Failed to b64 encode serialzied key")
+
+        return b64
 
     def __eq__(self, other):
         return self.protocol_version == other.protocol_version and \

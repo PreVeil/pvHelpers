@@ -1,23 +1,31 @@
-import types, struct
-from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer
+import types
+from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, CryptoException, \
+    CURVE25519_PUB_KEY_LENGTH, NISTP256_PUB_KEY_LENGTH, EC_SECRET_LENGTH
 from .asymm_key_base import PublicKeyBase, AsymmKeyBase
-from ..header_bytes import BINARY_BIT, TEXT_BIT, ASYMM_BIT, SEAL_BIT, HEADER_LENGTH
+
 import fipscrypto as FC
 
 class PublicKeyV3(PublicKeyBase):
     protocol_version = 3
 
-    @params(object, bytes, bytes)
-    def __init__(self, curve25519_pub, p256_pub):
+    @params(object, bytes)
+    def __init__(self, key):
         super(PublicKeyV3, self).__init__(self.protocol_version)
-        self.curve25519_pub = curve25519_pub
-        self.p256_pub = p256_pub
+        if len(key) != CURVE25519_PUB_KEY_LENGTH + NISTP256_PUB_KEY_LENGTH:
+            raise CryptoException('invalid public `key` length {}'.format(len(key)))
+
+        self.curve25519_pub = key[:CURVE25519_PUB_KEY_LENGTH]
+        self.p256_pub = key[CURVE25519_PUB_KEY_LENGTH:]
+
+
+    @property
+    def key(self):
+        return self.curve25519_pub + self.p256_pub
 
 
     @params(object, bytes)
     def sealBinary(self, message):
-        message_with_header = struct.pack(">BBBB", BINARY_BIT | SEAL_BIT, 0x00, 0x00, 0x00) + message
-        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message_with_header)
+        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message)
         status, b64 = b64enc(sealed_message)
         if not status:
             raise CryptoException("Failed to b64 encode message")
@@ -28,8 +36,7 @@ class PublicKeyV3(PublicKeyBase):
         status, raw_message = utf8Encode(message)
         if not status:
             raise CryptoException("Failed to utf8 encode message")
-        message_with_header = struct.pack(">BBBB", TEXT_BIT | SEAL_BIT, 0x00, 0x00, 0x00) + raw_message
-        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message_with_header)
+        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, raw_message)
         status, b64 = b64enc(sealed_message)
         if not status:
             raise CryptoException("Failed to b64 encode message")
@@ -39,21 +46,24 @@ class PublicKeyV3(PublicKeyBase):
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
-            key=self.curve25519_pub + self.p256_pub
+            key=self.key
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
+        status, b64_enc_public_key = b64enc(self.buffer.SerializeToString())
+        if status == False:
+            raise CryptoException("Failed to b46 encode public key")
+        return b64_enc_public_key
 
 
 class AsymmKeyV3(AsymmKeyBase):
     protocol_version = 3
     public_side_model = PublicKeyV3
 
-    @params(object, {bytes, types.NoneType}, {bytes, types.NoneType})
-    def __init__(self, curve25519_secret=None, p256_secret=None):
+    @params(object, {bytes, types.NoneType})
+    def __init__(self, key=None):
         super(AsymmKeyV3, self).__init__(self.protocol_version)
-        if curve25519_secret is None and p256_secret is None:
+        if key is None:
             self._curve25519_secret, curve25519_pub = FC.generate_ec_key(
                 FC.EC_KEY_TYPE.CURVE_25519, FC.EC_KEY_USAGE.ENCRYPTION_USAGE)
 
@@ -61,14 +71,21 @@ class AsymmKeyV3(AsymmKeyBase):
                 FC.EC_KEY_TYPE.NIST_P256, FC.EC_KEY_USAGE.ENCRYPTION_USAGE)
 
         else:
-            self._curve25519_secret = curve25519_secret
+            if len(key) != 2 * EC_SECRET_LENGTH:
+                raise CryptoException('invalid `key` length {}'.format(len(key)))
+
+            self._curve25519_secret = key[:EC_SECRET_LENGTH]
             curve25519_pub = FC.ec_key_to_public(
                 self._curve25519_secret, FC.EC_KEY_TYPE.CURVE_25519, FC.EC_KEY_USAGE.ENCRYPTION_USAGE)
-            self._p256_secret = p256_secret
+            self._p256_secret = key[EC_SECRET_LENGTH:]
             p256_pub = FC.ec_key_to_public(
                 self._p256_secret, FC.EC_KEY_TYPE.NIST_P256, FC.EC_KEY_USAGE.ENCRYPTION_USAGE)
 
-        self._public_key = self.public_side_model(curve25519_pub, p256_pub)
+        self._public_key = self.public_side_model(curve25519_pub + p256_pub)
+
+    @property
+    def key(self):
+        return self._curve25519_secret + self._p256_secret
 
     @property
     def public_key(self):
@@ -79,22 +96,15 @@ class AsymmKeyV3(AsymmKeyBase):
         status, cipher = b64dec(cipher)
         if not status:
             raise CryptoException("Failed to b64 decode cipher")
-        message_with_header = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
-        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
-        if header[0] != (BINARY_BIT | SEAL_BIT):
-            raise CryptoException(u"Invalid header bytes")
-        return message_with_header[HEADER_LENGTH:]
+        return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
 
     @params(object, unicode)
     def unsealText(self, cipher):
         status, cipher = b64dec(cipher)
         if not status:
             raise CryptoException("Failed to b64 decode cipher")
-        message_with_header = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
-        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
-        if header[0] != (TEXT_BIT | SEAL_BIT):
-            raise CryptoException(u"Invalid header bytes")
-        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
+        raw_message = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
+        status, message = utf8Decode(raw_message)
         if not status:
             raise CryptoException(u"Failed to utf8 decode message")
         return message
@@ -111,8 +121,11 @@ class AsymmKeyV3(AsymmKeyBase):
     def buffer(self):
         return KeyBuffer(
             protocol_version=self.protocol_version,
-            key=self._curve25519_secret + self._p256_secret
+            key=self.key
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
+        status, b64_enc_private_key = b64enc(self.buffer.SerializeToString())
+        if status == False:
+            raise CryptoException("Failed to b46 encode private key")
+        return b64_enc_private_key

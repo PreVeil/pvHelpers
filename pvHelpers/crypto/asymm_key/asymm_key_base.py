@@ -7,6 +7,10 @@ class AsymmKeyBase(object):
         raise NotImplementedError("children must have public_key property")
 
     @property
+    def key(self):
+        raise NotImplementedError("children must have `key` property")
+
+    @property
     def buffer(self):
         raise NotImplementedError("buffer must be implemented by children")
 
@@ -28,6 +32,10 @@ class AsymmKeyBase(object):
 class PublicKeyBase(object):
     def __init__(self, protocol_version):
         self.protocol_version = protocol_version
+
+    @property
+    def key(self):
+        raise NotImplementedError("children must have `key` property")
 
     @property
     def buffer(self):
