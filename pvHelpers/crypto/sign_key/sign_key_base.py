@@ -48,5 +48,8 @@ class VerifyKeyBase(object):
     def verifyBinary(self, *args, **kwargs):
         raise NotImplementedError("verifyBinary must be implemented by children")
 
+    def verify(self, *arg, **kwargs):
+        raise NotImplementedError("verify must be implemented by children")
+
     def serialize(self):
         raise NotImplementedError("serialize must be implemented by children")

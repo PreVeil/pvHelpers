@@ -21,6 +21,14 @@ class VerifyKeyV3(VerifyKeyBase):
     def key(self):
         return self.curve25519_pub + self.p256_pub
 
+    @params(object, unicode, unicode, bool)
+    def verify(self, message, signature, is_text=True):
+        if is_text:
+            return self.verifyText(message, signature)
+        status, message = b64dec(message)
+        if not status:
+            raise CryptoException("Failed to b64 decode signature")
+        return self.verifyBinary(message, signature)
 
     @params(object, bytes, unicode)
     def verifyBinary(self, message, signature):

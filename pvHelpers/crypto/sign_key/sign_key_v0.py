@@ -18,6 +18,15 @@ class VerifyKeyV0(VerifyKeyBase):
     def vk(self):
         return self._verifier.vk
 
+    @params(object, unicode, unicode, bool)
+    def verify(self, message, signature, is_text=True):
+        if is_text:
+            return self.verifyText(message, signature)
+        status, message = b64dec(message)
+        if not status:
+            raise CryptoException("Failed to b64 decode signature")
+        return self.verifyBinary(message, signature)
+
     @params(object, unicode, unicode)
     def verifyText(self, message, signature):
         status, raw_message = utf8Encode(message)
