@@ -1,6 +1,6 @@
 import struct, types, libnacl
 from .asymm_key_v0 import AsymmKeyV0, PublicKeyV0
-from ..utils import CryptoException, params, g_log, Sha512Sum, RandomBytes, KeyBuffer
+from ..utils import CryptoException, params, g_log, Sha512Sum, RandomBytes, KeyBuffer, b64enc
 
 crypto_box_SEEDBYTES = libnacl.nacl.crypto_box_seedbytes()
 
@@ -19,20 +19,30 @@ class PublicKeyV2(PublicKeyV0):
             key=self._public_key.pk
         )
 
+    def serialize(self):
+        status, b64_enc_public_key = b64enc(self.buffer.SerializeToString())
+        if status == False:
+            raise CryptoException("Failed to b46 encode public key")
+        return b64_enc_public_key
+
 
 class AsymmKeyV2(AsymmKeyV0):
     protocol_version = 2
     public_side_model = PublicKeyV2
 
     @params(object, {bytes, types.NoneType})
-    def __init__(self, enc_seed=None):
-        if not enc_seed:
-            enc_seed = RandomBytes(crypto_box_SEEDBYTES)
-        if len(enc_seed) != crypto_box_SEEDBYTES:
+    def __init__(self, key=None):
+        if not key:
+            key = RandomBytes(crypto_box_SEEDBYTES)
+        if len(key) != crypto_box_SEEDBYTES:
             raise CryptoException(u"invalid seed")
 
-        self._seed = enc_seed
-        super(AsymmKeyV2, self).__init__(Sha512Sum(enc_seed)[:32])
+        self._seed = key
+        super(AsymmKeyV2, self).__init__(Sha512Sum(self._seed)[:32])
+
+    @property
+    def key(self):
+        return self._seed
 
     @property
     def buffer(self):
@@ -44,3 +54,9 @@ class AsymmKeyV2(AsymmKeyV0):
     @property
     def seed(self):
         return self._seed
+
+    def serialize(self):
+        status, b64_enc_private_key = b64enc(self.buffer.SerializeToString())
+        if status == False:
+            raise CryptoException("Failed to b46 encode private key")
+        return b64_enc_private_key

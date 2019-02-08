@@ -11,8 +11,21 @@ class VerifyKeyV0(VerifyKeyBase):
         self._verifier = libnacl.sign.Verifier(HexEncode(verifier_key))
 
     @property
+    def key(self):
+        return self._verifier.vk
+
+    @property
     def vk(self):
         return self._verifier.vk
+
+    @params(object, unicode, unicode, bool)
+    def verify(self, message, signature, is_text=True):
+        if is_text:
+            return self.verifyText(message, signature)
+        status, message = b64dec(message)
+        if not status:
+            raise CryptoException("Failed to b64 decode signature")
+        return self.verifyBinary(message, signature)
 
     @params(object, unicode, unicode)
     def verifyText(self, message, signature):
@@ -46,10 +59,14 @@ class SignKeyV0(SignKeyBase):
     public_side_model = VerifyKeyV0
 
     @params(object, {bytes, types.NoneType})
-    def __init__(self, seed=None):
+    def __init__(self, key=None):
         super(SignKeyV0, self).__init__(self.protocol_version)
-        self._signer = libnacl.sign.Signer(seed)
+        self._signer = libnacl.sign.Signer(key)
         self._verify_key = self.public_side_model(self._signer.vk)
+
+    @property
+    def key(self):
+        return self._signer.seed
 
     @property
     def verify_key(self):

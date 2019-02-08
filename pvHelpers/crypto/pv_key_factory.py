@@ -1,14 +1,17 @@
-from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, USER_KEY_PROTOCOL_VERSION, SIGN_KEY_PROTOCOL_VERSION
+from .key_protocols import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, USER_KEY_PROTOCOL_VERSION, \
+    SIGN_KEY_PROTOCOL_VERSION
 from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
-from .symm_key import SymmKeyV0
-from .asymm_key import AsymmKeyV0, AsymmKeyV2, PublicKeyV2, AsymmKeyV1, PublicKeyV1
-from .sign_key import SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0
-from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, utf8Decode, jloads
+from .symm_key import SymmKeyV0, SymmKeyV1
+from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV3, PublicKeyV2, AsymmKeyV1, PublicKeyV1
+from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0, VerifyKeyV3
+from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, \
+    utf8Decode, jloads, EC_SECRET_LENGTH
 
 class PVKeyFactory(object):
     @staticmethod
     def newUserKey(key_version, protocol_version=USER_KEY_PROTOCOL_VERSION.Latest, encryption_key=None, signing_key=None):
         if protocol_version == USER_KEY_PROTOCOL_VERSION.V0:
+            # UserKeyV0 is tied to EncryptionKeyV0, SignKeyV0 due to legacy reasons
             if not encryption_key:
                 encryption_key = AsymmKeyV0()
             if not signing_key:
@@ -16,19 +19,46 @@ class PVKeyFactory(object):
             return UserKeyV0(key_version, encryption_key, signing_key)
         elif protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
             if not encryption_key:
-                encryption_key = AsymmKeyV2()
+                encryption_key = PVKeyFactory.newAsymmKey()
             if not signing_key:
-                signing_key = SignKeyV1()
+                signing_key = PVKeyFactory.newSignKey()
             return UserKeyV1(key_version, encryption_key, signing_key)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
 
     @staticmethod
-    def newSymmKey(protocol_version=SYMM_KEY_PROTOCOL_VERSION.Latest, *args, **kwargs):
-        if protocol_version == SYMM_KEY_PROTOCOL_VERSION.V0:
-            return SymmKeyV0(*args, **kwargs)
+    def newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.Latest, **kwargs):
+        if protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V0:
+            return AsymmKeyV0(**kwargs)
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V1:
+            return AsymmKeyV1(**kwargs)
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
+            return AsymmKeyV2(**kwargs)
+        elif protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
+            return AsymmKeyV3(**kwargs)
         else:
             raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+
+    @staticmethod
+    def newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.Latest,  **kwargs):
+        if protocol_version == SIGN_KEY_PROTOCOL_VERSION.V0:
+            return SignKeyV0(**kwargs)
+        elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V1:
+            return SignKeyV1(**kwargs)
+        elif protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
+            return SignKeyV3(**kwargs)
+        else:
+            raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+
+    @staticmethod
+    def newSymmKey(protocol_version=SYMM_KEY_PROTOCOL_VERSION.Latest, **kwargs):
+        if protocol_version == SYMM_KEY_PROTOCOL_VERSION.V0:
+            return SymmKeyV0(**kwargs)
+        elif protocol_version == SYMM_KEY_PROTOCOL_VERSION.V1:
+            return SymmKeyV1(**kwargs)
+        else:
+            raise CryptoException("Invalid protocol_version: {}".format(protocol_version))
+
 
     @staticmethod
     def asymmKeyFromBuffer(buffer):
@@ -36,15 +66,19 @@ class PVKeyFactory(object):
             return AsymmKeyV1(buffer.key)
         elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
             return AsymmKeyV2(buffer.key)
+        elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
+            return AsymmKeyV3(buffer.key)
         else:
-            raise CryptoException(u"not supported protocol_version")
+            raise CryptoException(u"not supported protocol_version {}".format(buffer.protocol_version))
 
     @staticmethod
     def signKeyFromBuffer(buffer):
         if buffer.protocol_version == SIGN_KEY_PROTOCOL_VERSION.V1:
             return SignKeyV1(buffer.key)
+        elif buffer.protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
+            return SignKeyV3(buffer.key)
         else:
-            raise CryptoException(u"not supported protocol_version")
+            raise CryptoException(u"not supported protocol_version {}".format(buffer.protocol_version))
 
     @staticmethod
     def publicKeyFromBuffer(buffer):
@@ -52,18 +86,61 @@ class PVKeyFactory(object):
             return PublicKeyV1(buffer.key)
         elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V2:
             return PublicKeyV2(buffer.key)
+        elif buffer.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
+            return PublicKeyV3(buffer.key)
         else:
-            raise CryptoException(u"not supported protocol_version")
+            raise CryptoException(u"not supported protocol_version {}".format(buffer.protocol_version))
 
     @staticmethod
     def verifyKeyFromBuffer(buffer):
         if buffer.protocol_version == SIGN_KEY_PROTOCOL_VERSION.V1:
             return VerifyKeyV1(buffer.key)
+        elif buffer.protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
+            return VerifyKeyV3(buffer.key)
         else:
-            raise CryptoException(u"not supported protocol_version")
+            raise CryptoException(u"not supported protocol_version {}".format(buffer.protocol_version))
+
+    @staticmethod
+    def symmKeyFromSerializedBuffer(serialized_buffer):
+        try:
+            buffer = KeyBuffer()
+            buffer.ParseFromString(serialized_buffer)
+            if buffer.protocol_version == SYMM_KEY_PROTOCOL_VERSION.V1:
+                return SymmKeyV1(secret=buffer.key)
+            else:
+                raise CryptoException(u"unsupported protocol_version {}".format(buffer.protocol_version))
+        except ProtobufErrors as e:
+            raise CryptoException(e)
+
+    @staticmethod
+    def userKeyFromSerializedBuffer(serialized_buffer):
+        try:
+            buffer = UserKeyBuffer()
+            buffer.ParseFromString(serialized_buffer)
+            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
+                return UserKeyV1(
+                    buffer.key_version,
+                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
+                    PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
+                )
+            else:
+                raise CryptoException(u"unsupported protocol_version {}".format(buffer.protocol_version))
+        except ProtobufErrors as e:
+            raise CryptoException(e)
+
 
     @staticmethod
     def deserializeSymmKey(key):
+        status, key = b64dec(key)
+        if not status:
+            raise CryptoException("Failed to b64 decode key")
+
+        try:
+            return PVKeyFactory.symmKeyFromSerializedBuffer(key)
+        except (ProtobufErrors, CryptoException) as e:
+            g_log.exception(e)
+            g_log.info(u"Falling back to protocol_version 0")
+
         return SymmKeyV0.fromDict({"key": key})
 
     @staticmethod
@@ -82,20 +159,37 @@ class PVKeyFactory(object):
         return VerifyKeyV0(verify_key)
 
     @staticmethod
-    def userKeyFromSerializedBuffer(serialized_buffer):
+    def deserializeAsymmKey(asymm_key):
+        status, asymm_key = b64dec(asymm_key)
+        if not status:
+            raise CryptoException(u"Failed b64 dec")
+
         try:
-            buffer = UserKeyBuffer()
-            buffer.ParseFromString(serialized_buffer)
-            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
-                return UserKeyV1(
-                    buffer.key_version,
-                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
-                    PVKeyFactory.signKeyFromBuffer(buffer.signing_key)
-                )
-            else:
-                raise CryptoException(u"unsupported protocol_version")
-        except ProtobufErrors as e:
-            raise CryptoException(e)
+            buffer = KeyBuffer()
+            buffer.ParseFromString(asymm_key)
+            return PVKeyFactory.asymmKeyFromBuffer(buffer)
+        except (ProtobufErrors, CryptoException) as e:
+            g_log.exception(e)
+            g_log.info(u"Falling back to protocol_version 0")
+
+        return AsymmKeyV0(asymm_key)
+
+    @staticmethod
+    def deserializeSignKey(sign_key):
+        status, sign_key = b64dec(sign_key)
+        if not status:
+            raise CryptoException(u"Failed b64 dec")
+
+        try:
+            buffer = KeyBuffer()
+            buffer.ParseFromString(sign_key)
+            return PVKeyFactory.signKeyFromBuffer(buffer)
+        except (ProtobufErrors, CryptoException) as e:
+            g_log.exception(e)
+            g_log.info(u"Falling back to protocol_version 0")
+
+        return SignKeyV0(sign_key)
+
 
     @staticmethod
     def deserializePublicUserKey(public_user_key, is_protobuf=True):
@@ -119,7 +213,7 @@ class PVKeyFactory(object):
                     PVKeyFactory.verifyKeyFromBuffer(buffer.verify_key)
                 )
             else:
-                raise CryptoException(u"unsupported protocol_version")
+                raise CryptoException(u"unsupported protocol_version {}".format(buffer.protocol_version))
         except ProtobufErrors as e:
             raise CryptoException(e)
 
@@ -136,6 +230,7 @@ class PVKeyFactory(object):
         if not status:
             raise CryptoException(u"Failed to b64 dec key")
         return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
+
 
     @staticmethod
     def userKeyfromDB(key, is_protobuf=True):
