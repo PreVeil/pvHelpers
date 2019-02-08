@@ -2,7 +2,9 @@ import types
 from .sign_key_base import SignKeyBase, VerifyKeyBase
 from ..utils import KeyBuffer, b64enc, params, b64dec, CryptoException, utf8Decode, utf8Encode, \
     EC_SECRET_LENGTH, NISTP256_PUB_KEY_LENGTH, CURVE25519_PUB_KEY_LENGTH
-import fipscrypto as FC
+
+# uncomment when dll packaged
+# import fipscrypto as FC
 
 
 class VerifyKeyV3(VerifyKeyBase):

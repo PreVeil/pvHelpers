@@ -3,7 +3,8 @@ from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, C
     CURVE25519_PUB_KEY_LENGTH, NISTP256_PUB_KEY_LENGTH, EC_SECRET_LENGTH
 from .asymm_key_base import PublicKeyBase, AsymmKeyBase
 
-import fipscrypto as FC
+# uncomment when dll packaged
+# import fipscrypto as FC
 
 class PublicKeyV3(PublicKeyBase):
     protocol_version = 3
