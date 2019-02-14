@@ -4,7 +4,7 @@ import random
 
 from pvHelpers import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
 
-def xtest_encryption_key_v3():
+def test_encryption_key_v3():
     k = PVKeyFactory.newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.V3)
 
     # seal/unseal

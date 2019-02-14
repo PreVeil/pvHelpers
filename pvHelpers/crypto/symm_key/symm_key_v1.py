@@ -1,7 +1,6 @@
 import types
 
-# uncomment when dll packaged
-# import fipscrypto as FC
+import fipscrypto as FC
 
 from .symm_key_base import SymmKeyBase
 from ..utils import params, RandomBytes, KeyBuffer, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, \

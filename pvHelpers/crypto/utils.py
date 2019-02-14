@@ -3,11 +3,11 @@ from ..params import params
 from ..misc import jdumps, utf8Encode, b64enc, b64dec, jloads, utf8Decode, g_log
 from ..protos import UserKey as UserKeyBuffer, PublicUserKey as PublicUserKeyBuffer, Key as KeyBuffer, ProtobufErrors
 
-# uncomment when dll packaged
-# import fipscrypto as FC
-EC_SECRET_LENGTH  = -1 #FC.EC_PRIVATE_KEY_LENGTH
-CURVE25519_PUB_KEY_LENGTH = -1 #FC.CURVE25519_PUB_KEY_LENGTH
-NISTP256_PUB_KEY_LENGTH = -1 #FC.NISTP256_PUB_KEY_LENGTH
+import fipscrypto as FC
+
+EC_SECRET_LENGTH  = FC.EC_PRIVATE_KEY_LENGTH
+CURVE25519_PUB_KEY_LENGTH = FC.CURVE25519_PUB_KEY_LENGTH
+NISTP256_PUB_KEY_LENGTH = FC.NISTP256_PUB_KEY_LENGTH
 
 @params(bytes)
 def HexEncode(data):

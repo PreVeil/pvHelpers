@@ -5,7 +5,7 @@ import random
 from pvHelpers import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
-def xtest_signing_key_v3():
+def test_signing_key_v3():
     k = PVKeyFactory.newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.V3)
 
     # sign/verify
