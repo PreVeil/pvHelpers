@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.parametrize("protocol_version", [
     SYMM_KEY_PROTOCOL_VERSION.V0,
-    SYMM_KEY_PROTOCOL_VERSION.V1
+    # SYMM_KEY_PROTOCOL_VERSION.V1
 ])
 def test_symmetric_key(protocol_version):
     k = PVKeyFactory.newSymmKey(protocol_version=protocol_version)

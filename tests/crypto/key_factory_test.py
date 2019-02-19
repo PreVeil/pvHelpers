@@ -33,7 +33,7 @@ def test_user_key_creation(protocol_version):
     ASYMM_KEY_PROTOCOL_VERSION.V0,
     ASYMM_KEY_PROTOCOL_VERSION.V1,
     ASYMM_KEY_PROTOCOL_VERSION.V2,
-    ASYMM_KEY_PROTOCOL_VERSION.V3,
+    # ASYMM_KEY_PROTOCOL_VERSION.V3,
 ])
 def test_encryption_key_creation(protocol_version):
     k = PVKeyFactory.newAsymmKey(protocol_version)
@@ -51,7 +51,7 @@ def test_encryption_key_creation(protocol_version):
 @pytest.mark.parametrize('protocol_version', [
     SIGN_KEY_PROTOCOL_VERSION.V0,
     SIGN_KEY_PROTOCOL_VERSION.V1,
-    SIGN_KEY_PROTOCOL_VERSION.V3,
+    # SIGN_KEY_PROTOCOL_VERSION.V3,
 ])
 def test_sign_key_creation(protocol_version):
     k = PVKeyFactory.newSignKey(protocol_version)
@@ -72,7 +72,7 @@ def test_sign_key_creation(protocol_version):
 
 @pytest.mark.parametrize('protocol_version', [
     SYMM_KEY_PROTOCOL_VERSION.V0,
-    SYMM_KEY_PROTOCOL_VERSION.V1,
+    # SYMM_KEY_PROTOCOL_VERSION.V1,
 ])
 def test_symm_key_creation(protocol_version):
     k = PVKeyFactory.newSymmKey(protocol_version)
