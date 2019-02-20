@@ -131,15 +131,15 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeSymmKey(key):
-        status, key = b64dec(key)
-        if not status:
-            raise CryptoException("Failed to b64 decode key")
-
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
             g_log.exception(e)
             g_log.info(u"Falling back to protocol_version 0")
+
+        status, key = b64dec(key)
+        if not status:
+            raise CryptoException("Failed to b64 decode key")
 
         return SymmKeyV0.fromDict({"key": key})
 

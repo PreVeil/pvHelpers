@@ -30,10 +30,7 @@ class SymmKeyV1(SymmKeyBase):
         )
 
     def serialize(self):
-        status, key = b64enc(self.buffer.SerializeToString())
-        if status == False:
-            raise CryptoException("Failed to b46 encode key")
-        return key
+        return self.buffer.SerializeToString()
 
     @params(object, unicode)
     def encryptText(self, message):
