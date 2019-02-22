@@ -30,15 +30,23 @@ class SymmKeyV1(SymmKeyBase):
         )
 
     def serialize(self):
-        return self.buffer.SerializeToString()
+        status, serialized = b64enc(self.buffer.SerializeToString())
+        if not status:
+            raise CryptoException("failed to b64 encode")
 
-    @params(object, unicode)
-    def encryptText(self, message):
+        return serialized
+
+    @params(object, unicode, {dict, types.NoneType})
+    def encryptText(self, message, details=None):
         status, raw_message = utf8Encode(message)
         if not status:
             raise CryptoException("Failed to utf8 encode message")
         cipher, tag, iv = FC.aes_encrypt(self._secret, raw_message)
         cipher = cipher + iv + tag
+
+        if details != None:
+            details["sha256"] = HexEncode(Sha256Sum(cipher))
+            details["length"] = len(cipher)
 
         status, b64_cipher = b64enc(cipher)
         if not status:
@@ -65,10 +73,14 @@ class SymmKeyV1(SymmKeyBase):
         return message
 
 
-    @params(object, bytes)
-    def encryptBinary(self, message):
+    @params(object, bytes, {dict, types.NoneType})
+    def encryptBinary(self, message, details=None):
         cipher, tag, iv = FC.aes_encrypt(self._secret, message)
         cipher = cipher + iv + tag
+
+        if details != None:
+            details["sha256"] = HexEncode(Sha256Sum(cipher))
+            details["length"] = len(cipher)
 
         status, b64_cipher = b64enc(cipher)
         if not status:
