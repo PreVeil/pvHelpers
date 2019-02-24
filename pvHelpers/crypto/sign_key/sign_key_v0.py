@@ -18,27 +18,27 @@ class VerifyKeyV0(VerifyKeyBase):
     def vk(self):
         return self._verifier.vk
 
-    @params(object, unicode, unicode, bool)
-    def verify(self, message, signature, is_text=True):
-        if is_text:
-            return self.verifyText(message, signature)
-        status, message = b64dec(message)
-        if not status:
-            raise CryptoException("Failed to b64 decode signature")
-        return self.verifyBinary(message, signature)
+    # @params(object, unicode, unicode, bool)
+    # def verify(self, message, signature, is_text=True):
+    #     if is_text:
+    #         return self.verifyText(message, signature)
+    #     status, message = b64dec(message)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 decode signature")
+    #     return self.verifyBinary(message, signature)
 
-    @params(object, unicode, unicode)
-    def verifyText(self, message, signature):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-        return self.verifyBinary(raw_message, signature)
+    # @params(object, unicode, unicode)
+    # def verifyText(self, message, signature):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #     return self.verifyBinary(raw_message, signature)
 
-    @params(object, bytes, unicode)
-    def verifyBinary(self, message, signature):
-        status, signature = b64dec(signature)
-        if not status:
-            raise CryptoException("Failed to b64 decode signature")
+    @params(object, bytes, bytes)
+    def verify(self, message, signature):
+        # status, signature = b64dec(signature)
+        # if not status:
+        #     raise CryptoException("Failed to b64 decode signature")
 
         try:
             self._verifier.verify(signature + message)
@@ -82,20 +82,17 @@ class SignKeyV0(SignKeyBase):
             raise CryptoException("Failed to b46 enc signing seed")
         return b64_enc_signing_seed
 
-    @params(object, unicode)
-    def signText(self, message):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-
-        return self.signBinary(raw_message)
+    # @params(object, unicode)
+    # def signText(self, message):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #
+    #     return self.signBinary(raw_message)
 
     @params(object, bytes)
-    def signBinary(self, message):
-        status, b64_signature = b64enc(self._signer.signature(message))
-        if not status:
-            raise CryptoException("Failed to b64 encode signature")
-        return b64_signature
+    def sign(self, message):
+        return self._signer.signature(message)
 
     def __ne__(self, other):
         return not self.__eq__(other)

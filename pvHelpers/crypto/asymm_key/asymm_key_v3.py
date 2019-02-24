@@ -25,23 +25,22 @@ class PublicKeyV3(PublicKeyBase):
 
 
     @params(object, bytes)
-    def sealBinary(self, message):
-        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message)
-        status, b64 = b64enc(sealed_message)
-        if not status:
-            raise CryptoException("Failed to b64 encode message")
-        return b64
+    def seal(self, message):
+        # status, b64 = b64enc(sealed_message)
+        # if not status:
+        #     raise CryptoException("Failed to b64 encode message")
+        return FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message)
 
-    @params(object, unicode)
-    def sealText(self, message):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-        sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, raw_message)
-        status, b64 = b64enc(sealed_message)
-        if not status:
-            raise CryptoException("Failed to b64 encode message")
-        return b64
+    # @params(object, unicode)
+    # def XsealText(self, message):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #     sealed_message = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, raw_message)
+    #     status, b64 = b64enc(sealed_message)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 encode message")
+    #     return b64
 
     @property
     def buffer(self):
@@ -92,23 +91,23 @@ class AsymmKeyV3(AsymmKeyBase):
     def public_key(self):
         return self._public_key
 
-    @params(object, unicode)
-    def unsealBinary(self, cipher):
-        status, cipher = b64dec(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 decode cipher")
+    @params(object, bytes)
+    def unseal(self, cipher):
+        # status, cipher = b64dec(cipher)
+        # if not status:
+        #     raise CryptoException("Failed to b64 decode cipher")
         return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
 
-    @params(object, unicode)
-    def unsealText(self, cipher):
-        status, cipher = b64dec(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 decode cipher")
-        raw_message = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
-        status, message = utf8Decode(raw_message)
-        if not status:
-            raise CryptoException(u"Failed to utf8 decode message")
-        return message
+    # @params(object, unicode)
+    # def XunsealText(self, cipher):
+    #     status, cipher = b64dec(cipher)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 decode cipher")
+    #     raw_message = FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
+    #     status, message = utf8Decode(raw_message)
+    #     if not status:
+    #         raise CryptoException(u"Failed to utf8 decode message")
+    #     return message
 
     def __eq__(self, other):
         return self.protocol_version == other.protocol_version and \

@@ -1,5 +1,6 @@
 import types, libnacl, struct
 from .symm_key_base import *
+from pvHelpers.hook_decorators import WrapExceptions
 from ..utils import params, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, HexEncode, Sha256Sum, jloads
 from ..header_bytes import TEXT_BIT, SECRET_BIT, BINARY_BIT, HEADER_LENGTH
 
@@ -48,71 +49,68 @@ class SymmKeyV0(SymmKeyBase):
             raise CryptoException("Failed to b64 decode material")
         return cls(secret)
 
-    @params(object, unicode, {dict, types.NoneType})
-    def encryptText(self, message, details=None):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-        message_with_header = struct.pack(">BBBB", TEXT_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + raw_message
-        try:
-            cipher = self._box.encrypt(message_with_header)
-        except (libnacl.CryptError, ValueError) as e:
-            raise CryptoException(e)
-        if details != None:
-            details["sha256"] = HexEncode(Sha256Sum(cipher))
-            details["length"] = len(cipher)
-        status, b64_cipher = b64enc(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 encode cipher")
-        return b64_cipher
+    # @params(object, unicode, {dict, types.NoneType})
+    # def encryptText(self, message, details=None):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #     message_with_header = struct.pack(">BBBB", TEXT_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + raw_message
+    #     try:
+    #         cipher = self._box.encrypt(message_with_header)
+    #     except (libnacl.CryptError, ValueError) as e:
+    #         raise CryptoException(e)
+    #     if details != None:
+    #         details["sha256"] = HexEncode(Sha256Sum(cipher))
+    #         details["length"] = len(cipher)
+    #     status, b64_cipher = b64enc(cipher)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 encode cipher")
+    #     return b64_cipher
 
-    @params(object, unicode)
-    def decryptText(self, cipher):
-        status, raw_cipher = b64dec(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 decode cipher")
-        try:
-            message_with_header = self._box.decrypt(raw_cipher)
-        except (libnacl.CryptError, ValueError) as e:
-            raise CryptoException(e)
-        header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
-        if header[0] != (TEXT_BIT | SECRET_BIT):
-            raise CryptoException("Invalid header byte {}".format(header))
+    # @params(object, unicode)
+    # def decryptText(self, cipher):
+    #     status, raw_cipher = b64dec(cipher)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 decode cipher")
+    #     try:
+    #         message_with_header = self._box.decrypt(raw_cipher)
+    #     except (libnacl.CryptError, ValueError) as e:
+    #         raise CryptoException(e)
+    #     header = struct.unpack(">BBBB", message_with_header[:HEADER_LENGTH])
+    #     if header[0] != (TEXT_BIT | SECRET_BIT):
+    #         raise CryptoException("Invalid header byte {}".format(header))
+    #
+    #     status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 message")
+    #
+    #     return message
 
-        status, message = utf8Decode(message_with_header[HEADER_LENGTH:])
-        if not status:
-            raise CryptoException("Failed to utf8 message")
-
-        return message
-
+    @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
     @params(object, bytes, {dict, types.NoneType})
-    def encryptBinary(self, message, details=None):
+    def encrypt(self, message, details=None):
         message_with_header = struct.pack(">BBBB", BINARY_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + message
-        try:
-            cipher = self._box.encrypt(message_with_header)
-        except (libnacl.CryptError, ValueError) as e:
-            raise CryptoException(e)
+        cipher = self._box.encrypt(message_with_header)
         if details != None:
             details["sha256"] = HexEncode(Sha256Sum(cipher))
             details["length"] = len(cipher)
-        status, b64_cipher = b64enc(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 encode cipher")
 
-        return b64_cipher
+        # status, b64_cipher = b64enc(cipher)
+        # if not status:
+        #     raise CryptoException("Failed to b64 encode cipher")
 
-    @params(object, unicode)
-    def decryptBinary(self, cipher):
-        status, raw_cipher = b64dec(cipher)
-        if not status:
-            raise CryptoException("Failed to b64 decode cipher")
-        try:
-            message = self._box.decrypt(raw_cipher)
-        except (libnacl.CryptError, ValueError) as e:
-            raise CryptoException(e)
+        return cipher
+
+    @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
+    @params(object, bytes)
+    def decrypt(self, cipher):
+        # status, raw_cipher = b64dec(cipher)
+        # if not status:
+        #     raise CryptoException("Failed to b64 decode cipher")
+        message = self._box.decrypt(cipher)
         header_byte = struct.unpack(">BBBB", message[:HEADER_LENGTH])[0]
-        if header_byte != (BINARY_BIT | SECRET_BIT):
-            raise CryptoException("Invalid header byte {}".format(header_byte))
+        # if header_byte != (BINARY_BIT | SECRET_BIT):
+        #     raise CryptoException("Invalid header byte {}".format(header_byte))
 
         return message[HEADER_LENGTH:]
 

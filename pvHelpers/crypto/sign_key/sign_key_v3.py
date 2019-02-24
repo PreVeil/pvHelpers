@@ -23,29 +23,29 @@ class VerifyKeyV3(VerifyKeyBase):
     def key(self):
         return self.curve25519_pub + self.p256_pub
 
-    @params(object, unicode, unicode, bool)
-    def verify(self, message, signature, is_text=True):
-        if is_text:
-            return self.verifyText(message, signature)
-        status, message = b64dec(message)
-        if not status:
-            raise CryptoException("Failed to b64 decode signature")
-        return self.verifyBinary(message, signature)
+    # @params(object, unicode, unicode, bool)
+    # def verify(self, message, signature, is_text=True):
+    #     if is_text:
+    #         return self.verifyText(message, signature)
+    #     status, message = b64dec(message)
+    #     if not status:
+    #         raise CryptoException("Failed to b64 decode signature")
+    #     return self.verifyBinary(message, signature)
 
-    @params(object, bytes, unicode)
-    def verifyBinary(self, message, signature):
-        status, signature = b64dec(signature)
-        if not status:
-            raise CryptoException("Failed to b64 decode signature")
+    @params(object, bytes, bytes)
+    def verify(self, message, signature):
+        # status, signature = b64dec(signature)
+        # if not status:
+        #     raise CryptoException("Failed to b64 decode signature")
 
         return FC.hybrid_verify(self.curve25519_pub, self.p256_pub, signature, message)
 
-    @params(object, unicode, unicode)
-    def verifyText(self, message, signature):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-        return self.verifyBinary(raw_message, signature)
+    # @params(object, unicode, unicode)
+    # def verifyText(self, message, signature):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #     return self.verifyBinary(raw_message, signature)
 
     @property
     def buffer(self):
@@ -121,16 +121,16 @@ class SignKeyV3(SignKeyBase):
 
 
     @params(object, bytes)
-    def signBinary(self, message):
-        status, b64_signature = b64enc(FC.hybrid_sign(self._curve25519_secret, self._p256_secret, message))
-        if not status:
-            raise CryptoException("Failed to b64 encode signature")
-        return b64_signature
+    def sign(self, message):
+        # status, b64_signature = b64enc()
+        # if not status:
+        #     raise CryptoException("Failed to b64 encode signature")
+        return FC.hybrid_sign(self._curve25519_secret, self._p256_secret, message)
 
-    @params(object, unicode)
-    def signText(self, message):
-        status, raw_message = utf8Encode(message)
-        if not status:
-            raise CryptoException("Failed to utf8 encode message")
-
-        return self.signBinary(raw_message)
+    # @params(object, unicode)
+    # def signText(self, message):
+    #     status, raw_message = utf8Encode(message)
+    #     if not status:
+    #         raise CryptoException("Failed to utf8 encode message")
+    #
+    #     return self.signBinary(raw_message)
