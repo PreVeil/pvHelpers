@@ -4,12 +4,15 @@ from ..utils import KeyBuffer, b64enc
 class VerifyKeyV1(VerifyKeyV0):
     protocol_version = 1
 
+
     def __init__(self, *args, **kwargs):
         super(VerifyKeyV1, self).__init__(*args, **kwargs)
+
 
     @property
     def key(self):
         return self.vk
+
 
     @property
     def buffer(self):
@@ -18,23 +21,24 @@ class VerifyKeyV1(VerifyKeyV0):
             key=self.vk
         )
 
-    def serialize(self):
-        status, b64 = b64enc(self.buffer.SerializeToString())
-        if not status:
-            raise CryptoException(u"Failed to b64 encode serialzied key")
 
+    def serialize(self):
+        b64 = b64enc(self.buffer.SerializeToString())
         return b64
 
 class SignKeyV1(SignKeyV0):
     protocol_version = 1
     public_side_model = VerifyKeyV1
 
+
     def __init__(self, key=None):
         super(SignKeyV1, self).__init__(key)
+
 
     @property
     def key(self):
         return self.seed
+
 
     @property
     def buffer(self):
@@ -43,9 +47,7 @@ class SignKeyV1(SignKeyV0):
             key=self.seed
         )
 
-    def serialize(self):
-        status, b64 = b64enc(self.buffer.SerializeToString())
-        if not status:
-            raise CryptoException(u"Failed to b64 encode serialzied key")
 
+    def serialize(self):
+        b64 = b64enc(self.buffer.SerializeToString())
         return b64

@@ -64,9 +64,7 @@ class PublicAPIClient:
             "content-type" : "application/json",
             "accept-version" : BACKEND_API_VERSION,
         }
-        status, encoded_raw_body = misc.utf8Encode(raw_body)
-        if status == False:
-            raise requests.exceptions.RequestException("failed to utf8 encode request body")
+        encoded_raw_body = misc.utf8Encode(raw_body)
         return url, encoded_raw_body, headers
 
 class UserAPIClient(PublicAPIClient):
@@ -90,17 +88,12 @@ class UserAPIClient(PublicAPIClient):
         status, signature = self.signRequest(canonical_request)
         if status == False:
             raise requests.exceptions.RequestException("failed to sign request")
-        status, encoded_user_id = misc.utf8Encode(self.user_id)
-        if status == False:
-            raise requests.exceptions.RequestException("failed to utf8 encode user_id")
+        encoded_user_id = misc.utf8Encode(self.user_id)
         headers = {
             "content-type" : "application/json",
             "x-user-id"    : encoded_user_id,
             "x-signature"  : signature,
             "accept-version" : BACKEND_API_VERSION,
         }
-        status, encoded_raw_body = misc.utf8Encode(raw_body)
-        if status == False:
-            raise requests.exceptions.RequestException("failed to utf8 encode request body")
-
+        encoded_raw_body = misc.utf8Encode(raw_body)
         return url, encoded_raw_body, headers

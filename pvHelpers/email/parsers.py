@@ -138,9 +138,7 @@ def parseMime(raw_mime):
             # it'll be `unicode` if content_type is `text/*`
             # this is troublesome for attachment files of `.html` `.txt` `.py`
             # hence should encode them if an attachment
-            status, encoded = encodeContentIfUnicode(part_content)
-            if status == False:
-                raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
+            encoded = encodeContentIfUnicode(part_content)
 
             attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
@@ -190,22 +188,16 @@ def parseMime(raw_mime):
                      # message container parts also fall here message/rfc, message/news
                     pass
 
-                status, encoded = encodeContentIfUnicode(part_content)
-                if status == False:
-                    raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
+                encoded = encodeContentIfUnicode(part_content)
                 attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.INLINE, content_id), Content(encoded)))
 
             else:
                 # this part has no info on it's presentation and is not text or html, hence, should default to attachment
-                status, encoded = encodeContentIfUnicode(part_content)
-                if status == False:
-                    raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
+                encoded = encodeContentIfUnicode(part_content)
                 attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
         else: # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
-            status, encoded = encodeContentIfUnicode(part_content)
-            if status == False:
-                raise EmailException(u"parseMime: failed to utf-8 encode a unicode attachment")
+            encoded = encodeContentIfUnicode(part_content)
             attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
     return text, html, attachments

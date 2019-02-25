@@ -12,8 +12,7 @@ class User():
 def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments, in_reply_to, references, reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
         if message_id is None:
             message_id = u"<{}>".format(EmailHelpers.newMessageId())
-        status, body = EmailHelpers.serializeBody({"text": text, "html": html})
-        assert status
+        body = EmailHelpers.serializeBody({"text": text, "html": html})
         return EmailFactory.new(**{
             "server_attr": server_attr,
             "flags": flags,

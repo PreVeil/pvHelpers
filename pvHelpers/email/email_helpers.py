@@ -1,5 +1,6 @@
 from ..misc import jdumps, jloads, utf8Decode, encodeContentIfUnicode
 import uuid
+from pvHelpers.params import params
 
 DUMMY_DISPOSITION = u"dummy"
 DUMMY_CONTENT_TYPE = u"dummy/dummy"
@@ -33,18 +34,15 @@ class EmailHelpers(object):
         return u"{}@preveil.com".format(str(uuid.uuid4()))
 
     @staticmethod
+    @params(dict)
     def serializeBody(body):
-        if not isinstance(body, dict):
-            return False, None
         return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
     @staticmethod
     def deserializeBody(body):
         if not isinstance(body, (str, bytes)):
             return False, None
-        status, body = utf8Decode(body)
-        if status == False:
-            return False, None
+        body = utf8Decode(body)
         return jloads(body)
 
     @staticmethod

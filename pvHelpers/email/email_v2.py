@@ -98,8 +98,10 @@ class EmailV2(EmailHelpers, EmailBase):
 
             browser_atts = []
             for att in self.attachments:
-                status, encoded = b64enc(att.content.content)
-                if status == False:
+                try:
+                    encoded = b64enc(att.content.content)
+                except EncodingException as e:
+                    g_log.exception(e)
                     continue
 
                 browser_atts.append({
@@ -194,10 +196,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
         text, html, attachments = parseMime(raw_mime)
 
-        status, body = EmailHelpers.serializeBody({"text": text, "html":html})
-        if not status:
-            raise EmailException(u"failed serializeBody")
-
+        body = EmailHelpers.serializeBody({"text": text, "html":html})
         body = Content(body)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \

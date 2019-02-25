@@ -280,14 +280,14 @@ class EmailV1(EmailHelpers, EmailBase):
                     part_content = att_mime.body
 
                 content_id = att_mime.headers.get("Content-Id", None)
-                status, encoded = encodeContentIfUnicode(part_content)
-                if status == False:
-                    g_log.error("encodeContentIfUnicode")
+
+                try:
+                    encoded = encodeContentIfUnicode(part_content)
+                    b64encoded = b64enc(encoded)
+                except EncodingException as e:
+                    g_log.exception(e)
                     continue
-                status, b64encoded = b64enc(encoded)
-                if status == False:
-                    g_log.error("b64")
-                    continue
+
                 browser_atts.append({
                     "filename": filename,
                     "content_type": c_t,

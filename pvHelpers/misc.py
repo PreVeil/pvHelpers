@@ -3,6 +3,14 @@ import os, yaml, sys, random, time, simplejson
 import datetime, base64, logging, logging.handlers, types
 import struct, collections, copy, StringIO, itertools
 from sqlalchemy import create_engine, event, orm
+from .params import params
+from .hook_decorators import WrapExceptions
+
+
+class EncodingException(Exception):
+    def __init__(self, exception=u""):
+        super(EncodingException, self).__init__(exception)
+
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
@@ -31,18 +39,13 @@ def resolvePreVeilMode(mode_file_path):
     # 2. 'dev'
     mode = os.environ.get(u"PREVEIL_MODE")
     if mode != None:
-        status, mode = unicodeIfUnicodeElseDecode(mode)
-        if status == False:
-            g_log.error(u"resolvePreVeilMode: unicodeIfUnicodeElseDecode failed")
-            return False, None
+        mode = unicodeIfUnicodeElseDecode(mode)
         return True, mode
 
     try:
         with open(mode_file_path, u"r") as f:
             mode = f.read().strip()
-        status, mode = ASCIIToUnicode(mode)
-        if status == False:
-            g_log.error(u"resolvePreVeilMode: ASCIIToUnicode failed")
+        mode = ASCIIToUnicode(mode)
         return True, mode
     except IOError:
         pass
@@ -135,6 +138,7 @@ class _LogWrapper(object):
 
 g_log = _LogWrapper()
 
+
 def unicodeToASCII(s):
     if not isinstance(s, unicode):
         return False, None
@@ -144,64 +148,51 @@ def unicodeToASCII(s):
     except (UnicodeDecodeError, UnicodeEncodeError):
         return False, False
 
+
 def unicodeToASCIIWithReplace(s):
     return s.encode("ascii", "replace")
 
+
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@params(bytes)
 def ASCIIToUnicode(s):
-    if not isinstance(s, str):
-        return False, None
+    return s.encode("utf-8").decode("utf-8")
 
-    try:
-        return True, s.encode("utf-8").decode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
 def utf8Encode(s):
-    if not isinstance(s, unicode):
-        return False, None
+    return s.encode("utf-8")
 
-    try:
-        return True, s.encode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@params(bytes)
 def utf8Decode(s):
-    if not (isinstance(s, str) or isinstance(s, bytes)):
-        return False, None
+    return s.decode("utf-8")
 
-    try:
-        return True, s.decode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
 def unicodeIfUnicodeElseDecode(b):
     if isinstance(b, unicode):
-        return True, b
+        return b
     else:
         return utf8Decode(b)
+
 
 def encodeContentIfUnicode(content):
     if isinstance(content, unicode):
         return utf8Encode(content)
-    return True, content
+    return content
 
 # binary -> unicode
+@params(bytes, {types.NoneType, str})
 def b64enc(data, altchars=None):
-    if not (isinstance(data, bytes) or isinstance(data, str)):
-        return False, None
-
     enc = base64.b64encode(data, altchars=altchars)
     return ASCIIToUnicode(enc)
 
 # unicode -> binary
+@params(unicode, {types.NoneType, str})
 def b64dec(data, altchars=None):
-    if not isinstance(data, unicode):
-        return False, None
-
-    try:
-        return True, base64.b64decode(data, altchars=altchars)
-    except TypeError:
-        return False, None
+    return base64.b64decode(data, altchars=altchars)
 
 def toInt(data):
     if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
@@ -232,9 +223,6 @@ def jload(fp):
         return True, simplejson.load(fp)
     except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
         return False, None
-
-def filesystemSafeBase64Encode(email):
-    return b64enc(email.upper(), "()")
 
 def getTempFilePath(mode_dir):
     return os.path.join(tempDir(mode_dir),
@@ -480,15 +468,19 @@ class CaseInsensitiveDict(dict):
             v = super(CaseInsensitiveDict, self).pop(k)
             self.__setitem__(k, v)
 
+
 class NOT_ASSIGNED(object):
     def __init__(self):
         pass
 
+
     def __str__(self):
         return u"__NOT_ASSIGNED__"
 
+
     def serialize(self):
         return self.__str__()
+
 
 def MergeDicts(*args):
     ret = {}
@@ -498,12 +490,15 @@ def MergeDicts(*args):
         ret.update(_dict)
     return ret
 
+
 def randUnicode(length=20):
     GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
     return u"".join(random.choice(GLYPHS) for _ in range(length))
 
+
 def randStr(size=1024):
     return os.urandom(size)
+
 
 def randStream(size=1024):
     return StringIO.StringIO(randStr(size))

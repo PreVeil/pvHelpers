@@ -131,10 +131,7 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeSymmKey(key):
-        status, key = b64dec(key)
-        if not status:
-            raise CryptoException("Failed to b64 decode key")
-
+        key = b64dec(key)
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
@@ -145,9 +142,7 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeVerifyKey(verify_key):
-        status, verify_key = b64dec(verify_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
+        verify_key = b64dec(verify_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(verify_key)
@@ -160,10 +155,7 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeAsymmKey(asymm_key):
-        status, asymm_key = b64dec(asymm_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
-
+        asymm_key = b64dec(asymm_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(asymm_key)
@@ -176,10 +168,7 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeSignKey(sign_key):
-        status, sign_key = b64dec(sign_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
-
+        sign_key = b64dec(sign_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(sign_key)
@@ -200,9 +189,7 @@ class PVKeyFactory(object):
                 g_log.exception(e)
                 g_log.info("Falling to protobuf")
 
-        status, serialized = b64dec(public_user_key)
-        if not status:
-            raise CryptoException(u"Failed to b64 dec key")
+        serialized = b64dec(public_user_key)
         try:
             buffer = PublicUserKeyBuffer()
             buffer.ParseFromString(serialized)
@@ -226,9 +213,7 @@ class PVKeyFactory(object):
                 g_log.exception(e)
                 g_log.info("Falling to protobuf")
 
-        status, serialized = b64dec(user_key)
-        if not status:
-            raise CryptoException(u"Failed to b64 dec key")
+        serialized = b64dec(user_key)
         return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
 
 

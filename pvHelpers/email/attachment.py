@@ -12,17 +12,15 @@ class AttachmentMetadata(object):
     __initialized = False
     def __init__(self, filename=None, content_type=None, content_disposition=AttachmentType.ATTACHMENT, content_id=None, size=None):
         if isinstance(filename, str):
-            status, filename = ASCIIToUnicode(filename)
-            if status == False:
-                raise EmailException(u"AttachmentMetadata.__init__: failed to convert filename to unicode")
+            filename = ASCIIToUnicode(filename)
+
         if not isinstance(filename, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__: filename must be unicode, {}".format(filename))
         self.filename = filename
 
         if isinstance(content_type, str):
-            status, content_type = ASCIIToUnicode(content_type)
-            if status == False:
-                raise EmailException(u"AttachmentMetadata.__init__: failed to convert content_type to unicode")
+            content_type = ASCIIToUnicode(content_type)
+
         if not isinstance(content_type, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__:: content_type must be of type unicode, {}".format(content_type))
 
@@ -36,17 +34,15 @@ class AttachmentMetadata(object):
         # and keep it MIME consistent with object
         content_disposition = AttachmentType.ATTACHMENT if content_disposition is None else content_disposition
         if isinstance(content_disposition, str):
-            status, content_disposition = ASCIIToUnicode(content_disposition)
-            if status == False:
-                raise EmailException(u"AttachmentMetadata.__init__: failed to convert content_disposition to unicode")
+            content_disposition = ASCIIToUnicode(content_disposition)
+
         if not isinstance(content_disposition, unicode):
             raise EmailException(u"AttachmentMetadata.__init__: content_disposition must be unicode, value: {}".format(content_disposition))
         self.content_disposition = content_disposition
 
         if isinstance(content_id, str):
-            status, content_id = ASCIIToUnicode(content_id)
-            if status == False:
-                raise EmailException(u"AttachmentMetadata.__init__: failed to convert content_id to unicode")
+            content_id = ASCIIToUnicode(content_id)
+
         if not isinstance(content_id, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__: content_id must be unicode, value: {}".format(content_id))
         self.content_id = content_id
@@ -90,9 +86,7 @@ class Attachment(object):
             raise EmailException(u"metadata must be of type AttachmentMetadata")
 
         content = _file.read()
-        status, content = encodeContentIfUnicode(content)
-        if status == False:
-            raise EmailException(u"fromFileStorage: Failed to encode content")
+        content = encodeContentIfUnicode(content)
 
         # flanker defaults the mime header to (application/octet-stream) if c-t not specified
         # it also makes some assumptions based on filename if c-t is (application/octet-stream)
