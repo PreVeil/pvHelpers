@@ -1,10 +1,10 @@
-from distutils.core import setup
-setup(name="pvHelpers",
-      version="4.30",
-      packages=["pvHelpers", "pvHelpers.email", "pvHelpers.crypto", "pvHelpers.crypto.asymm_key",
-                "pvHelpers.crypto.box", "pvHelpers.crypto.user_key", "pvHelpers.crypto.sign_key",
-                "pvHelpers.crypto.symm_key", "pvHelpers.protos"],
-      install_requires=[
+from setuptools import setup, find_packages
+
+setup(
+    name="pvHelpers",
+    version="4.40",
+    packages=find_packages(),
+    install_requires=[
         "PyYAML==3.11",
         "requests==2.20.1",
         "simplejson==3.8.2",
@@ -15,7 +15,6 @@ setup(name="pvHelpers",
         "pysqlite==2.8.3.1",
         "semver==2.7.7",
         "protobuf==3.5.2.post1",
-        # uncomment when dll packaged
-        # "fipscrypto==0.1"
-      ],
+        "fipscrypto==1.0"
+    ],
 )

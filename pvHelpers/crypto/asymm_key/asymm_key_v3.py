@@ -2,9 +2,7 @@ import types
 from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, CryptoException, \
     CURVE25519_PUB_KEY_LENGTH, NISTP256_PUB_KEY_LENGTH, EC_SECRET_LENGTH
 from .asymm_key_base import PublicKeyBase, AsymmKeyBase
-
-# uncomment when dll packaged
-# import fipscrypto as FC
+import fipscrypto as FC
 
 
 class PublicKeyV3(PublicKeyBase):

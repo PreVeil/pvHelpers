@@ -1,4 +1,4 @@
-from ..misc import ASCIIToUnicode, unicodeIfUnicodeElseDecode, g_log, encodeContentIfUnicode, toInt
+from ..misc import ASCIIToUnicode, g_log, encodeContentIfUnicode, toInt
 from .email_helpers import EmailException
 import content as cnt
 from flanker import mime, addresslib

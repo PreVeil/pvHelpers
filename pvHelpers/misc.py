@@ -7,6 +7,10 @@ from .params import params
 from .hook_decorators import WrapExceptions
 
 
+DATA_DIR_MODE = 0o750
+HTTP_TIMEOUT = 15
+
+
 class EncodingException(Exception):
     def __init__(self, exception=u""):
         super(EncodingException, self).__init__(exception)
@@ -18,15 +22,15 @@ if sys.platform in ["darwin", "linux2"]:
 else:
     pass
 
-DATA_DIR_MODE = 0o750
-HTTP_TIMEOUT = 15
 
 def initRandom():
     seed = struct.unpack("=I", os.urandom(4))[0]
     random.seed(seed)
 
+
 def getdir(path):
     return os.path.dirname(os.path.realpath(path))
+
 
 def resolvePreVeilMode(mode_file_path):
     if not isinstance(mode_file_path, unicode):
@@ -52,6 +56,7 @@ def resolvePreVeilMode(mode_file_path):
 
     return True, u"dev"
 
+
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
         return False, None
@@ -62,6 +67,7 @@ def readYAMLConfig(path):
             return True, c
     except IOError as e:
         return False, None
+
 
 # TODO: handle deadlock
 class _LogWrapper(object):
@@ -136,17 +142,14 @@ class _LogWrapper(object):
             observer = twisted_observer_fn(loggerName=name)
             observer.start()
 
+
 g_log = _LogWrapper()
 
 
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
 def unicodeToASCII(s):
-    if not isinstance(s, unicode):
-        return False, None
-
-    try:
-        return True, s.encode("ascii")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
+    return s.encode("ascii")
 
 
 def unicodeToASCIIWithReplace(s):
@@ -183,16 +186,17 @@ def encodeContentIfUnicode(content):
         return utf8Encode(content)
     return content
 
-# binary -> unicode
+
 @params(bytes, {types.NoneType, str})
 def b64enc(data, altchars=None):
     enc = base64.b64encode(data, altchars=altchars)
     return ASCIIToUnicode(enc)
 
-# unicode -> binary
+
 @params(unicode, {types.NoneType, str})
 def b64dec(data, altchars=None):
     return base64.b64decode(data, altchars=altchars)
+
 
 def toInt(data):
     if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
@@ -203,8 +207,10 @@ def toInt(data):
     except ValueError:
         return False, None
 
+
 def jdumps(data, ensure_ascii=False):
     return simplejson.dumps(data, ensure_ascii=ensure_ascii)
+
 
 def jloads(data):
     if not isinstance(data, unicode):
@@ -215,6 +221,7 @@ def jloads(data):
     except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
         return False, None
 
+
 def jload(fp):
     if not isinstance(fp, file):
         return False, None
@@ -224,9 +231,11 @@ def jload(fp):
     except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
         return False, None
 
+
 def getTempFilePath(mode_dir):
     return os.path.join(tempDir(mode_dir),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
+
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
     if not (callable(flanker_from_string) and flanker_from_string.__name__ == "from_string"):
@@ -244,6 +253,7 @@ def getBodyFromFlankerMessage(message, flanker_from_string):
     else:
         return False, None
 
+
 def checkRunningAsRoot():
     if sys.platform in ["darwin", "linux2"]:
         uid = os.getuid()
@@ -259,6 +269,7 @@ def checkRunningAsRoot():
         return True
     else:
         return True
+
 
 class DoAsPreVeil(object):
     def __init__(self):
@@ -297,6 +308,7 @@ class DoAsPreVeil(object):
         if isinstance(value, Exception):
             raise value
 
+
 def switchUserPreVeil():
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
@@ -304,6 +316,7 @@ def switchUserPreVeil():
         os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
     elif "win32" == sys.platform:
         pass
+
 
 # lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
 def isSameDirOrChild(directory, test_child):
@@ -321,6 +334,7 @@ def isSameDirOrChild(directory, test_child):
     # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
     return os.path.commonprefix([test_child, directory]) == directory
 
+
 def recur_chown(path, uid, gid):
     os.chown(path, uid, gid)
     for root, dirs, files in os.walk(path):
@@ -329,6 +343,7 @@ def recur_chown(path, uid, gid):
         for name in files:
             os.chown(os.path.join(root, name), uid, gid)
 
+
 def quiet_mkdir(path):
     try:
         os.mkdir(path)
@@ -336,32 +351,42 @@ def quiet_mkdir(path):
         if not os.path.isdir(path):
             raise
 
+
 def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
+
 
 def daemonDataDir(wd):
     return os.path.join(wd, "daemon")
 
+
 def modesDir(wd):
     return os.path.join(daemonDataDir(wd), "modes")
+
 
 def getModeDir(wd, mode):
     return os.path.join(modesDir(wd), mode)
 
+
 def logsDir(mode_dir):
     return os.path.join(mode_dir, "logs")
+
 
 def tempDir(mode_dir):
     return os.path.join(mode_dir, "temp")
 
+
 def getUserDatabasePath(mode_dir):
     return os.path.join(mode_dir, "user_db.sqlite")
+
 
 def getMailDatabasePath(mode_dir):
     return os.path.join(mode_dir, "db.sqlite")
 
+
 def getActionsDatabasePath(mode_dir):
     return os.path.join(mode_dir, "actions_db.sqlite")
+
 
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
 # owner:group
@@ -399,6 +424,7 @@ def initDaemonDataDirs(wd, mode, is_test=False):
 
     return mode_dir
 
+
 class CaseInsensitiveSet(collections.Set):
     def __init__(self, lyst):
         self.data  = dict()
@@ -435,6 +461,7 @@ class CaseInsensitiveSet(collections.Set):
                 del new[o.upper()]
 
         return CaseInsensitiveSet(new.values())
+
 
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
@@ -502,6 +529,7 @@ def randStr(size=1024):
 
 def randStream(size=1024):
     return StringIO.StringIO(randStr(size))
+
 
 # https://docs.python.org/dev/library/itertools.html#itertools-recipes
 def partition(pred, iterable):
