@@ -1,6 +1,19 @@
-import pywintypes, win32con, win32api, win32security as ws, ctypes, socket, struct, win32process
-import os, sys, types, subprocess
+import ctypes
+import os
+import subprocess
+import sys
+import types
 from ctypes import wintypes
+
+import win32con
+
+import win32api
+import win32event
+import win32process
+import win32security as ws
+import win32ts
+
+from .misc import g_log
 
 DWORD = ctypes.c_ulong
 ULONG = ctypes.c_ulong
@@ -8,14 +21,17 @@ INT = ctypes.c_int
 NULL = None
 NULL_SID = ws.CreateWellKnownSid(ws.WinNullSid, None)
 LOCAL_SYSTEM_SID = ws.CreateWellKnownSid(ws.WinLocalSystemSid, None)
-ADMINISTRATORS_SID = ws.CreateWellKnownSid(ws.WinBuiltinAdministratorsSid, None)
+ADMINISTRATORS_SID = ws.CreateWellKnownSid(
+    ws.WinBuiltinAdministratorsSid, None)
 SIZEOF = ctypes.sizeof
 REF = ctypes.byref
 PySID = type(LOCAL_SYSTEM_SID)
 
+
 def loggedOnUserSid():
     cUserName = win32api.GetUserName()
     return getUserSid(cUserName)
+
 
 def getUserSid(username):
     (cuser_sid, _dm, _st) = ws.LookupAccountName(None, username)
@@ -31,28 +47,33 @@ class WIN_ERROR:
     # ... #
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366909(v=vs.85).aspx
+
+
 class TCP_STATE:
     # ... #
     MIB_TCP_STATE_ESTAB = 5
     # ... #
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/bb485761(v=vs.85).aspx
+
+
 class MIB_TCPROW2(ctypes.Structure):
     _fields_ = [("dwState", DWORD),
                 ("dwLocalAddr", DWORD),
-                ("dwLocalPort", DWORD), # network byte order
+                ("dwLocalPort", DWORD),  # network byte order
                 ("dwRemoteAddr", DWORD),
-                ("dwRemotePort", DWORD), # network byte order
+                ("dwRemotePort", DWORD),  # network byte order
                 ("dwOwningPid", DWORD),
                 ("dwOffloadState", DWORD)]
+
 
 def MIB_TCPTABLE2(row_num=1):
     # https://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
     class _MIB_TCPTABLE2(ctypes.Structure):
-            _fields_ = [
-                ("dwNumEntries", DWORD),
-                ("table", MIB_TCPROW2 * row_num)
-            ]
+        _fields_ = [
+            ("dwNumEntries", DWORD),
+            ("table", MIB_TCPROW2 * row_num)
+        ]
 
     return _MIB_TCPTABLE2()
 
@@ -66,56 +87,57 @@ ERROR_INVALID_HANDLE = 0x0006
 INVALID_HANDLE_VALUE = wintypes.HANDLE(-1).value
 INVALID_DWORD_VALUE = wintypes.DWORD(-1).value
 
-DEBUG_PROCESS                    = 0x00000001
-DEBUG_ONLY_THIS_PROCESS          = 0x00000002
-CREATE_SUSPENDED                 = 0x00000004
-DETACHED_PROCESS                 = 0x00000008
-CREATE_NEW_CONSOLE               = 0x00000010
-CREATE_NEW_PROCESS_GROUP         = 0x00000200
-CREATE_UNICODE_ENVIRONMENT       = 0x00000400
-CREATE_SEPARATE_WOW_VDM          = 0x00000800
-CREATE_SHARED_WOW_VDM            = 0x00001000
-INHERIT_PARENT_AFFINITY          = 0x00010000
-CREATE_PROTECTED_PROCESS         = 0x00040000
-EXTENDED_STARTUPINFO_PRESENT     = 0x00080000
-CREATE_BREAKAWAY_FROM_JOB        = 0x01000000
+DEBUG_PROCESS = 0x00000001
+DEBUG_ONLY_THIS_PROCESS = 0x00000002
+CREATE_SUSPENDED = 0x00000004
+DETACHED_PROCESS = 0x00000008
+CREATE_NEW_CONSOLE = 0x00000010
+CREATE_NEW_PROCESS_GROUP = 0x00000200
+CREATE_UNICODE_ENVIRONMENT = 0x00000400
+CREATE_SEPARATE_WOW_VDM = 0x00000800
+CREATE_SHARED_WOW_VDM = 0x00001000
+INHERIT_PARENT_AFFINITY = 0x00010000
+CREATE_PROTECTED_PROCESS = 0x00040000
+EXTENDED_STARTUPINFO_PRESENT = 0x00080000
+CREATE_BREAKAWAY_FROM_JOB = 0x01000000
 CREATE_PRESERVE_CODE_AUTHZ_LEVEL = 0x02000000
-CREATE_DEFAULT_ERROR_MODE        = 0x04000000
-CREATE_NO_WINDOW                 = 0x08000000
+CREATE_DEFAULT_ERROR_MODE = 0x04000000
+CREATE_NO_WINDOW = 0x08000000
 
-STARTF_USESHOWWINDOW    = 0x00000001
-STARTF_USESIZE          = 0x00000002
-STARTF_USEPOSITION      = 0x00000004
-STARTF_USECOUNTCHARS    = 0x00000008
+STARTF_USESHOWWINDOW = 0x00000001
+STARTF_USESIZE = 0x00000002
+STARTF_USEPOSITION = 0x00000004
+STARTF_USECOUNTCHARS = 0x00000008
 STARTF_USEFILLATTRIBUTE = 0x00000010
-STARTF_RUNFULLSCREEN    = 0x00000020
-STARTF_FORCEONFEEDBACK  = 0x00000040
+STARTF_RUNFULLSCREEN = 0x00000020
+STARTF_FORCEONFEEDBACK = 0x00000040
 STARTF_FORCEOFFFEEDBACK = 0x00000080
-STARTF_USESTDHANDLES    = 0x00000100
-STARTF_USEHOTKEY        = 0x00000200
-STARTF_TITLEISLINKNAME  = 0x00000800
-STARTF_TITLEISAPPID     = 0x00001000
-STARTF_PREVENTPINNING   = 0x00002000
+STARTF_USESTDHANDLES = 0x00000100
+STARTF_USEHOTKEY = 0x00000200
+STARTF_TITLEISLINKNAME = 0x00000800
+STARTF_TITLEISAPPID = 0x00001000
+STARTF_PREVENTPINNING = 0x00002000
 
-SW_HIDE            = 0
-SW_SHOWNORMAL      = 1
-SW_SHOWMINIMIZED   = 2
-SW_SHOWMAXIMIZED   = 3
-SW_SHOWNOACTIVATE  = 4
-SW_SHOW            = 5
-SW_MINIMIZE        = 6
+SW_HIDE = 0
+SW_SHOWNORMAL = 1
+SW_SHOWMINIMIZED = 2
+SW_SHOWMAXIMIZED = 3
+SW_SHOWNOACTIVATE = 4
+SW_SHOW = 5
+SW_MINIMIZE = 6
 SW_SHOWMINNOACTIVE = 7
-SW_SHOWNA          = 8
-SW_RESTORE         = 9
-SW_SHOWDEFAULT     = 10 # ~STARTUPINFO
-SW_FORCEMINIMIZE   = 11
+SW_SHOWNA = 8
+SW_RESTORE = 9
+SW_SHOWDEFAULT = 10  # ~STARTUPINFO
+SW_FORCEMINIMIZE = 11
 
-LOGON_WITH_PROFILE        = 0x00000001
+LOGON_WITH_PROFILE = 0x00000001
 LOGON_NETCREDENTIALS_ONLY = 0x00000002
 
-STD_INPUT_HANDLE  = wintypes.DWORD(-10).value
+STD_INPUT_HANDLE = wintypes.DWORD(-10).value
 STD_OUTPUT_HANDLE = wintypes.DWORD(-11).value
-STD_ERROR_HANDLE  = wintypes.DWORD(-12).value
+STD_ERROR_HANDLE = wintypes.DWORD(-12).value
+
 
 class HANDLE(wintypes.HANDLE):
     __slots__ = 'closed',
@@ -139,6 +161,7 @@ class HANDLE(wintypes.HANDLE):
 
     def __repr__(self):
         return "%s(%d)" % (self.__class__.__name__, int(self))
+
 
 class PROCESS_INFORMATION(ctypes.Structure):
     """https://msdn.microsoft.com/en-us/library/ms684873"""
@@ -167,9 +190,11 @@ class PROCESS_INFORMATION(ctypes.Structure):
         finally:
             self.hThread.Close()
 
+
 LPPROCESS_INFORMATION = ctypes.POINTER(PROCESS_INFORMATION)
 
 LPBYTE = ctypes.POINTER(wintypes.BYTE)
+
 
 class STARTUPINFO(ctypes.Structure):
     """https://msdn.microsoft.com/en-us/library/ms686331"""
@@ -196,47 +221,60 @@ class STARTUPINFO(ctypes.Structure):
         self.cb = ctypes.sizeof(self)
         super(STARTUPINFO, self).__init__(**kwds)
 
+
 class PROC_THREAD_ATTRIBUTE_LIST(ctypes.Structure):
     pass
 
+
 PPROC_THREAD_ATTRIBUTE_LIST = ctypes.POINTER(PROC_THREAD_ATTRIBUTE_LIST)
+
 
 class STARTUPINFOEX(STARTUPINFO):
     _fields_ = (('lpAttributeList', PPROC_THREAD_ATTRIBUTE_LIST),)
 
+
 LPSTARTUPINFO = ctypes.POINTER(STARTUPINFO)
 LPSTARTUPINFOEX = ctypes.POINTER(STARTUPINFOEX)
+
 
 class SECURITY_ATTRIBUTES(ctypes.Structure):
     _fields_ = (('nLength',              wintypes.DWORD),
                 ('lpSecurityDescriptor', wintypes.LPVOID),
                 ('bInheritHandle',       wintypes.BOOL))
+
     def __init__(self, **kwds):
         self.nLength = ctypes.sizeof(self)
         super(SECURITY_ATTRIBUTES, self).__init__(**kwds)
 
+
 LPSECURITY_ATTRIBUTES = ctypes.POINTER(SECURITY_ATTRIBUTES)
+
 
 class HANDLE_IHV(HANDLE):
     pass
 
+
 class DWORD_IDV(wintypes.DWORD):
     pass
+
 
 def _check_ihv(result, func, args):
     if result.value == INVALID_HANDLE_VALUE:
         raise ctypes.WinError(ctypes.get_last_error())
     return result.value
 
+
 def _check_idv(result, func, args):
     if result.value == INVALID_DWORD_VALUE:
         raise ctypes.WinError(ctypes.get_last_error())
     return result.value
 
+
 def _check_bool(result, func, args):
     if not result:
         raise ctypes.WinError(ctypes.get_last_error())
     return args
+
 
 def WIN(func, restype, *argtypes):
     func.restype = restype
@@ -248,13 +286,14 @@ def WIN(func, restype, *argtypes):
     else:
         func.errcheck = _check_bool
 
+
 # https://msdn.microsoft.com/en-us/library/ms724211
 WIN(kernel32.CloseHandle, wintypes.BOOL,
-    wintypes.HANDLE,) # _In_ HANDLE hObject
+    wintypes.HANDLE,)  # _In_ HANDLE hObject
 
 # https://msdn.microsoft.com/en-us/library/ms685086
 WIN(kernel32.ResumeThread, DWORD_IDV,
-    wintypes.HANDLE,) # _In_ hThread
+    wintypes.HANDLE,)  # _In_ hThread
 
 # https://msdn.microsoft.com/en-us/library/ms682425
 WIN(kernel32.CreateProcessW, wintypes.BOOL,
@@ -310,16 +349,17 @@ WIN(advapi32.CreateProcessWithLogonW, wintypes.BOOL,
     LPPROCESS_INFORMATION)  # _Out_       lpProcessInformation
 
 CREATION_TYPE_NORMAL = 0
-CREATION_TYPE_LOGON  = 1
-CREATION_TYPE_TOKEN  = 2
-CREATION_TYPE_USER   = 3
+CREATION_TYPE_LOGON = 1
+CREATION_TYPE_TOKEN = 2
+CREATION_TYPE_USER = 3
+
 
 class CREATIONINFO(object):
     __slots__ = ('dwCreationType',
-        'lpApplicationName', 'lpCommandLine', 'bUseShell',
-        'lpProcessAttributes', 'lpThreadAttributes', 'bInheritHandles',
-        'dwCreationFlags', 'lpEnvironment', 'lpCurrentDirectory',
-        'hToken', 'lpUsername', 'lpDomain', 'lpPassword', 'dwLogonFlags')
+                 'lpApplicationName', 'lpCommandLine', 'bUseShell',
+                 'lpProcessAttributes', 'lpThreadAttributes', 'bInheritHandles',
+                 'dwCreationFlags', 'lpEnvironment', 'lpCurrentDirectory',
+                 'hToken', 'lpUsername', 'lpDomain', 'lpPassword', 'dwLogonFlags')
 
     def __init__(self, dwCreationType=CREATION_TYPE_NORMAL,
                  lpApplicationName=None, lpCommandLine=None, bUseShell=False,
@@ -343,12 +383,14 @@ class CREATIONINFO(object):
         self.lpPassword = lpPassword
         self.dwLogonFlags = dwLogonFlags
 
+
 def create_environment(environ):
     if environ is not None:
         items = ['%s=%s' % (k, environ[k]) for k in sorted(environ)]
         buf = '\x00'.join(items)
         length = len(buf) + 2 if buf else 1
         return ctypes.create_unicode_buffer(buf, length)
+
 
 def create_process(commandline=None, creationinfo=None, startupinfo=None):
     if creationinfo is None:
@@ -358,10 +400,10 @@ def create_process(commandline=None, creationinfo=None, startupinfo=None):
         startupinfo = STARTUPINFO()
     elif isinstance(startupinfo, subprocess.STARTUPINFO):
         startupinfo = STARTUPINFO(dwFlags=startupinfo.dwFlags,
-                        hStdInput=startupinfo.hStdInput,
-                        hStdOutput=startupinfo.hStdOutput,
-                        hStdError=startupinfo.hStdError,
-                        wShowWindow=startupinfo.wShowWindow)
+                                  hStdInput=startupinfo.hStdInput,
+                                  hStdOutput=startupinfo.hStdOutput,
+                                  hStdError=startupinfo.hStdError,
+                                  wShowWindow=startupinfo.wShowWindow)
 
     si, ci, pi = startupinfo, creationinfo, PROCESS_INFORMATION()
 
@@ -373,7 +415,7 @@ def create_process(commandline=None, creationinfo=None, startupinfo=None):
             si.dwFlags |= STARTF_USESHOWWINDOW
             si.wShowWindow = SW_HIDE
             comspec = os.environ.get("ComSpec", os.path.join(
-                        os.environ["SystemRoot"], "System32", "cmd.exe"))
+                os.environ["SystemRoot"], "System32", "cmd.exe"))
             commandline = '"{}" /c "{}"'.format(comspec, commandline)
         commandline = ctypes.create_unicode_buffer(commandline)
 
@@ -381,9 +423,9 @@ def create_process(commandline=None, creationinfo=None, startupinfo=None):
     lpEnvironment = create_environment(ci.lpEnvironment)
 
     if (dwCreationFlags & DETACHED_PROCESS and
-       ((dwCreationFlags & CREATE_NEW_CONSOLE) or
-        (ci.dwCreationType == CREATION_TYPE_LOGON) or
-        (ci.dwCreationType == CREATION_TYPE_TOKEN))):
+        ((dwCreationFlags & CREATE_NEW_CONSOLE) or
+         (ci.dwCreationType == CREATION_TYPE_LOGON) or
+            (ci.dwCreationType == CREATION_TYPE_TOKEN))):
         raise RuntimeError('DETACHED_PROCESS is incompatible with '
                            'CREATE_NEW_CONSOLE, which is implied for '
                            'the logon and token creation types')
@@ -445,8 +487,8 @@ class WinPopen(subprocess.Popen):
             commandline = (args if isinstance(args, types.StringTypes) else
                            subprocess.list2cmdline(args))
             self._common_execute_child(executable, commandline, shell,
-                    close_fds, creationflags, env, cwd,
-                    startupinfo, p2cread, c2pwrite, errwrite, to_close)
+                                       close_fds, creationflags, env, cwd,
+                                       startupinfo, p2cread, c2pwrite, errwrite, to_close)
     else:
 
         def _execute_child(self, args, executable, preexec_fn, close_fds,
@@ -458,8 +500,8 @@ class WinPopen(subprocess.Popen):
             commandline = (args if isinstance(args, str) else
                            subprocess.list2cmdline(args))
             self._common_execute_child(executable, commandline, shell,
-                    close_fds, creationflags, env, cwd,
-                    startupinfo, p2cread, c2pwrite, errwrite)
+                                       close_fds, creationflags, env, cwd,
+                                       startupinfo, p2cread, c2pwrite, errwrite)
 
     def _common_execute_child(self, executable, commandline, shell,
                               close_fds, creationflags, env, cwd,
@@ -489,9 +531,9 @@ class WinPopen(subprocess.Popen):
         default = None if sys.version_info[0] == 2 else -1
         if default not in (p2cread, c2pwrite, errwrite):
             si.dwFlags |= STARTF_USESTDHANDLES
-            si.hStdInput  = int( p2cread)
+            si.hStdInput = int(p2cread)
             si.hStdOutput = int(c2pwrite)
-            si.hStdError  = int(errwrite)
+            si.hStdError = int(errwrite)
 
         try:
             pi = create_process(creationinfo=ci, startupinfo=si)
@@ -552,3 +594,78 @@ class WinPopen(subprocess.Popen):
                 if hasattr(self, '_handle'):
                     self.terminate()
         super(WinPopen, self).__del__()
+
+
+def runWindowsProcessAsCurrentUser(command):
+    try:
+        # This process is running as SYSTEM, but we must to run the command
+        # as the current luser. The first step is to determine the
+        # "active" session. If a user sits down and logins into a computer,
+        # he uses the console session. When the box is accessed thru remote
+        # desktop, the rdp session is used.
+        sessions = win32ts.WTSEnumerateSessions(
+            win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
+        SessionId = None
+        for s in sessions:
+            SessionId = s.get("SessionId")
+            State = s.get("State")
+
+            if State == win32ts.WTSActive:
+                break
+
+        if SessionId is None:
+            g_log.error("Failed to determine active session")
+            return False
+
+        user_token = win32ts.WTSQueryUserToken(SessionId)
+        try:
+            startupinfo = win32process.STARTUPINFO()
+            startupinfo.dwX = 0
+            startupinfo.dwY = 0
+            startupinfo.dwXSize = 0
+            startupinfo.dwYSize = 0
+            startupinfo.dwXCountChars = 0
+            startupinfo.dwYCountChars = 0
+            startupinfo.dwFillAttribute = 0
+            startupinfo.dwFlags = 0
+            startupinfo.wShowWindow = win32con.SW_HIDE
+            startupinfo.hStdInput = 0
+            startupinfo.hStdOutput = 0
+            startupinfo.hStdError = 0
+            startupinfo.lpDesktop = None
+            startupinfo.lpTitle = None
+
+            command = map(lambda x: unicode(x), command)
+            process_handle, thread_handle, process_id, thread_id = \
+                win32process.CreateProcessAsUser(
+                    user_token,
+                    command[0],
+                    u" ".join(command),  # FIXME: how to quote this?
+                    None,  # process attributes
+                    None,  # thread attributes
+                    0,  # inherit handles
+                    win32con.CREATE_NO_WINDOW,  # creation flags
+                    None,  # environment
+                    None,  # current directory
+                    startupinfo)
+
+            try:
+                status = win32event.WaitForSingleObject(process_handle, 10000)
+                if status != win32event.WAIT_OBJECT_0:
+                    g_log.error("win32event.WaitForSingleObject failed")
+                    return False
+
+                exit_code = win32process.GetExitCodeProcess(process_handle)
+                if exit_code != 0:
+                    g_log.error("bad exit code {} from cmd {}".format(
+                        exit_code, command))
+                    return False
+            finally:
+                win32api.CloseHandle(thread_handle)
+                win32api.CloseHandle(process_handle)
+        finally:
+            win32api.CloseHandle(user_token)
+    except win32api.error as e:
+        g_log.exception(e)
+        return False
+    return True
