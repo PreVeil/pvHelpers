@@ -1,5 +1,5 @@
 
-import os, yaml, sys, random, time, simplejson
+import os, yaml, sys, random, time, simplejson, requests
 import datetime, base64, logging, logging.handlers, types
 import struct, collections, copy, StringIO, itertools
 from sqlalchemy import create_engine, event, orm
@@ -14,6 +14,12 @@ HTTP_TIMEOUT = 15
 class EncodingException(Exception):
     def __init__(self, exception=u""):
         super(EncodingException, self).__init__(exception)
+
+
+class __NOOPAuth(requests.auth.AuthBase):
+    def __call__(self, r):
+        return r
+NOOPAuth = __NOOPAuth()
 
 
 if sys.platform in ["darwin", "linux2"]:
