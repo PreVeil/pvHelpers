@@ -3,6 +3,7 @@ from .symm_key_base import *
 from pvHelpers.hook_decorators import WrapExceptions
 from ..utils import params, utf8Encode, b64enc, CryptoException, utf8Decode, b64dec, jdumps, HexEncode, Sha256Sum, jloads
 from ..header_bytes import TEXT_BIT, SECRET_BIT, BINARY_BIT, HEADER_LENGTH
+from pvHelpers import EncodingException
 
 class SymmKeyV0(SymmKeyBase):
     protocol_version = 0
@@ -30,12 +31,12 @@ class SymmKeyV0(SymmKeyBase):
 
 
     @classmethod
+    @WrapExceptions(CryptoException, [EncodingException])
     @params(object, {"key": bytes})
     def fromDict(cls, key_dict):
         key = utf8Decode(key_dict["key"])
-        status, key = jloads(key)
-        if not status:
-            raise CryptoException("Failed to deserialize key")
+        key = jloads(key)
+
         key = key.get("material")
         if not key:
             raise CryptoException("Missing material")

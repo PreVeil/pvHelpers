@@ -1,10 +1,12 @@
-from ..misc import jdumps, jloads, utf8Decode, encodeContentIfUnicode
+from ..misc import jdumps, jloads, utf8Decode, encodeContentIfUnicode, EncodingException, g_log
 import uuid
 from pvHelpers.params import params
+
 
 DUMMY_DISPOSITION = u"dummy"
 DUMMY_CONTENT_TYPE = u"dummy/dummy"
 MAILBOX_ALIAS = {u"INBOX":u"inbox", u"Drafts":u"drafts", u"Sent Messages":u"sent", u"Deleted Messages":u"trash"}
+
 
 class PROTOCOL_VERSION(object):
     V1 = 1
@@ -13,9 +15,11 @@ class PROTOCOL_VERSION(object):
     V4 = 4
     Latest = 4
 
+
 class EmailException(Exception):
     def __init__(self, message=u""):
         Exception.__init__(self, message)
+
 
 #########################################
 ######### Factory Common Mixins #########
@@ -29,21 +33,30 @@ class EmailHelpers(object):
             return MAILBOX_ALIAS[mailbox_name]
         return mailbox_name
 
+
     @staticmethod
     def newMessageId():
         return u"{}@preveil.com".format(str(uuid.uuid4()))
+
 
     @staticmethod
     @params(dict)
     def serializeBody(body):
         return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
+
     @staticmethod
     def deserializeBody(body):
         if not isinstance(body, (str, bytes)):
             return False, None
-        body = utf8Decode(body)
-        return jloads(body)
+
+        try:
+            body = jloads(utf8Decode(body))
+        except EncodingException as e:
+            g_log.exception(e)
+            return False, None
+        return True, body
+
 
     @staticmethod
     def isLocalEmail(email_id):

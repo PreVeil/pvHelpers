@@ -1,4 +1,5 @@
 import types
+from pvHelpers import EncodingException, WrapExceptions
 from .email import EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata, \
                    EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt, g_log
@@ -29,20 +30,15 @@ class EmailFactory(object):
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
     @staticmethod
+    @WrapExceptions(EmailException, [EncodingException])
     def fromDB(revision_id, version, server_id, metadata, server_time, flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
         if server_id is None: # An email not having server_id means it's a local email
             server_info = NOT_ASSIGNED()
         else:
             server_info = ServerAttributes(server_id, revision_id, mailbox_server_id, mailbox_name, version, uid, thread_id, server_time, expunged)
 
-        status, flags = jloads(flags)
-        if status == False:
-            raise EmailException(u"EmailFactory.fromDB: bad flags json")
-
-        status, metadata = jloads(metadata)
-        if status == False:
-            raise EmailException(u"EmailFactory.fromDB: bad metadata json")
-
+        flags = jloads(flags)
+        metadata = jloads(metadata)
         status, v = toInt(metadata.get("protocol_version"))
         if status == False:
             raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")

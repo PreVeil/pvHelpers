@@ -6,6 +6,7 @@ from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV3, PublicKe
 from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0, VerifyKeyV3
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, \
     utf8Decode, jloads, EC_SECRET_LENGTH
+from pvHelpers import EncodingException
 
 class PVKeyFactory(object):
     @staticmethod
@@ -135,10 +136,8 @@ class PVKeyFactory(object):
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
+            return SymmKeyV0.fromDict({"key": key})
 
-        return SymmKeyV0.fromDict({"key": key})
 
     @staticmethod
     def deserializeVerifyKey(verify_key):
@@ -148,10 +147,7 @@ class PVKeyFactory(object):
             buffer.ParseFromString(verify_key)
             return PVKeyFactory.verifyKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
-
-        return VerifyKeyV0(verify_key)
+            return VerifyKeyV0(verify_key)
 
     @staticmethod
     def deserializeAsymmKey(asymm_key):
@@ -161,10 +157,7 @@ class PVKeyFactory(object):
             buffer.ParseFromString(asymm_key)
             return PVKeyFactory.asymmKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
-
-        return AsymmKeyV0(asymm_key)
+            return AsymmKeyV0(asymm_key)
 
     @staticmethod
     def deserializeSignKey(sign_key):
@@ -174,10 +167,7 @@ class PVKeyFactory(object):
             buffer.ParseFromString(sign_key)
             return PVKeyFactory.signKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
-
-        return SignKeyV0(sign_key)
+            return SignKeyV0(sign_key)
 
 
     @staticmethod
@@ -185,9 +175,8 @@ class PVKeyFactory(object):
         if not is_protobuf:
             try:
                 return PublicUserKeyV0.deserialize(public_user_key)
-            except CryptoException as e:
-                g_log.exception(e)
-                g_log.info("Falling to protobuf")
+            except (EncodingException, CryptoException) as e:
+                pass
 
         serialized = b64dec(public_user_key)
         try:
@@ -209,9 +198,8 @@ class PVKeyFactory(object):
         if not is_protobuf:
             try:
                 return UserKeyV0.deserialize(user_key)
-            except CryptoException as e:
-                g_log.exception(e)
-                g_log.info("Falling to protobuf")
+            except (EncodingException, CryptoException) as e:
+                pass
 
         serialized = b64dec(user_key)
         return PVKeyFactory.userKeyFromSerializedBuffer(serialized)

@@ -3,7 +3,7 @@ from ..asymm_key import AsymmKeyV0, PublicKeyV0, AsymmKeyBase, PublicKeyBase
 from ..sign_key import SignKeyV0, VerifyKeyV0, SignKeyBase, VerifyKeyBase
 from .user_key_base import *
 from ..utils import params, b64dec, CryptoException, g_log, utf8Encode, b64enc, utf8Decode, jloads
-
+from pvHelpers import EncodingException, WrapExceptions
 
 class PublicUserKeyV0(PublicUserKeyBase):
     protocol_version = 0
@@ -38,9 +38,7 @@ class PublicUserKeyV0(PublicUserKeyBase):
     @classmethod
     @params(object, unicode)
     def deserialize(cls, json_serialized):
-        status, public_user_key_dict = jloads(json_serialized)
-        if not status:
-            raise CryptoException("Failed to jload json_serialized")
+        public_user_key_dict = jloads(json_serialized)
         public_key = b64dec(public_user_key_dict["public_key"])
         verify_key = b64dec(public_user_key_dict["verify_key"])
         return cls(public_user_key_dict["version"], PublicKeyV0(public_key), VerifyKeyV0(verify_key))
@@ -75,13 +73,12 @@ class UserKeyV0(UserKeyBase):
 
 
     @classmethod
+    @WrapExceptions(CryptoException, [EncodingException])
     @params(object, unicode)
     def deserialize(cls, b64):
         encoded = b64dec(b64)
         json_serialized = utf8Decode(encoded)
-        status, key_dict = jloads(json_serialized)
-        if not status:
-            raise CryptoException("Failed to jload json_serialized")
+        key_dict = jloads(json_serialized)
         private_key = b64dec(key_dict["private_key"])
         signing_key_seed = b64dec(key_dict["signing_key"])
         return cls(key_dict["version"], AsymmKeyV0(private_key), SignKeyV0(signing_key_seed))
@@ -119,10 +116,9 @@ class UserKeyV0(UserKeyBase):
 
 
     @classmethod
+    @WrapExceptions(CryptoException, [EncodingException])
     def fromDB(cls, json_serialized):
-        status, key_dict = jloads(json_serialized)
-        if not status:
-            raise CryptoException("Failed to jload json_serialized")
+        key_dict = jloads(json_serialized)
         private_key = b64dec(key_dict["private_key"])
         signing_key_seed = b64dec(key_dict["signing_key"])
         return cls(key_dict["version"], AsymmKeyV0(private_key), SignKeyV0(signing_key_seed))

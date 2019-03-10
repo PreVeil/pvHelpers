@@ -1,5 +1,6 @@
 import abc, sys
 from . import misc
+from pvHelpers import EncodingException
 if sys.platform in ["win32"]:
     from .win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
 
@@ -43,9 +44,10 @@ class LUserInfo(object):
     def deserialize(json_str):
         if json_str == str(misc.NOT_ASSIGNED()):
             return misc.NOT_ASSIGNED()
-        status, _dict = misc.jloads(json_str)
-        if status == False:
-            raise ValueError("Failed to deserialize json_str")
+        try:
+            _dict = misc.jloads(json_str)
+        except EncodingException as e:
+            raise ValueError(e)
 
         platform = _dict["platform"]
         if platform == "win32":

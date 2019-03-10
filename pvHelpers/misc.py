@@ -214,18 +214,15 @@ def toInt(data):
         return False, None
 
 
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
 def jdumps(data, ensure_ascii=False):
     return simplejson.dumps(data, ensure_ascii=ensure_ascii)
 
 
+@WrapExceptions(EncodingException, [ValueError, simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
 def jloads(data):
-    if not isinstance(data, unicode):
-        return False, None
-
-    try:
-        return True, simplejson.loads(data)
-    except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
-        return False, None
+    return simplejson.loads(data)
 
 
 def jload(fp):
