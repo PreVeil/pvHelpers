@@ -23,18 +23,16 @@ class SymmKeyV0(SymmKeyBase):
 
     def serialize(self):
         b64 = b64enc(self._box.sk)
-        raw_key = utf8Encode(jdumps({
+        return utf8Encode(jdumps({
             "material": b64
         }))
-        b64_key = b64enc(raw_key)
-        return b64_key
 
 
     @classmethod
     @WrapExceptions(CryptoException, [EncodingException])
-    @params(object, {"key": bytes})
-    def fromDict(cls, key_dict):
-        key = utf8Decode(key_dict["key"])
+    @params(object, bytes)
+    def fromDict(cls, key):
+        key = utf8Decode(key)
         key = jloads(key)
 
         key = key.get("material")

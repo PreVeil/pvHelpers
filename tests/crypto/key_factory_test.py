@@ -1,7 +1,7 @@
 import os, base64, random
 
 from pvHelpers import USER_KEY_PROTOCOL_VERSION, ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, \
-    SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory, CryptoException
+    SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory, CryptoException, b64dec
 import pytest
 
 

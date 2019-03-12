@@ -32,8 +32,7 @@ class SymmKeyV1(SymmKeyBase):
 
 
     def serialize(self):
-        serialized = b64enc(self.buffer.SerializeToString())
-        return serialized
+        return self.buffer.SerializeToString()
 
 
     @params(object, bytes, {dict, types.NoneType})

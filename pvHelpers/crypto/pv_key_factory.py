@@ -132,11 +132,10 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeSymmKey(key):
-        key = b64dec(key)
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
-            return SymmKeyV0.fromDict({"key": key})
+            return SymmKeyV0.fromDict(key)
 
 
     @staticmethod
@@ -148,6 +147,7 @@ class PVKeyFactory(object):
             return PVKeyFactory.verifyKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
             return VerifyKeyV0(verify_key)
+
 
     @staticmethod
     def deserializeAsymmKey(asymm_key):
