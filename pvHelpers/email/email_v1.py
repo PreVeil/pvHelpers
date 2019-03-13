@@ -1,6 +1,6 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
-from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode
+from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode, EncodingException
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content

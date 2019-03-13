@@ -1,6 +1,7 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
-from ..misc import b64enc, g_log, NOT_ASSIGNED
+from ..misc import b64enc, g_log, NOT_ASSIGNED, EncodingException
+from pvHelpers.hook_decorators import WrapExceptions
 import email.utils
 from .parsers import createMime, parseMime
 from flanker import mime, addresslib
@@ -16,9 +17,7 @@ class EmailV2(EmailHelpers, EmailBase):
                                       tos, ccs, bccs, sender, reply_tos, subject, \
                                       body,  attachments, references, in_reply_to, message_id, snippet)
         if body.content != None:
-            status, body = EmailHelpers.deserializeBody(body.content)
-            if status == False:
-                raise EmailException(u"EmailV2.__init__: failed deserializing body")
+            body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
                 raise EmailException(u"EmailV2.__init__: body must be of a serialized dict")
             if not isinstance(body.get("text"), unicode) or not isinstance(body.get("html"), unicode):
@@ -32,10 +31,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
     def snippet(self):
         if self._snippet is None:
-            status, body = EmailHelpers.deserializeBody(self.body.content)
-            if status == False:
-                raise EmailException(u"EmailV2.snippet: Failed to deserialize body")
-
+            body = EmailHelpers.deserializeBody(self.body.content)
             body_string = body.get("text")
             snippet = body_string[:1024]
             if len(body_string) > len(snippet):
@@ -48,10 +44,7 @@ class EmailV2(EmailHelpers, EmailBase):
         if not self.body.isLoaded() or (len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
             raise EmailException(u"EmailV2.toMime: All content must be loaded!")
 
-        status, body = EmailHelpers.deserializeBody(self.body.content)
-        if status == False:
-            raise EmailException(u"EmailV2.toMime: Failed to deserialize body")
-
+        body = EmailHelpers.deserializeBody(self.body.content)
         time = None
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
@@ -92,9 +85,7 @@ class EmailV2(EmailHelpers, EmailBase):
             if not self.body.isLoaded():
                 body = {"text": u"", "html": u""}
             else:
-                status, body = EmailHelpers.deserializeBody(self.body.content)
-                if status == False:
-                    raise EmailException(u"EmailV2.toBrowser: Failed to deserialize body")
+                body = EmailHelpers.deserializeBody(self.body.content)
 
             browser_atts = []
             for att in self.attachments:

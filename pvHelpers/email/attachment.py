@@ -1,5 +1,6 @@
-from ..misc import ASCIIToUnicode, g_log, encodeContentIfUnicode, toInt
+from ..misc import ASCIIToUnicode, g_log, encodeContentIfUnicode, toInt, EncodingException
 from .email_helpers import EmailException
+from pvHelpers.hook_decorators import WrapExceptions
 import content as cnt
 from flanker import mime, addresslib
 import types, copy
@@ -10,6 +11,8 @@ class AttachmentType(object):
 
 class AttachmentMetadata(object):
     __initialized = False
+
+    @WrapExceptions(EmailException, [EncodingException])
     def __init__(self, filename=None, content_type=None, content_disposition=AttachmentType.ATTACHMENT, content_id=None, size=None):
         if isinstance(filename, str):
             filename = ASCIIToUnicode(filename)
@@ -80,7 +83,9 @@ class AttachmentMetadata(object):
 
 class Attachment(object):
     __initialized = False
+
     @staticmethod
+    @WrapExceptions(EmailException, [EncodingException])
     def fromFileStorage(_file, metadata):
         if not isinstance(metadata, AttachmentMetadata):
             raise EmailException(u"metadata must be of type AttachmentMetadata")

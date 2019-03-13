@@ -152,7 +152,7 @@ class _LogWrapper(object):
 g_log = _LogWrapper()
 
 
-@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode)
 def unicodeToASCII(s):
     return s.encode("ascii")
@@ -162,19 +162,19 @@ def unicodeToASCIIWithReplace(s):
     return s.encode("ascii", "replace")
 
 
-@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(bytes)
 def ASCIIToUnicode(s):
     return s.encode("utf-8").decode("utf-8")
 
 
-@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode)
 def utf8Encode(s):
     return s.encode("utf-8")
 
 
-@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(bytes)
 def utf8Decode(s):
     return s.decode("utf-8")
@@ -193,12 +193,14 @@ def encodeContentIfUnicode(content):
     return content
 
 
+@WrapExceptions(EncodingException, [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(bytes, {types.NoneType, str})
 def b64enc(data, altchars=None):
     enc = base64.b64encode(data, altchars=altchars)
     return ASCIIToUnicode(enc)
 
 
+@WrapExceptions(EncodingException, [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode, {types.NoneType, str})
 def b64dec(data, altchars=None):
     return base64.b64decode(data, altchars=altchars)
@@ -219,7 +221,7 @@ def jdumps(data, ensure_ascii=False):
     return simplejson.dumps(data, ensure_ascii=ensure_ascii)
 
 
-@WrapExceptions(EncodingException, [ValueError, simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError])
+@WrapExceptions(EncodingException, [KeyError, TypeError, ValueError, simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode)
 def jloads(data):
     return simplejson.loads(data)

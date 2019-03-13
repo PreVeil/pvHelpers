@@ -1,4 +1,5 @@
 from ..misc import jdumps, jloads, utf8Decode, encodeContentIfUnicode, EncodingException, g_log
+from pvHelpers.hook_decorators import WrapExceptions
 import uuid
 from pvHelpers.params import params
 
@@ -40,22 +41,18 @@ class EmailHelpers(object):
 
 
     @staticmethod
+    @WrapExceptions(EmailException, [EncodingException])
     @params(dict)
     def serializeBody(body):
         return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
 
     @staticmethod
+    @WrapExceptions(EmailException, [EncodingException])
+    @params(bytes)
     def deserializeBody(body):
-        if not isinstance(body, (str, bytes)):
-            return False, None
-
-        try:
-            body = jloads(utf8Decode(body))
-        except EncodingException as e:
-            g_log.exception(e)
-            return False, None
-        return True, body
+        body = jloads(utf8Decode(body))
+        return body
 
 
     @staticmethod
