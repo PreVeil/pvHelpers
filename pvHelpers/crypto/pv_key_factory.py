@@ -135,7 +135,7 @@ class PVKeyFactory(object):
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
-            return SymmKeyV0.fromDict(key)
+            return SymmKeyV0.deserialize(key)
 
 
     @staticmethod
