@@ -6,6 +6,7 @@ from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV3, PublicKe
 from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0, VerifyKeyV3
 from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, \
     utf8Decode, jloads, EC_SECRET_LENGTH
+from pvHelpers import EncodingException
 
 class PVKeyFactory(object):
     @staticmethod
@@ -131,64 +132,42 @@ class PVKeyFactory(object):
 
     @staticmethod
     def deserializeSymmKey(key):
-        status, key = b64dec(key)
-        if not status:
-            raise CryptoException("Failed to b64 decode key")
-
         try:
             return PVKeyFactory.symmKeyFromSerializedBuffer(key)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
+            return SymmKeyV0.deserialize(key)
 
-        return SymmKeyV0.fromDict({"key": key})
 
     @staticmethod
     def deserializeVerifyKey(verify_key):
-        status, verify_key = b64dec(verify_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
+        verify_key = b64dec(verify_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(verify_key)
             return PVKeyFactory.verifyKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
+            return VerifyKeyV0(verify_key)
 
-        return VerifyKeyV0(verify_key)
 
     @staticmethod
     def deserializeAsymmKey(asymm_key):
-        status, asymm_key = b64dec(asymm_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
-
+        asymm_key = b64dec(asymm_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(asymm_key)
             return PVKeyFactory.asymmKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
-
-        return AsymmKeyV0(asymm_key)
+            return AsymmKeyV0(asymm_key)
 
     @staticmethod
     def deserializeSignKey(sign_key):
-        status, sign_key = b64dec(sign_key)
-        if not status:
-            raise CryptoException(u"Failed b64 dec")
-
+        sign_key = b64dec(sign_key)
         try:
             buffer = KeyBuffer()
             buffer.ParseFromString(sign_key)
             return PVKeyFactory.signKeyFromBuffer(buffer)
         except (ProtobufErrors, CryptoException) as e:
-            g_log.exception(e)
-            g_log.info(u"Falling back to protocol_version 0")
-
-        return SignKeyV0(sign_key)
+            return SignKeyV0(sign_key)
 
 
     @staticmethod
@@ -196,13 +175,10 @@ class PVKeyFactory(object):
         if not is_protobuf:
             try:
                 return PublicUserKeyV0.deserialize(public_user_key)
-            except CryptoException as e:
-                g_log.exception(e)
-                g_log.info("Falling to protobuf")
+            except (EncodingException, CryptoException) as e:
+                pass
 
-        status, serialized = b64dec(public_user_key)
-        if not status:
-            raise CryptoException(u"Failed to b64 dec key")
+        serialized = b64dec(public_user_key)
         try:
             buffer = PublicUserKeyBuffer()
             buffer.ParseFromString(serialized)
@@ -222,13 +198,10 @@ class PVKeyFactory(object):
         if not is_protobuf:
             try:
                 return UserKeyV0.deserialize(user_key)
-            except CryptoException as e:
-                g_log.exception(e)
-                g_log.info("Falling to protobuf")
+            except (EncodingException, CryptoException) as e:
+                pass
 
-        status, serialized = b64dec(user_key)
-        if not status:
-            raise CryptoException(u"Failed to b64 dec key")
+        serialized = b64dec(user_key)
         return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
 
 

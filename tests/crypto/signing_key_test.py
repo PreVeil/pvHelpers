@@ -1,42 +1,37 @@
 import base64
 import os
 import random
+import pytest
 
 from pvHelpers import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
-def xtest_signing_key_v3():
-    k = PVKeyFactory.newSignKey(protocol_version=SIGN_KEY_PROTOCOL_VERSION.V3)
+@pytest.mark.parametrize("protocol_version", [
+    SIGN_KEY_PROTOCOL_VERSION.V0,
+    SIGN_KEY_PROTOCOL_VERSION.V1,
+    SIGN_KEY_PROTOCOL_VERSION.V3
+])
+def test_signing_key_v3(protocol_version):
+    k = PVKeyFactory.newSignKey(protocol_version=protocol_version)
 
     # sign/verify
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
-    b64plaintext = unicode(base64.b64encode(plaintext))
-    signatures = [k.signBinary(plaintext) for _ in range(500)]
-    assert len(signatures) == len(set(signatures))
-    for s in signatures:
-        assert k.verify_key.verify(b64plaintext, s, is_text=False)
-        assert k.verify_key.verifyBinary(plaintext, s)
-        assert k.verify_key.verifyBinary(
-            plaintext, s[:21] + u"A" + s[22:]) is False
 
-    plaintext = unicode(base64.encodestring(os.urandom(1024 * 2 + random.randint(0, 1024))))
-    signatures = [k.signText(plaintext) for _ in range(500)]
-    assert len(signatures) == len(set(signatures))
+    signatures = [k.sign(plaintext) for _ in range(500)]
+
+    # NOTE: this is due to a bug in V0/V1 `protocol_version`s
+    if protocol_version == SIGN_KEY_PROTOCOL_VERSION.V3:
+        assert len(signatures) == len(set(signatures))
+
     for s in signatures:
         assert k.verify_key.verify(plaintext, s)
-        assert k.verify_key.verifyText(plaintext, s)
-        assert k.verify_key.verifyText(
-            plaintext, s[:21] + u"A" + s[22:]) is False
-
+        assert k.verify_key.verify(
+            plaintext, s[:21] + "a" + s[22:]) is False
 
     k2 = PVKeyFactory.newSignKey(
-        protocol_version=SIGN_KEY_PROTOCOL_VERSION.V3, key=k.key)
+        protocol_version=protocol_version, key=k.key)
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
-    assert k2.verify_key.verifyBinary(
-        plaintext,
-        k.signBinary(plaintext))
-    assert k.verify_key.verifyBinary(
-        plaintext,
-        k2.signBinary(plaintext))
+    assert k2.verify_key.verify(plaintext, k.sign(plaintext))
+    assert k.verify_key.verify(plaintext, k2.sign(plaintext))
     assert k == k2
     assert k.serialize() == k2.serialize()

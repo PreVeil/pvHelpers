@@ -1,5 +1,5 @@
 from .email_v2 import EmailV2
-from .email_helpers import PROTOCOL_VERSION, EmailHelpers
+from .email_helpers import PROTOCOL_VERSION, EmailHelpers, EmailException
 from ..misc import g_log
 
 class EmailV4(EmailV2):
@@ -18,9 +18,10 @@ class EmailV4(EmailV2):
 
     def indexableBody(self):
         # TODO: striphtml and search in html!
-        status, body = EmailHelpers.deserializeBody(self.body.content)
-        if status == False:
-            g_log.error(u"indexableBody: failed to deserialize body")
+        try:
+            body = EmailHelpers.deserializeBody(self.body.content)
+        except EmailException as e:
+            g_log.exception(e)
             return u""
 
         return body["text"]

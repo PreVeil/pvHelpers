@@ -1,6 +1,6 @@
 # vim: set fileencoding=utf-8 :
 import copy, os, simplejson, random
-from pvHelpers import AttachmentMetadata, Attachment, AttachmentType, randUnicode, jdumps, randStr, randStream, utf8Decode, getdir, EmailException, EmailV1, Content
+from pvHelpers import AttachmentMetadata, Attachment, AttachmentType, randUnicode, jdumps, randStr, randStream, getdir, EmailException, EmailV1, Content
 from werkzeug.datastructures import FileStorage
 
 

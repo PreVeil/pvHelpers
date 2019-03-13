@@ -1,8 +1,26 @@
 
-import os, yaml, sys, random, time, simplejson
+import os, yaml, sys, random, time, simplejson, requests
 import datetime, base64, logging, logging.handlers, types
 import struct, collections, copy, StringIO, itertools
 from sqlalchemy import create_engine, event, orm
+from .params import params
+from .hook_decorators import WrapExceptions
+
+
+DATA_DIR_MODE = 0o750
+HTTP_TIMEOUT = 15
+
+
+class EncodingException(Exception):
+    def __init__(self, exception=u""):
+        super(EncodingException, self).__init__(exception)
+
+
+class __NOOPAuth(requests.auth.AuthBase):
+    def __call__(self, r):
+        return r
+NOOPAuth = __NOOPAuth()
+
 
 if sys.platform in ["darwin", "linux2"]:
     import pwd
@@ -10,15 +28,15 @@ if sys.platform in ["darwin", "linux2"]:
 else:
     pass
 
-DATA_DIR_MODE = 0o750
-HTTP_TIMEOUT = 15
 
 def initRandom():
     seed = struct.unpack("=I", os.urandom(4))[0]
     random.seed(seed)
 
+
 def getdir(path):
     return os.path.dirname(os.path.realpath(path))
+
 
 def resolvePreVeilMode(mode_file_path):
     if not isinstance(mode_file_path, unicode):
@@ -31,23 +49,19 @@ def resolvePreVeilMode(mode_file_path):
     # 2. 'dev'
     mode = os.environ.get(u"PREVEIL_MODE")
     if mode != None:
-        status, mode = unicodeIfUnicodeElseDecode(mode)
-        if status == False:
-            g_log.error(u"resolvePreVeilMode: unicodeIfUnicodeElseDecode failed")
-            return False, None
+        mode = unicodeIfUnicodeElseDecode(mode)
         return True, mode
 
     try:
         with open(mode_file_path, u"r") as f:
             mode = f.read().strip()
-        status, mode = ASCIIToUnicode(mode)
-        if status == False:
-            g_log.error(u"resolvePreVeilMode: ASCIIToUnicode failed")
+        mode = ASCIIToUnicode(mode)
         return True, mode
     except IOError:
         pass
 
     return True, u"dev"
+
 
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
@@ -59,6 +73,7 @@ def readYAMLConfig(path):
             return True, c
     except IOError as e:
         return False, None
+
 
 # TODO: handle deadlock
 class _LogWrapper(object):
@@ -133,75 +148,63 @@ class _LogWrapper(object):
             observer = twisted_observer_fn(loggerName=name)
             observer.start()
 
+
 g_log = _LogWrapper()
 
-def unicodeToASCII(s):
-    if not isinstance(s, unicode):
-        return False, None
 
-    try:
-        return True, s.encode("ascii")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
+def unicodeToASCII(s):
+    return s.encode("ascii")
+
 
 def unicodeToASCIIWithReplace(s):
     return s.encode("ascii", "replace")
 
+
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(bytes)
 def ASCIIToUnicode(s):
-    if not isinstance(s, str):
-        return False, None
+    return s.encode("utf-8").decode("utf-8")
 
-    try:
-        return True, s.encode("utf-8").decode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
 def utf8Encode(s):
-    if not isinstance(s, unicode):
-        return False, None
+    return s.encode("utf-8")
 
-    try:
-        return True, s.encode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
+@WrapExceptions(EncodingException, [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(bytes)
 def utf8Decode(s):
-    if not (isinstance(s, str) or isinstance(s, bytes)):
-        return False, None
+    return s.decode("utf-8")
 
-    try:
-        return True, s.decode("utf-8")
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        return False, False
 
 def unicodeIfUnicodeElseDecode(b):
     if isinstance(b, unicode):
-        return True, b
+        return b
     else:
         return utf8Decode(b)
+
 
 def encodeContentIfUnicode(content):
     if isinstance(content, unicode):
         return utf8Encode(content)
-    return True, content
+    return content
 
-# binary -> unicode
+
+@WrapExceptions(EncodingException, [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(bytes, {types.NoneType, str})
 def b64enc(data, altchars=None):
-    if not (isinstance(data, bytes) or isinstance(data, str)):
-        return False, None
-
     enc = base64.b64encode(data, altchars=altchars)
     return ASCIIToUnicode(enc)
 
-# unicode -> binary
-def b64dec(data, altchars=None):
-    if not isinstance(data, unicode):
-        return False, None
 
-    try:
-        return True, base64.b64decode(data, altchars=altchars)
-    except TypeError:
-        return False, None
+@WrapExceptions(EncodingException, [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode, {types.NoneType, str})
+def b64dec(data, altchars=None):
+    return base64.b64decode(data, altchars=altchars)
+
 
 def toInt(data):
     if not (isinstance(data, (unicode, str)) or (isinstance(data, (int, long, float)))):
@@ -212,17 +215,17 @@ def toInt(data):
     except ValueError:
         return False, None
 
+
+@WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
 def jdumps(data, ensure_ascii=False):
     return simplejson.dumps(data, ensure_ascii=ensure_ascii)
 
-def jloads(data):
-    if not isinstance(data, unicode):
-        return False, None
 
-    try:
-        return True, simplejson.loads(data)
-    except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
-        return False, None
+@WrapExceptions(EncodingException, [KeyError, TypeError, ValueError, simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError])
+@params(unicode)
+def jloads(data):
+    return simplejson.loads(data)
+
 
 def jload(fp):
     if not isinstance(fp, file):
@@ -233,12 +236,11 @@ def jload(fp):
     except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError, ValueError):
         return False, None
 
-def filesystemSafeBase64Encode(email):
-    return b64enc(email.upper(), "()")
 
 def getTempFilePath(mode_dir):
     return os.path.join(tempDir(mode_dir),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
+
 
 def getBodyFromFlankerMessage(message, flanker_from_string):
     if not (callable(flanker_from_string) and flanker_from_string.__name__ == "from_string"):
@@ -256,6 +258,7 @@ def getBodyFromFlankerMessage(message, flanker_from_string):
     else:
         return False, None
 
+
 def checkRunningAsRoot():
     if sys.platform in ["darwin", "linux2"]:
         uid = os.getuid()
@@ -271,6 +274,7 @@ def checkRunningAsRoot():
         return True
     else:
         return True
+
 
 class DoAsPreVeil(object):
     def __init__(self):
@@ -309,6 +313,7 @@ class DoAsPreVeil(object):
         if isinstance(value, Exception):
             raise value
 
+
 def switchUserPreVeil():
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
@@ -316,6 +321,7 @@ def switchUserPreVeil():
         os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
     elif "win32" == sys.platform:
         pass
+
 
 # lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
 def isSameDirOrChild(directory, test_child):
@@ -333,6 +339,7 @@ def isSameDirOrChild(directory, test_child):
     # e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
     return os.path.commonprefix([test_child, directory]) == directory
 
+
 def recur_chown(path, uid, gid):
     os.chown(path, uid, gid)
     for root, dirs, files in os.walk(path):
@@ -341,6 +348,7 @@ def recur_chown(path, uid, gid):
         for name in files:
             os.chown(os.path.join(root, name), uid, gid)
 
+
 def quiet_mkdir(path):
     try:
         os.mkdir(path)
@@ -348,32 +356,42 @@ def quiet_mkdir(path):
         if not os.path.isdir(path):
             raise
 
+
 def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
+
 
 def daemonDataDir(wd):
     return os.path.join(wd, "daemon")
 
+
 def modesDir(wd):
     return os.path.join(daemonDataDir(wd), "modes")
+
 
 def getModeDir(wd, mode):
     return os.path.join(modesDir(wd), mode)
 
+
 def logsDir(mode_dir):
     return os.path.join(mode_dir, "logs")
+
 
 def tempDir(mode_dir):
     return os.path.join(mode_dir, "temp")
 
+
 def getUserDatabasePath(mode_dir):
     return os.path.join(mode_dir, "user_db.sqlite")
+
 
 def getMailDatabasePath(mode_dir):
     return os.path.join(mode_dir, "db.sqlite")
 
+
 def getActionsDatabasePath(mode_dir):
     return os.path.join(mode_dir, "actions_db.sqlite")
+
 
 # Handle cases where /var/preveil/* doesn't exist or it has the wrong
 # owner:group
@@ -410,6 +428,7 @@ def initDaemonDataDirs(wd, mode, is_test=False):
             pass
 
     return mode_dir
+
 
 class CaseInsensitiveSet(collections.Set):
     def __init__(self, lyst):
@@ -448,6 +467,7 @@ class CaseInsensitiveSet(collections.Set):
 
         return CaseInsensitiveSet(new.values())
 
+
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
     @classmethod
@@ -480,15 +500,19 @@ class CaseInsensitiveDict(dict):
             v = super(CaseInsensitiveDict, self).pop(k)
             self.__setitem__(k, v)
 
+
 class NOT_ASSIGNED(object):
     def __init__(self):
         pass
 
+
     def __str__(self):
         return u"__NOT_ASSIGNED__"
 
+
     def serialize(self):
         return self.__str__()
+
 
 def MergeDicts(*args):
     ret = {}
@@ -498,15 +522,19 @@ def MergeDicts(*args):
         ret.update(_dict)
     return ret
 
+
 def randUnicode(length=20):
     GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
     return u"".join(random.choice(GLYPHS) for _ in range(length))
 
+
 def randStr(size=1024):
     return os.urandom(size)
 
+
 def randStream(size=1024):
     return StringIO.StringIO(randStr(size))
+
 
 # https://docs.python.org/dev/library/itertools.html#itertools-recipes
 def partition(pred, iterable):
