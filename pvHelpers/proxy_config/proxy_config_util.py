@@ -154,14 +154,13 @@ class __ProxyConfig(object):
 
     def addOrUpdate(self, type_, proxy_config_item):
         if type_ in [ProxyKey.MANUAL_PROXY_SETTINGS, ProxyKey.PROXY_BASIC_AUTH, ProxyKey.OS_PROXY_SETTINGS]:
-            if type_ not in self.proxies or self.proxies[type_] != proxy_config_item:
-                self.proxies[type_] = proxy_config_item
+            self.proxies[type_] = proxy_config_item
 
-                # proxy auth has to be formatted as this syntax: <protocol>://user:password@ip:port/
-                # otherwise, it won't work
-                # http://docs.python-requests.org/en/master/user/advanced/#proxies
-                if type_ == ProxyKey.PROXY_BASIC_AUTH:
-                    self.setBasicAuthCred(proxy_config_item)
+            # proxy auth has to be formatted as this syntax: <protocol>://user:password@ip:port/
+            # otherwise, it won't work
+            # http://docs.python-requests.org/en/master/user/advanced/#proxies
+            if type_ == ProxyKey.PROXY_BASIC_AUTH:
+                self.setBasicAuthCred(proxy_config_item)
 
     def init(self, manual_settings=None):
         self.proxies[ProxyKey.MANUAL_PROXY_SETTINGS] = manual_settings
