@@ -13,7 +13,7 @@ class ASYMM_KEY_PROTOCOL_VERSION(object):
     V2 = 2
     V3 = 3
 
-    Latest = int(os.environ.get("ASYMM_KEY_PROTOCOL_VERSION", 2))
+    Latest = int(os.environ.get("ASYMM_KEY_PROTOCOL_VERSION", 3))
 
 class SIGN_KEY_PROTOCOL_VERSION(object):
     V0 = 0
@@ -21,10 +21,10 @@ class SIGN_KEY_PROTOCOL_VERSION(object):
 #   V2 = 2 skipped: https://github.com/PreVeil/core/wiki/Signing-Keys#protocol-version-2
     V3 = 3
 
-    Latest = int(os.environ.get("SIGN_KEY_PROTOCOL_VERSION", 1))
+    Latest = int(os.environ.get("SIGN_KEY_PROTOCOL_VERSION", 3))
 
 class SYMM_KEY_PROTOCOL_VERSION(object):
     V0 = 0
     V1 = 1
 
-    Latest = int(os.environ.get("SYMM_KEY_PROTOCOL_VERSION", 0))
+    Latest = int(os.environ.get("SYMM_KEY_PROTOCOL_VERSION", 1))
