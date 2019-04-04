@@ -32,21 +32,24 @@ def __process_darwin_proxies(config):
         http_proxy = config.get(ProxyKey.HttpProxy)
         http_port = config.get(ProxyKey.HttpPort)
         if http_proxy is not None and http_port is not None:
-            proxy_item.add_or_update(IPProtocol.HTTP, ProxyUrl(
-                IPProtocol.HTTP, http_proxy, http_port))
+            proxy_item.add_or_update(
+                IPProtocol.HTTP,
+                ProxyUrl(IPProtocol.HTTP, http_proxy, http_port))
 
     https_enable = config.get(ProxyKey.HttpsEnable)
     if https_enable == "1":
         https_proxy = config.get(ProxyKey.HttpsProxy)
         https_port = config.get(ProxyKey.HttpsPort)
         if https_proxy is not None and https_port is not None:
-            proxy_item.add_or_update(IPProtocol.HTTPS, ProxyUrl(
-                IPProtocol.HTTPS, https_proxy, https_port))
+            proxy_item.add_or_update(
+                IPProtocol.HTTPS,
+                ProxyUrl(IPProtocol.HTTPS, https_proxy, https_port))
 
     pac_enable = config.get(ProxyKey.ProxyAutoConfigEnable)
     if pac_enable == "1":
-        proxy_item.add_or_update(IPProtocol.PAC, ProxyPac(
-            config.get(ProxyKey.ProxyAutoConfigURLString)))
+        proxy_item.add_or_update(
+            IPProtocol.PAC,
+            ProxyPac(config.get(ProxyKey.ProxyAutoConfigURLString)))
 
     return proxy_item if proxy_item.size > 0 else None
 
@@ -79,8 +82,8 @@ def __process_win_proxies(config):
                     pc = scheme[0]
                     s = scheme[1].split(":")
                     if len(s) != 2:
-                        g_log.warn(
-                            "encounter invalid ip:port {}".format(scheme[1]))
+                        g_log.warn("encounter invalid ip:port {}".format(
+                            scheme[1]))
                         continue
                     ip, port = s[0], s[1]
                     proxy_item.add_or_update(pc, ProxyUrl(pc, ip, port))
@@ -111,8 +114,12 @@ def get_os_proxies():
     proxy_conf_str = None
     if "darwin" == sys.platform:
         try:
-            proxy_conf_str = subprocess.check_output(
-                "scutil --proxy", shell=True)
+            process_scutil = subprocess.Popen(["scutil", "--proxy"],
+                                              stdout=subprocess.PIPE,
+                                              shell=False)
+
+            proxy_conf_str = process_scutil.communicate()[0]
+
         except subprocess.CalledProcessError as e:
             g_log.exception(e)
             proxy_conf_str = None
@@ -124,8 +131,8 @@ def get_os_proxies():
         # the current logic of running the process as current user
         # does not give us access to the process's stdout.
         # so need to write to a temp file first then read from it. :(
-        temp_path = os.path.join(
-            tempfile.gettempdir(), randUnicode(5) + ".txt")
+        temp_path = os.path.join(tempfile.gettempdir(),
+                                 randUnicode(5) + ".txt")
         g_log.debug(temp_path)
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
             ps, reg_internet_setting, temp_path)
@@ -156,7 +163,10 @@ class __ProxyConfig(object):
         self.proxies = {}
 
     def add_or_update(self, type_, proxy_config_item):
-        if type_ in [ProxyKey.MANUAL_PROXY_SETTINGS, ProxyKey.PROXY_BASIC_AUTH, ProxyKey.OS_PROXY_SETTINGS]:
+        if type_ in [
+                ProxyKey.MANUAL_PROXY_SETTINGS, ProxyKey.PROXY_BASIC_AUTH,
+                ProxyKey.OS_PROXY_SETTINGS
+        ]:
             self.proxies[type_] = proxy_config_item
 
             # proxy auth has to be formatted as this syntax: <protocol>://user:password@ip:port/
@@ -198,9 +208,15 @@ class __ProxyConfig(object):
 
     def toDict(self):
         if self.manual_proxy_setting is not None:
-            return {"setting_type": "manual", "setting_values": self.manual_proxy_setting.toDict()}
+            return {
+                "setting_type": "manual",
+                "setting_values": self.manual_proxy_setting.toDict()
+            }
         if self.os_proxy_setting is not None:
-            return {"setting_type": "os", "setting_values": self.os_proxy_setting.toDict()}
+            return {
+                "setting_type": "os",
+                "setting_values": self.os_proxy_setting.toDict()
+            }
         return {"setting_type": None, "setting_values": {}}
 
 

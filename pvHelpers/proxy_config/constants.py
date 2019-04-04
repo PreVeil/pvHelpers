@@ -11,7 +11,7 @@ class ProxyKey():
     HttpPort = "HTTPPort"
     HttpsPort = "HTTPSPort"
     HttpProxy = "HTTPProxy"
-    HttpSProxy = "HTTPSProxy"
+    HttpsProxy = "HTTPSProxy"
     ProxyAutoConfigEnable = "ProxyAutoConfigEnable"
     ProxyAutoConfigURLString = "ProxyAutoConfigURLString"
 
