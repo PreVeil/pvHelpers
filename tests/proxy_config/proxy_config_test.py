@@ -1,7 +1,8 @@
 import os
 import pytest
+import requests
 from requests.auth import HTTPProxyAuth
-from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, getdir
+from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, ProxyKey, getdir, download_url
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -121,8 +122,8 @@ scutil_with_proxy = """<dictionary > {
             HTTPSPort: 2222
             HTTPSProxy: localhost
             ProxyAutoConfigEnable: 1
-            ProxyAutoConfigURLString: some_pac.pac
-    }"""
+            ProxyAutoConfigURLString: %s
+    }""" % os.path.join(getdir(__file__), "test_pac_file.pac")
 
 scutil_with_proxy_info_inenable = """<dictionary > {
             HTTPEnable: 0
@@ -135,10 +136,11 @@ scutil_with_proxy_info_inenable = """<dictionary > {
             ProxyAutoConfigURLString: some_pac.pac
     }"""
 
-Proxy_Dicts = [win_no_proxy,
-               win_proxy_str, win_proxy_str_inenable, win_proxy_str_pac,
-               win_proxy_str_one_ip_port_for_all,
-               scutil_no_proxy, scutil_with_proxy, scutil_with_proxy_info_inenable]
+Proxy_Dicts = [
+    win_no_proxy, win_proxy_str, win_proxy_str_inenable, win_proxy_str_pac,
+    win_proxy_str_one_ip_port_for_all, scutil_no_proxy, scutil_with_proxy,
+    scutil_with_proxy_info_inenable
+]
 
 
 def test_OS_proxy_processer():
@@ -152,18 +154,42 @@ def test_OS_proxy_processer():
     assert process_os_proxies(win_proxy_str, "win32").toDict() == \
         {"http": {"username": None, "ip": "localhost",
                   "password": None, "protocol": "http", "port": "3333"}}
-    assert process_os_proxies(win_proxy_str_pac, "win32").toDict() == \
-        {"pac": {"pac_url": "C:\\Users\\preveil\\Desktop\\pv-pac.pac"}}
+    with pytest.raises(IOError):
+        process_os_proxies(win_proxy_str_pac, "win32")
 
     # darwin
     assert process_os_proxies(scutil_no_proxy, "darwin") is None
     assert process_os_proxies(scutil_with_proxy_info_inenable, "darwin").toDict() == \
         {"https": {"username": None, "ip": "localhost",
                    "password": None, "protocol": "https", "port": "2222"}}
+
     assert process_os_proxies(scutil_with_proxy, "darwin").toDict() == \
-        {"pac": {"pac_url": "some_pac.pac"},
-         "http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "3128"},
-         "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}
+        {"pac": {"pac_url": os.path.join(getdir(__file__), "test_pac_file.pac"), "protocol": "pac"},
+            "http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "3128"},
+            "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}
+
+
+def test_download_pac_retry():
+    def no_retry_handler(url):
+        raise requests.exceptions.InvalidURL
+
+    def retryable_one(url):
+        raise requests.exceptions.ConnectTimeout
+
+    def retryable_two(url):
+        raise requests.exceptions.Timeout
+
+    def retryable_three(url):
+        raise requests.exceptions.ConnectionError
+
+    retry, content = download_url("some url", no_retry_handler)
+    assert retry is False
+    assert content is None
+
+    for h in [retryable_one, retryable_two, retryable_three]:
+        retry, content = download_url("some url", h)
+        assert retry is True
+        assert content is None
 
 
 def test_bad_pacfile():
@@ -178,6 +204,9 @@ def test_bad_pacfile():
     a = Pac(bad_pac_file)
     with pytest.raises(Exception):
         a.get_proxies("https://preveil.com")
+
+    with pytest.raises(Exception):
+        a.get_proxies("https://preveil.test.com")
 
     test_pac_file = os.path.join(getdir(__file__), "test_pac_file.pac")
     pac = Pac(test_pac_file)
@@ -204,4 +233,53 @@ def test_bad_pacfile():
 
 
 def test_proxy_config_operations():
-    pass
+    manual_px_item = process_os_proxies(scutil_with_proxy, "darwin")
+    px = ProxyConfig()
+    px.add_or_update(ProxyKey.MANUAL_PROXY_SETTINGS, manual_px_item)
+    assert px.manual_proxy_setting is manual_px_item
+    assert px.os_proxy_setting is None
+    assert px.basic_auth is None
+
+    os_px_item = process_os_proxies(win_proxy_str_one_ip_port_for_all, "win32")
+    px.add_or_update(ProxyKey.OS_PROXY_SETTINGS, os_px_item)
+
+    # should still use the manual one:
+    assert px.get_proxies("https://collections.preveil.com") == \
+        [
+            {"https": "http://199.168.151.10:10975",
+             "http": "http://199.168.151.10:10975"},
+            {"https": "http://104.129.194.41:10975",
+             "http": "http://104.129.194.41:10975"}
+    ]
+
+    # add some cred
+    px.set_basic_auth_cred(HTTPProxyAuth("user", "pass"))
+    assert px.get_proxies("https://collections.preveil.com") == \
+        [
+            {"https": "http://user:pass@199.168.151.10:10975",
+             "http": "http://user:pass@199.168.151.10:10975"},
+            {"https": "http://user:pass@104.129.194.41:10975",
+             "http": "http://user:pass@104.129.194.41:10975"}
+    ]
+
+    # should now fall back to os proxies
+    px.add_or_update(ProxyKey.MANUAL_PROXY_SETTINGS, None)
+    assert px.get_proxies("https://collections.preveil.com") == \
+        [
+            {"https": "http://localhost:2121", "http": "http://localhost:2121"}
+    ]
+
+    # manual override
+    px.add_or_update(ProxyKey.MANUAL_PROXY_SETTINGS, manual_px_item)
+    assert px.get_proxies("https://collections.preveil.com") == \
+        [
+            {"https": "http://user:pass@199.168.151.10:10975",
+             "http": "http://user:pass@199.168.151.10:10975"},
+            {"https": "http://user:pass@104.129.194.41:10975",
+             "http": "http://user:pass@104.129.194.41:10975"}
+    ]
+
+    # no proxy
+    px.add_or_update(ProxyKey.MANUAL_PROXY_SETTINGS, None)
+    px.add_or_update(ProxyKey.OS_PROXY_SETTINGS, None)
+    assert px.get_proxies("https://collections.preveil.com") is None

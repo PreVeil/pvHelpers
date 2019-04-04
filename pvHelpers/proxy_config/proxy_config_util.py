@@ -158,7 +158,7 @@ def get_os_proxies():
     return None
 
 
-class __ProxyConfig(object):
+class ProxyConfig(object):
     def __init__(self, os_proxy_settings=None, manual_proxy_settings=None):
         self.proxies = {}
 
@@ -174,9 +174,6 @@ class __ProxyConfig(object):
             # http://docs.python-requests.org/en/master/user/advanced/#proxies
             if type_ == ProxyKey.PROXY_BASIC_AUTH:
                 self.set_basic_auth_cred(proxy_config_item)
-
-    def init(self, manual_settings=None):
-        self.proxies[ProxyKey.MANUAL_PROXY_SETTINGS] = manual_settings
 
     def get_update(self):
         self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, get_os_proxies())
@@ -218,6 +215,3 @@ class __ProxyConfig(object):
                 "setting_values": self.os_proxy_setting.toDict()
             }
         return {"setting_type": None, "setting_values": {}}
-
-
-ProxyConfig = __ProxyConfig()

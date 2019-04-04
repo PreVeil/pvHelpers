@@ -3,30 +3,40 @@ import requests
 
 from ..misc import g_log
 
+RETRYABLE_EXCEPTION = (requests.exceptions.ConnectionError,
+                       requests.exceptions.Timeout)
+
 
 class Pac(object):
-
     def __init__(self, pac_url, proxy_auth=None):
         self.pac_url = pac_url
         self.proxy_auth = proxy_auth
+        self.fetched = False
         self.__parse_pac()
 
     def __parse_pac(self):
+        retry, downloaded_pac = download_url(self.pac_url, download_pac)
+
+        # connection error, we are gonna retry
+        # when get_proxies() gets called.
+        if retry:
+            self.fetched = False
+            return
+
+        # either download succeeded, or it is not a valid url, then falls back to
+        # a file path.
         try:
             pacparser.init()
-            downloaded_pac = download_pac([self.pac_url])
             if downloaded_pac is not None:
                 g_log.debug("pac url is a url: {}".format(self.pac_url))
                 pacparser.parse_pac_string(downloaded_pac)
             else:
                 g_log.debug("pac url is a local file: {}".format(self.pac_url))
                 pacparser.parse_pac_file(self.pac_url)
-
-        except IOError as e:
-            g_log.error(u"Pac.__parse_pac: {}".format(e))
-            self.fetched = False
-            pacparser.cleanup()
-
+        except IOError:
+            # neither a valid url or valid file path
+            self.clean_up()
+            raise
         else:
             self.fetched = True
 
@@ -68,9 +78,20 @@ class Pac(object):
 
         return proxies_for_requests if len(proxies_for_requests) > 0 else None
 
-    def reset(self):
+    def clean_up(self):
         pacparser.cleanup()
-        self.fetched = False
+
+
+def download_url(url, download_handler):
+    """
+    :return: retryable, content of the pac url
+    """
+    try:
+        return False, download_handler([url])
+    except requests.RequestException as e:
+        if isinstance(e, RETRYABLE_EXCEPTION):
+            return True, None
+    return False, None
 
 
 """
@@ -94,7 +115,9 @@ def download_pac(candidate_urls, timeout=1, allowed_content_types=None):
     """
     if not allowed_content_types:
         allowed_content_types = {
-            "application/x-ns-proxy-autoconfig", "application/x-javascript-config"}
+            "application/x-ns-proxy-autoconfig",
+            "application/x-javascript-config"
+        }
 
     sess = requests.Session()
     # Don't inherit proxy config from environment variables.
@@ -103,11 +126,15 @@ def download_pac(candidate_urls, timeout=1, allowed_content_types=None):
         try:
             resp = sess.get(pac_url, timeout=timeout)
             content_type = resp.headers.get("content-type", "").lower()
-            if content_type and True not in [allowed_type in content_type for allowed_type in allowed_content_types]:
+            if content_type and True not in [
+                    allowed_type in content_type
+                    for allowed_type in allowed_content_types
+            ]:
                 continue
             if resp.ok:
                 return resp.text
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
             g_log.exception(e)
             continue
 
@@ -156,13 +183,16 @@ def proxy_url(value, proxy_auth=None, socks_scheme=None):
         keyword, proxy = parts[0].upper(), parts[1]
         if keyword == "PROXY":
             if proxy_auth:
-                return "http://{}:{}@{}".format(proxy_auth.username, proxy_auth.password, proxy)
+                return "http://{}:{}@{}".format(proxy_auth.username,
+                                                proxy_auth.password, proxy)
             return "http://" + proxy
         elif keyword == "SOCKS":
             if not socks_scheme:
                 socks_scheme = "socks5"
             if proxy_auth:
-                return "{}://{}:{}@{}".format(socks_scheme, proxy_auth.username, proxy_auth.password, proxy)
+                return "{}://{}:{}@{}".format(socks_scheme,
+                                              proxy_auth.username,
+                                              proxy_auth.password, proxy)
             return "{}://{}".format(socks_scheme, proxy)
 
         # TODO: also support keyword 'HTTP' and 'HTTPS'

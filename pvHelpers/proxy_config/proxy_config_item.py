@@ -8,8 +8,7 @@ class ProxyPac(object):
     def __init__(self, pac_url, proxy_auth=None):
         self.pac_url = pac_url
         self.__proxy_auth = proxy_auth
-        self.__proxy_resolver = Pac(
-            self.pac_url, proxy_auth=self.__proxy_auth)
+        self.__proxy_resolver = Pac(self.pac_url, proxy_auth=self.__proxy_auth)
 
     def __eq__(self, other):
         if not isinstance(other, ProxyPac):
@@ -31,14 +30,14 @@ class ProxyPac(object):
             return self.__proxy_resolver.get_proxies(url)
         except Exception as e:
             g_log.debug("ProxyResolver.get_proxies {}".format(e))
-            self.__proxy_resolver.reset()
+            self.__proxy_resolver.clean_up()
             return None
 
     def __ne__(self, other):
         return not self == other
 
     def toDict(self):
-        return {"protocol": "pac", "pac_url": self.pac_url}
+        return {"protocol": IPProtocol.PAC, "pac_url": self.pac_url}
 
     @classmethod
     def fromDict(cls, data_dict):
@@ -78,7 +77,8 @@ class ProxyUrl(object):
         if self.username is None and self.password is None:
             return "http://{}:{}".format(self.ip, self.port)
         else:
-            return "http://{}:{}@{}:{}".format(self.username, self.password, self.ip, self.port)
+            return "http://{}:{}@{}:{}".format(self.username, self.password,
+                                               self.ip, self.port)
 
     def toDict(self):
         return {
@@ -159,14 +159,14 @@ class ProxyConfigItem(object):
                     u"Must provide url to get proxies from pac file")
             return self.proxies[IPProtocol.PAC].get_proxies(url)
 
-        proxies_for_requests = []
-        for k, v in self.proxies.iteritems():
-            if k in [IPProtocol.HTTP, IPProtocol.HTTPS]:
-                proxies_for_requests.append({
-                    k: v.to_proxy_url
-                })
+        proxies_for_requests = {
+            k: v.to_proxy_url
+            for k, v in self.proxies.iteritems()
+        }
+        if len(proxies_for_requests) > 0:
+            return [proxies_for_requests]
 
-        return proxies_for_requests if len(proxies_for_requests) > 0 else None
+        return None
 
     @property
     def size(self):
