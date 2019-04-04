@@ -1,7 +1,7 @@
 import os
 import pytest
 from requests.auth import HTTPProxyAuth
-from pvHelpers import ProxyConfig, processOSProxies, ProxyPac, Pac, getdir
+from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, getdir
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -141,32 +141,32 @@ Proxy_Dicts = [win_no_proxy,
                scutil_no_proxy, scutil_with_proxy, scutil_with_proxy_info_inenable]
 
 
-def testOSProxyProcesser():
+def test_OS_proxy_processer():
     # win32
-    assert processOSProxies(win_no_proxy, "win32") is None
-    assert processOSProxies(win_proxy_str_inenable, "win32") is None
-    assert processOSProxies(win_proxy_str_one_ip_port_for_all, "win32").toDB() == \
+    assert process_os_proxies(win_no_proxy, "win32") is None
+    assert process_os_proxies(win_proxy_str_inenable, "win32") is None
+    assert process_os_proxies(win_proxy_str_one_ip_port_for_all, "win32").toDict() == \
         {"http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "2121"},
          "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2121"}}
 
-    assert processOSProxies(win_proxy_str, "win32").toDB() == \
+    assert process_os_proxies(win_proxy_str, "win32").toDict() == \
         {"http": {"username": None, "ip": "localhost",
                   "password": None, "protocol": "http", "port": "3333"}}
-    assert processOSProxies(win_proxy_str_pac, "win32").toDB() == \
+    assert process_os_proxies(win_proxy_str_pac, "win32").toDict() == \
         {"pac": {"pac_url": "C:\\Users\\preveil\\Desktop\\pv-pac.pac"}}
 
     # darwin
-    assert processOSProxies(scutil_no_proxy, "darwin") is None
-    assert processOSProxies(scutil_with_proxy_info_inenable, "darwin").toDB() == \
+    assert process_os_proxies(scutil_no_proxy, "darwin") is None
+    assert process_os_proxies(scutil_with_proxy_info_inenable, "darwin").toDict() == \
         {"https": {"username": None, "ip": "localhost",
                    "password": None, "protocol": "https", "port": "2222"}}
-    assert processOSProxies(scutil_with_proxy, "darwin").toDB() == \
+    assert process_os_proxies(scutil_with_proxy, "darwin").toDict() == \
         {"pac": {"pac_url": "some_pac.pac"},
          "http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "3128"},
          "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}
 
 
-def testBadPacFile():
+def test_bad_pacfile():
     # make sure we don't crash if provided bad pac file
     with pytest.raises(IOError):
         Pac("http://not_exist_pac.pac")
@@ -177,12 +177,12 @@ def testBadPacFile():
     bad_pac_file = os.path.join(getdir(__file__), "bad_pac_file.pac")
     a = Pac(bad_pac_file)
     with pytest.raises(Exception):
-        a.getProxies("https://preveil.com")
+        a.get_proxies("https://preveil.com")
 
     test_pac_file = os.path.join(getdir(__file__), "test_pac_file.pac")
     pac = Pac(test_pac_file)
 
-    assert pac.getProxies("https://collections.preveil.com") == \
+    assert pac.get_proxies("https://collections.preveil.com") == \
         [
             {"https": "http://199.168.151.10:10975",
              "http": "http://199.168.151.10:10975"},
@@ -190,11 +190,11 @@ def testBadPacFile():
              "http": "http://104.129.194.41:10975"}
     ]
 
-    assert pac.getProxies("adsfads") is None
+    assert pac.get_proxies("adsfads") is None
 
     proxy_pac = ProxyPac(test_pac_file)
-    proxy_pac.setBasicAuthCred(HTTPProxyAuth("user", "pass"))
-    assert proxy_pac.getProxies("https://collections.preveil.com") == \
+    proxy_pac.set_basic_auth_cred(HTTPProxyAuth("user", "pass"))
+    assert proxy_pac.get_proxies("https://collections.preveil.com") == \
         [
             {"https": "http://user:pass@199.168.151.10:10975",
              "http": "http://user:pass@199.168.151.10:10975"},
@@ -203,5 +203,5 @@ def testBadPacFile():
     ]
 
 
-def testProxyConfigOperations():
+def test_proxy_config_operations():
     pass

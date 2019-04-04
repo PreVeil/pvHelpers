@@ -1,18 +1,15 @@
 from .constants import IPProtocol
-from requests.auth import HTTPProxyAuth
 from .pac_parser import Pac
 
 from ..misc import g_log
 
 
 class ProxyPac(object):
-    def __init__(self, pac_url, username=None, password=None):
+    def __init__(self, pac_url, proxy_auth=None):
         self.pac_url = pac_url
-        if username is not None and password is not None:
-            self.__proxy_auth = HTTPProxyAuth(username, password)
-        else:
-            self.__proxy_auth = None
-        self.__initProxyResolver()
+        self.__proxy_auth = proxy_auth
+        self.__proxy_resolver = Pac(
+            self.pac_url, proxy_auth=self.__proxy_auth)
 
     def __eq__(self, other):
         if not isinstance(other, ProxyPac):
@@ -23,42 +20,28 @@ class ProxyPac(object):
                 return False
         return True
 
-    def __initProxyResolver(self):
-        try:
-            self.__proxy_resolver = Pac(
-                self.pac_url, proxy_auth=self.__proxy_auth)
+    def set_basic_auth_cred(self, cred):
+        self.__proxy_auth = cred
+        self.__proxy_resolver.proxy_auth = cred
 
-        except IOError as e:
-            g_log.error(u"__initProxyResolver: {}".format(e))
-            self.__proxy_resolver = None
-
-    def setBasicAuthCred(self, cred):
-        if self.__proxy_resolver is not None:
-            self.__proxy_auth = cred
-            self.__proxy_resolver.proxy_auth = cred
-
-    def getProxies(self, url):
-        if self.__proxy_resolver is None:
-            return None
+    def get_proxies(self, url):
         # should we open a process to avoid js crash?
         # hasn't happened for pacparser
         try:
-            return self.__proxy_resolver.getProxies(url)
+            return self.__proxy_resolver.get_proxies(url)
         except Exception as e:
-            g_log.debug("ProxyResolver.getProxies {}".format(e))
+            g_log.debug("ProxyResolver.get_proxies {}".format(e))
+            self.__proxy_resolver.reset()
             return None
 
     def __ne__(self, other):
         return not self == other
 
-    def toDB(self):
-        return {"pac_url": self.pac_url}
-
-    def toBrowser(self):
-        return self.toDB()
+    def toDict(self):
+        return {"protocol": "pac", "pac_url": self.pac_url}
 
     @classmethod
-    def fromDB(cls, data_dict):
+    def fromDict(cls, data_dict):
         return cls(data_dict["pac_url"])
 
 
@@ -68,8 +51,8 @@ class ProxyUrl(object):
         self.protocol = protocol
         self.ip = ip
         self.port = port
-        self.__username = username
-        self.__password = password
+        self.username = username
+        self.password = password
 
     def __eq__(self, other):
         if not isinstance(other, ProxyUrl):
@@ -83,34 +66,31 @@ class ProxyUrl(object):
     def __ne__(self, other):
         return not self == other
 
-    def setBasicAuthCred(self, cred):
-        self.__username = cred.username
-        self.__password = cred.password
+    def set_basic_auth_cred(self, cred):
+        self.username = cred.username
+        self.password = cred.password
 
     # I can't find much details on determining whether the proxy handling
     # the given protocol is itself an http or https proxy
     # pypac assumes it is http
     @property
     def to_proxy_url(self):
-        if self.__username is None and self.__password is None:
+        if self.username is None and self.password is None:
             return "http://{}:{}".format(self.ip, self.port)
         else:
-            return "http://{}:{}@{}:{}".format(self.__username, self.__password, self.ip, self.port)
+            return "http://{}:{}@{}:{}".format(self.username, self.password, self.ip, self.port)
 
-    def toBrowser(self):
-        return self.toDB()
-
-    def toDB(self):
+    def toDict(self):
         return {
             "protocol": self.protocol,
             "ip": self.ip,
             "port": self.port,
-            "username": self.__username,
-            "password": self.__password
+            "username": self.username,
+            "password": self.password
         }
 
     @classmethod
-    def fromDB(cls, request_dict):
+    def fromDict(cls, request_dict):
         return cls(
             request_dict["protocol"],
             request_dict["ip"],
@@ -143,18 +123,19 @@ class ProxyConfigItem(object):
     def __ne__(self, other):
         return not self == other
 
-    def addOrUpdate(self, type_, proxy_obj):
+    def add_or_update(self, type_, proxy_obj):
         if type_ in ProxyConfigItem.PROTOCOL_TYPES:
             self.proxies[type_] = proxy_obj
 
+    # need this to work with the existing temp object interface
     def toDB(self):
-        return {k: v.toDB() for k, v in self.proxies.iteritems()}
+        return self.toDict()
 
-    def toBrowser(self):
-        return self.toDB()
+    def toDict(self):
+        return {k: v.toDict() for k, v in self.proxies.iteritems()}
 
     @classmethod
-    def fromDB(cls, data_dict):
+    def fromDict(cls, data_dict):
         proxies = {}
         for k, v in data_dict.iteritems():
             if k not in ProxyConfigItem.PROTOCOL_TYPES:
@@ -162,21 +143,21 @@ class ProxyConfigItem(object):
                     u"{} is not a supported proxy protocol type".format(k))
 
             if k in [IPProtocol.HTTP, IPProtocol.HTTPS]:
-                proxies[k] = ProxyUrl.fromDB(v)
+                proxies[k] = ProxyUrl.fromDict(v)
             elif k == IPProtocol.PAC:
-                proxies[k] = ProxyPac.fromDB(v)
+                proxies[k] = ProxyPac.fromDict(v)
         return cls(proxies)
 
-    def setBasicAuthCred(self, basic_proxy_auth):
+    def set_basic_auth_cred(self, basic_proxy_auth):
         for protocol in self.proxies:
-            self.proxies[protocol].setBasicAuthCred(basic_proxy_auth)
+            self.proxies[protocol].set_basic_auth_cred(basic_proxy_auth)
 
-    def getProxies(self, url=None):
+    def get_proxies(self, url=None):
         if IPProtocol.PAC in self.proxies:
             if url is None:
                 raise ValueError(
                     u"Must provide url to get proxies from pac file")
-            return self.proxies[IPProtocol.PAC].getProxies(url)
+            return self.proxies[IPProtocol.PAC].get_proxies(url)
 
         proxies_for_requests = []
         for k, v in self.proxies.iteritems():

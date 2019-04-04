@@ -7,49 +7,54 @@ from ..misc import g_log
 class Pac(object):
 
     def __init__(self, pac_url, proxy_auth=None):
-        pacparser.init()
-        # determine whether this is a url
-        # or a file path
-        downloaded_pac = download_pac([pac_url])
-        if downloaded_pac is not None:
-            g_log.debug("pac url is a url: {}".format(pac_url))
-            pacparser.parse_pac_string(downloaded_pac)
+        self.pac_url = pac_url
+        self.proxy_auth = proxy_auth
+        self.__parse_pac()
+
+    def __parse_pac(self):
+        try:
+            pacparser.init()
+            downloaded_pac = download_pac([self.pac_url])
+            if downloaded_pac is not None:
+                g_log.debug("pac url is a url: {}".format(self.pac_url))
+                pacparser.parse_pac_string(downloaded_pac)
+            else:
+                g_log.debug("pac url is a local file: {}".format(self.pac_url))
+                pacparser.parse_pac_file(self.pac_url)
+
+        except IOError as e:
+            g_log.error(u"Pac.__parse_pac: {}".format(e))
+            self.fetched = False
+            pacparser.cleanup()
+
         else:
-            g_log.debug("pac url is a local file: {}".format(pac_url))
-            pacparser.parse_pac_file(pac_url)
+            self.fetched = True
 
-        self._proxy_auth = proxy_auth
-
-    @property
-    def proxy_auth(self):
-        """Proxy authentication object."""
-        return self._proxy_auth
-
-    @proxy_auth.setter
-    def proxy_auth(self, value):
-        self._proxy_auth = value
-
-    def __getProxies(self, url, host=None):
+    def __get_proxies(self, url, host=None):
         """
         :return: a string of proxies from FindProxyForURL() in pac file js
         or 'None' if we can't process the url.
         """
+
+        if not self.fetched:
+            self.__parse_pac()
+
         try:
             proxy_str = pacparser.find_proxy(url, host)
         except pacparser.URLError as e:
             g_log.error(e)
             return None
         else:
-            return parse_pac_value(proxy_str, self._proxy_auth)
+            return parse_pac_value(proxy_str, self.proxy_auth)
 
-    def getProxies(self, url, host=None):
+    def get_proxies(self, url, host=None):
         """
         :return: a list of proxy dict that can be passed to
         requests' proxies parameter. Each proxy dict is meant to be used in a
         fallover fashion. 'None' means the url requires no proxy.
         """
 
-        proxy_list = self.__getProxies(url, host)
+        proxy_list = self.__get_proxies(url, host)
         if not proxy_list:
             return None
 
@@ -63,8 +68,9 @@ class Pac(object):
 
         return proxies_for_requests if len(proxies_for_requests) > 0 else None
 
-    def __del__(self):
+    def reset(self):
         pacparser.cleanup()
+        self.fetched = False
 
 
 """
@@ -113,6 +119,7 @@ def parse_pac_value(value, proxy_auth=None, socks_scheme=None):
 
     For example, the result of parsing ``PROXY example.local:8080; DIRECT``
     is a list containing strings ``http://example.local:8080`` and ``DIRECT``.
+    Also includes the proxy auth creds if provided.
 
     :param str value: Any value returned by ``FindProxyForURL()``.
     :param str socks_scheme: Scheme to assume for SOCKS proxies. ``socks5`` by default.

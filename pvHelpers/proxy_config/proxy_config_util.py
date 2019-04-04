@@ -2,8 +2,8 @@ import os
 import subprocess
 import sys
 
-from ..misc import g_log
 from .constants import IPProtocol, ProxyKey
+from ..misc import g_log
 from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
 
 if "win32" == sys.platform:
@@ -13,7 +13,7 @@ if "win32" == sys.platform:
     from ..win_helpers import runWindowsProcessAsCurrentUser
 
 
-def parseOSProxyConfig(scutil_proxy_conf):
+def parse_os_proxy_config(scutil_proxy_conf):
     res = scutil_proxy_conf.replace(" ", "")
     res = res.split("\n")
     proxy_dict = {}
@@ -25,36 +25,35 @@ def parseOSProxyConfig(scutil_proxy_conf):
     return proxy_dict
 
 
-def __processDarwinProxies(config):
+def __process_darwin_proxies(config):
     proxy_item = ProxyConfigItem()
-    http_enable = config.get(ProxyKey.HTTPEnable)
+    http_enable = config.get(ProxyKey.HttpEnable)
     if http_enable == "1":
-        HTTPProxy = config.get(ProxyKey.HTTPProxy)
-        HTTPPort = config.get(ProxyKey.HTTPPort)
-        if HTTPProxy is not None and HTTPPort is not None:
-            proxy_item.addOrUpdate(IPProtocol.HTTP, ProxyUrl(
-                IPProtocol.HTTP, HTTPProxy, HTTPPort))
+        http_proxy = config.get(ProxyKey.HttpProxy)
+        http_port = config.get(ProxyKey.HttpPort)
+        if http_proxy is not None and http_port is not None:
+            proxy_item.add_or_update(IPProtocol.HTTP, ProxyUrl(
+                IPProtocol.HTTP, http_proxy, http_port))
 
-    https_enable = config.get(ProxyKey.HTTPSEnable)
+    https_enable = config.get(ProxyKey.HttpsEnable)
     if https_enable == "1":
-        HTTPSProxy = config.get(ProxyKey.HTTPSProxy)
-        HTTPSPort = config.get(ProxyKey.HTTPSPort)
-        if HTTPSProxy is not None and HTTPSPort is not None:
-            proxy_item.addOrUpdate(IPProtocol.HTTPS, ProxyUrl(
-                IPProtocol.HTTPS, HTTPSProxy, HTTPSPort))
+        https_proxy = config.get(ProxyKey.HttpsProxy)
+        https_port = config.get(ProxyKey.HttpsPort)
+        if https_proxy is not None and https_port is not None:
+            proxy_item.add_or_update(IPProtocol.HTTPS, ProxyUrl(
+                IPProtocol.HTTPS, https_proxy, https_port))
 
     pac_enable = config.get(ProxyKey.ProxyAutoConfigEnable)
     if pac_enable == "1":
-        proxy_item.addOrUpdate(IPProtocol.PAC, ProxyPac(
+        proxy_item.add_or_update(IPProtocol.PAC, ProxyPac(
             config.get(ProxyKey.ProxyAutoConfigURLString)))
 
     return proxy_item if proxy_item.size > 0 else None
 
 
-def __processWinProxies(config):
+def __process_win_proxies(config):
     proxy_item = ProxyConfigItem()
-    enable = config.get("ProxyEnable")
-    if enable == "1":
+    if config.get("ProxyEnable") == "1":
         proxy_server = config.get("ProxyServer")
         if proxy_server is not None:
             # each server is format as http=ip:port;https=ip:port or ip:port if each
@@ -71,9 +70,9 @@ def __processWinProxies(config):
                         g_log.warn("encounter invalid ip:port {}".format(e))
                         continue
                     ip, port = s[0], s[1]
-                    proxy_item.addOrUpdate(
+                    proxy_item.add_or_update(
                         IPProtocol.HTTP, ProxyUrl(IPProtocol.HTTP, ip, port))
-                    proxy_item.addOrUpdate(
+                    proxy_item.add_or_update(
                         IPProtocol.HTTPS, ProxyUrl(IPProtocol.HTTPS, ip, port))
 
                 elif len(scheme) == 2:
@@ -84,31 +83,31 @@ def __processWinProxies(config):
                             "encounter invalid ip:port {}".format(scheme[1]))
                         continue
                     ip, port = s[0], s[1]
-                    proxy_item.addOrUpdate(pc, ProxyUrl(pc, ip, port))
+                    proxy_item.add_or_update(pc, ProxyUrl(pc, ip, port))
 
     pac_url = config.get(ProxyKey.AutoConfigURL)
     if pac_url is not None:
-        proxy_item.addOrUpdate(IPProtocol.PAC, ProxyPac(pac_url))
+        proxy_item.add_or_update(IPProtocol.PAC, ProxyPac(pac_url))
 
     return proxy_item if proxy_item.size > 0 else None
 
 
-def processOSProxies(proxy_config_str, platform=None):
-    config = parseOSProxyConfig(proxy_config_str)
+def process_os_proxies(proxy_config_str, platform=None):
+    config = parse_os_proxy_config(proxy_config_str)
 
     if platform is None:
         platform = sys.platform
 
     if platform == "darwin":
-        return __processDarwinProxies(config)
+        return __process_darwin_proxies(config)
 
     elif platform == "win32":
-        return __processWinProxies(config)
+        return __process_win_proxies(config)
 
     return None
 
 
-def getOSProxies():
+def get_os_proxies():
     proxy_conf_str = None
     if "darwin" == sys.platform:
         try:
@@ -121,6 +120,10 @@ def getOSProxies():
     elif "win32" == sys.platform:
         reg_internet_setting = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
         ps = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
+
+        # the current logic of running the process as current user
+        # does not give us access to the process's stdout.
+        # so need to write to a temp file first then read from it. :(
         temp_path = os.path.join(
             tempfile.gettempdir(), randUnicode(5) + ".txt")
         g_log.debug(temp_path)
@@ -143,7 +146,7 @@ def getOSProxies():
             g_log.warn(e)
 
     if proxy_conf_str is not None:
-        return processOSProxies(proxy_conf_str)
+        return process_os_proxies(proxy_conf_str)
 
     return None
 
@@ -152,7 +155,7 @@ class __ProxyConfig(object):
     def __init__(self, os_proxy_settings=None, manual_proxy_settings=None):
         self.proxies = {}
 
-    def addOrUpdate(self, type_, proxy_config_item):
+    def add_or_update(self, type_, proxy_config_item):
         if type_ in [ProxyKey.MANUAL_PROXY_SETTINGS, ProxyKey.PROXY_BASIC_AUTH, ProxyKey.OS_PROXY_SETTINGS]:
             self.proxies[type_] = proxy_config_item
 
@@ -160,13 +163,13 @@ class __ProxyConfig(object):
             # otherwise, it won't work
             # http://docs.python-requests.org/en/master/user/advanced/#proxies
             if type_ == ProxyKey.PROXY_BASIC_AUTH:
-                self.setBasicAuthCred(proxy_config_item)
+                self.set_basic_auth_cred(proxy_config_item)
 
     def init(self, manual_settings=None):
         self.proxies[ProxyKey.MANUAL_PROXY_SETTINGS] = manual_settings
 
-    def getUpdate(self):
-        self.addOrUpdate(ProxyKey.OS_PROXY_SETTINGS, getOSProxies())
+    def get_update(self):
+        self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, get_os_proxies())
 
     @property
     def basic_auth(self):
@@ -180,24 +183,24 @@ class __ProxyConfig(object):
     def manual_proxy_setting(self):
         return self.proxies.get(ProxyKey.MANUAL_PROXY_SETTINGS)
 
-    def setBasicAuthCred(self, basic_auth):
+    def set_basic_auth_cred(self, basic_auth):
         if self.manual_proxy_setting is not None:
-            self.manual_proxy_setting.setBasicAuthCred(basic_auth)
+            self.manual_proxy_setting.set_basic_auth_cred(basic_auth)
         elif self.os_proxy_setting is not None:
-            self.os_proxy_setting.setBasicAuthCred(basic_auth)
+            self.os_proxy_setting.set_basic_auth_cred(basic_auth)
 
-    def getProxies(self, url=None):
+    def get_proxies(self, url=None):
         if self.manual_proxy_setting is not None:
-            return self.manual_proxy_setting.getProxies(url)
+            return self.manual_proxy_setting.get_proxies(url)
         if self.os_proxy_setting is not None:
-            return self.os_proxy_setting.getProxies(url)
+            return self.os_proxy_setting.get_proxies(url)
         return None
 
-    def toBrowser(self):
+    def toDict(self):
         if self.manual_proxy_setting is not None:
-            return {"setting_type": "manual", "setting_values": self.manual_proxy_setting.toBrowser()}
+            return {"setting_type": "manual", "setting_values": self.manual_proxy_setting.toDict()}
         if self.os_proxy_setting is not None:
-            return {"setting_type": "os", "setting_values": self.os_proxy_setting.toBrowser()}
+            return {"setting_type": "os", "setting_values": self.os_proxy_setting.toDict()}
         return {"setting_type": None, "setting_values": {}}
 
 

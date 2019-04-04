@@ -6,12 +6,12 @@ class IPProtocol():
 
 class ProxyKey():
     # darwin
-    HTTPEnable = "HTTPEnable"
-    HTTPSEnable = "HTTPSEnable"
-    HTTPPort = "HTTPPort"
-    HTTPSPort = "HTTPSPort"
-    HTTPProxy = "HTTPProxy"
-    HTTPSProxy = "HTTPSProxy"
+    HttpEnable = "HTTPEnable"
+    HttpsEnable = "HTTPSEnable"
+    HttpPort = "HTTPPort"
+    HttpsPort = "HTTPSPort"
+    HttpProxy = "HTTPProxy"
+    HttpSProxy = "HTTPSProxy"
     ProxyAutoConfigEnable = "ProxyAutoConfigEnable"
     ProxyAutoConfigURLString = "ProxyAutoConfigURLString"
 
