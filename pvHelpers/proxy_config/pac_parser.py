@@ -79,6 +79,7 @@ class Pac(object):
         return proxies_for_requests if len(proxies_for_requests) > 0 else None
 
     def clean_up(self):
+        self.fetched = False
         pacparser.cleanup()
 
 

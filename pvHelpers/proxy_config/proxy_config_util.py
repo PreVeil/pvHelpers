@@ -14,11 +14,10 @@ if "win32" == sys.platform:
 
 
 def parse_os_proxy_config(scutil_proxy_conf):
-    res = scutil_proxy_conf.replace(" ", "")
-    res = res.split("\n")
+    res = scutil_proxy_conf.split("\n")
     proxy_dict = {}
     for r in res:
-        entry = r.split(":")
+        entry = [e.strip() for e in r.split(":")]
         if len(entry) >= 2:
             proxy_dict[entry[0]] = ":".join(entry[1:])
 
@@ -27,8 +26,7 @@ def parse_os_proxy_config(scutil_proxy_conf):
 
 def __process_darwin_proxies(config):
     proxy_item = ProxyConfigItem()
-    http_enable = config.get(ProxyKey.HttpEnable)
-    if http_enable == "1":
+    if config.get(ProxyKey.HttpEnable) == "1":
         http_proxy = config.get(ProxyKey.HttpProxy)
         http_port = config.get(ProxyKey.HttpPort)
         if http_proxy is not None and http_port is not None:
@@ -36,8 +34,7 @@ def __process_darwin_proxies(config):
                 IPProtocol.HTTP,
                 ProxyUrl(IPProtocol.HTTP, http_proxy, http_port))
 
-    https_enable = config.get(ProxyKey.HttpsEnable)
-    if https_enable == "1":
+    if config.get(ProxyKey.HttpsEnable) == "1":
         https_proxy = config.get(ProxyKey.HttpsProxy)
         https_port = config.get(ProxyKey.HttpsPort)
         if https_proxy is not None and https_port is not None:
@@ -45,8 +42,7 @@ def __process_darwin_proxies(config):
                 IPProtocol.HTTPS,
                 ProxyUrl(IPProtocol.HTTPS, https_proxy, https_port))
 
-    pac_enable = config.get(ProxyKey.ProxyAutoConfigEnable)
-    if pac_enable == "1":
+    if config.get(ProxyKey.ProxyAutoConfigEnable) == "1":
         proxy_item.add_or_update(
             IPProtocol.PAC,
             ProxyPac(config.get(ProxyKey.ProxyAutoConfigURLString)))
@@ -125,8 +121,9 @@ def get_os_proxies():
             proxy_conf_str = None
 
     elif "win32" == sys.platform:
-        reg_internet_setting = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
-        ps = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
+        # registry location for proxy settings
+        reg_internet_setting = "HKCU:/Software/Microsoft/Windows/CurrentVersion/Internet Settings"
+        ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
 
         # the current logic of running the process as current user
         # does not give us access to the process's stdout.
