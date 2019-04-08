@@ -100,9 +100,10 @@ class _LogWrapper(object):
         self.logobj = logobj
 
     def debug(self, string):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
+        curframe, calframe = None, None
         try:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
                 self.logobj.debug(" ".join([caller_info, str(string)]))
@@ -114,9 +115,10 @@ class _LogWrapper(object):
             del calframe
 
     def info(self, string):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
+        curframe, calframe = None, None
         try:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
                 self.logobj.info(" ".join([caller_info, str(string)]))
@@ -128,9 +130,10 @@ class _LogWrapper(object):
             del calframe
 
     def warning(self, string):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
+        curframe, calframe = None, None
         try:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
                 self.logobj.warning(" ".join([caller_info, str(string)]))
@@ -144,9 +147,10 @@ class _LogWrapper(object):
     warn = warning
 
     def error(self, string):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
+        curframe, calframe = None, None
         try:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
                 self.logobj.error(" ".join([caller_info, str(string)]))
@@ -158,9 +162,10 @@ class _LogWrapper(object):
             del calframe
 
     def exception(self, exception):
-        curframe = inspect.currentframe()
-        calframe = inspect.getouterframes(curframe, 2)
+        curframe, calframe = None, None
         try:
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
                 self.logobj.exception(" ".join([caller_info, str(exception)]))
@@ -177,6 +182,8 @@ class _LogWrapper(object):
     def __format_caller_info(self, calframe):
         """
             :return: (filename, line_number, func)
+            Note: calframe[1] should always exist since we call inspect within one of the log print
+            methods. And the log print method is called from a daemon's context somewhere.
         """
         filename = calframe[1][1]
         line_number = calframe[1][2]
