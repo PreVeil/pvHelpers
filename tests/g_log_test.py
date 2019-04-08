@@ -12,7 +12,7 @@ msg = stream.getvalue()
 
 # remove the time stamp since we can't capture that
 assert " ".join(
-    msg.split(" ")[2:]) == "EXCEPTION: (misc_test.py 9: <module>) debug_msg\n"
+    msg.split(" ")[2:]) == "EXCEPTION: (g_log_test.py 9: <module>) debug_msg\n"
 
 
 def test_g_log_caller_info():
@@ -26,8 +26,8 @@ def test_g_log_caller_info():
 
     # remove the time stamp since we can't capture that
     assert " ".join(
-        msg.split(" ")
-        [2:]) == "DEBUG: (misc_test.py 23: test_g_log_caller_info) debug_msg\n"
+        msg.split(" ")[2:]
+    ) == "DEBUG: (g_log_test.py 23: test_g_log_caller_info) debug_msg\n"
 
     def caller():
         stdout_ = sys.stdout
@@ -38,7 +38,7 @@ def test_g_log_caller_info():
         return stream.getvalue()
 
     assert " ".join(caller().split(" ")
-                    [2:]) == "INFO: (misc_test.py 36: caller) debug_msg\n"
+                    [2:]) == "INFO: (g_log_test.py 36: caller) debug_msg\n"
 
     def caller2():
         def inner_func():
@@ -53,4 +53,4 @@ def test_g_log_caller_info():
         return inner_func()
 
     assert " ".join(caller2().split(" ")
-                    [2:]) == "WARN: (misc_test.py 49: inner_func) debug_msg\n"
+                    [2:]) == "WARN: (g_log_test.py 49: inner_func) debug_msg\n"
