@@ -102,50 +102,74 @@ class _LogWrapper(object):
     def debug(self, string):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, 2)
-        caller_info = self.__format_caller_info(calframe)
-        if self.logobj is not None:
-            self.logobj.debug(" ".join([caller_info, str(string)]))
-        else:
-            print "{} DEBUG: {} {}".format(self.__now(), caller_info, string)
+        try:
+            caller_info = self.__format_caller_info(calframe)
+            if self.logobj is not None:
+                self.logobj.debug(" ".join([caller_info, str(string)]))
+            else:
+                print "{} DEBUG: {} {}".format(self.__now(), caller_info,
+                                               string)
+        finally:
+            del curframe
+            del calframe
 
     def info(self, string):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, 2)
-        caller_info = self.__format_caller_info(calframe)
-        if self.logobj is not None:
-            self.logobj.info(" ".join([caller_info, str(string)]))
-        else:
-            print "{} INFO: {} {}".format(self.__now(), caller_info, string)
+        try:
+            caller_info = self.__format_caller_info(calframe)
+            if self.logobj is not None:
+                self.logobj.info(" ".join([caller_info, str(string)]))
+            else:
+                print "{} INFO: {} {}".format(self.__now(), caller_info,
+                                              string)
+        finally:
+            del curframe
+            del calframe
 
     def warning(self, string):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, 2)
-        caller_info = self.__format_caller_info(calframe)
-        if self.logobj is not None:
-            self.logobj.warning(" ".join([caller_info, str(string)]))
-        else:
-            print "{} WARN: {} {}".format(self.__now(), caller_info, string)
+        try:
+            caller_info = self.__format_caller_info(calframe)
+            if self.logobj is not None:
+                self.logobj.warning(" ".join([caller_info, str(string)]))
+            else:
+                print "{} WARN: {} {}".format(self.__now(), caller_info,
+                                              string)
+        finally:
+            del curframe
+            del calframe
 
     warn = warning
 
     def error(self, string):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, 2)
-        caller_info = self.__format_caller_info(calframe)
-        if self.logobj is not None:
-            self.logobj.error(" ".join([caller_info, str(string)]))
-        else:
-            print "{} ERROR: {} {}".format(self.__now(), caller_info, string)
+        try:
+            caller_info = self.__format_caller_info(calframe)
+            if self.logobj is not None:
+                self.logobj.error(" ".join([caller_info, str(string)]))
+            else:
+                print "{} ERROR: {} {}".format(self.__now(), caller_info,
+                                               string)
+        finally:
+            del curframe
+            del calframe
 
     def exception(self, exception):
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, 2)
-        caller_info = self.__format_caller_info(calframe)
-        if self.logobj is not None:
-            self.logobj.exception(" ".join([caller_info, str(exception)]))
-        else:
-            print "{} EXCEPTION: {} {}".format(self.__now(), caller_info,
-                                               exception)
+        try:
+            caller_info = self.__format_caller_info(calframe)
+            if self.logobj is not None:
+                self.logobj.exception(" ".join([caller_info, str(exception)]))
+            else:
+                print "{} EXCEPTION: {} {}".format(self.__now(), caller_info,
+                                                   exception)
+        finally:
+            del curframe
+            del calframe
 
     def __now(self):
         return datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
