@@ -106,7 +106,7 @@ class _LogWrapper(object):
             calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
-                self.logobj.debug(" ".join([caller_info, str(string)]))
+                self.logobj.debug(" ".join([caller_info, "%s" % string]))
             else:
                 print "{} DEBUG: {} {}".format(self.__now(), caller_info,
                                                string)
@@ -121,7 +121,7 @@ class _LogWrapper(object):
             calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
-                self.logobj.info(" ".join([caller_info, str(string)]))
+                self.logobj.info(" ".join([caller_info, "%s" % string]))
             else:
                 print "{} INFO: {} {}".format(self.__now(), caller_info,
                                               string)
@@ -136,7 +136,7 @@ class _LogWrapper(object):
             calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
-                self.logobj.warning(" ".join([caller_info, str(string)]))
+                self.logobj.warning(" ".join([caller_info, "%s" % string]))
             else:
                 print "{} WARN: {} {}".format(self.__now(), caller_info,
                                               string)
@@ -153,7 +153,7 @@ class _LogWrapper(object):
             calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
-                self.logobj.error(" ".join([caller_info, str(string)]))
+                self.logobj.error(" ".join([caller_info, "%s" % string]))
             else:
                 print "{} ERROR: {} {}".format(self.__now(), caller_info,
                                                string)
@@ -168,7 +168,8 @@ class _LogWrapper(object):
             calframe = inspect.getouterframes(curframe, 2)
             caller_info = self.__format_caller_info(calframe)
             if self.logobj is not None:
-                self.logobj.exception(" ".join([caller_info, str(exception)]))
+                self.logobj.exception(" ".join([caller_info,
+                                                "%s" % exception]))
             else:
                 print "{} EXCEPTION: {} {}".format(self.__now(), caller_info,
                                                    exception)
