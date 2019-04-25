@@ -190,7 +190,7 @@ class _LogWrapper(object):
         line_number = calframe[1][2]
         caller_func = calframe[1][3]
         return "({} {}: {})".format(
-            filename.split("/")[-1], line_number, caller_func)
+            filename.split(os.sep)[-1], line_number, caller_func)
 
     # We don't start file system writes from the constructor because they
     # depend on the PreVeil directory structure.  Once we've confirmed
