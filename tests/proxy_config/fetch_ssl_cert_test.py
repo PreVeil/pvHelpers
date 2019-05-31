@@ -39,7 +39,6 @@ def test_fetch_cert_from_trust_root_cert_ca():
             pytest.fail(e)
 
     def remove_cert_root_store():
-        # | Where-Object Subject - match '{}'
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         cmd = "{} {}".format(ps, os.path.join(
             H.getdir(__file__), "remove_cert.ps1"))
