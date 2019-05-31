@@ -9,6 +9,7 @@ import pytest
 from certifi_win32 import generate_pem
 
 
+@pytest.mark.win32
 def test_fetch_cert_from_trust_root_cert_ca():
     # get the self-signed cert
     proxy_cert = pem.parse_file(os.path.join(
