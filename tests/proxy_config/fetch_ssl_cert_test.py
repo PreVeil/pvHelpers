@@ -36,7 +36,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
         except subprocess.CalledProcessError as e:
             pytest.fail(e)
 
-    def remove_cert_root_store(cert_identifier_name):
+    def remove_cert_root_store():
         # | Where-Object Subject - match '{}'
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         cmd = "{} {}".format(ps, os.path.join(
@@ -74,8 +74,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
     t = time.time()
     while time.time() - t < 60:
         if patch_certifi():
-            remove_cert_root_store("test.nonexistant")
-            # assert 1 == 2
+            remove_cert_root_store()
             return
         time.sleep(1)
         generate_pem()

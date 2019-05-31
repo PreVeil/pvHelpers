@@ -21,3 +21,4 @@ https://github.com/PreVeil/vendor/raw/pywin32_certifi/python/python_certifi_win3
 https://github.com/PreVeil/vendor/raw/pywin32_certifi/python/wincertstore-0.2-py2.py3-none-any.whl
 https://github.com/PreVeil/vendor/raw/pywin32_certifi/python/wrapt-1.11.1.tar.gz
 https://github.com/PreVeil/vendor/raw/pywin32_certifi/python/setuptools_scm-3.3.3-py2.py3-none-any.whl
+https://github.com/PreVeil/vendor/raw/pywin32_certifi/python/pem-19.1.0-py2.py3-none-any.whl
