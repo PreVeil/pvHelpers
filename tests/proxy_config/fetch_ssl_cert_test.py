@@ -1,4 +1,5 @@
 import pvHelpers as H
+import sys
 import os
 import time
 import subprocess
@@ -9,7 +10,7 @@ import pytest
 from certifi_win32 import generate_pem
 
 
-@pytest.mark.win32
+@pytest.mark.skipif(sys.platform != "win32", reason="win specific test")
 def test_fetch_cert_from_trust_root_cert_ca():
     # get the self-signed cert
     proxy_cert = pem.parse_file(os.path.join(
