@@ -33,24 +33,20 @@ def test_fetch_cert_from_trust_root_cert_ca():
         cmd = "{} import-certificate -Filepath {} -CertStoreLocation cert:/LocalMachine/Root".format(
             ps, capath)
 
-        try:
-            print _subprocess_run(cmd)
-        except subprocess.CalledProcessError as e:
-            pytest.fail(e)
+        return _subprocess_run(cmd)
 
     def remove_cert_root_store():
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         cmd = "{} {}".format(ps, os.path.join(
             H.getdir(__file__), "remove_cert.ps1"))
 
-        try:
-            print _subprocess_run(cmd)
-        except subprocess.CalledProcessError as e:
-            pytest.fail(e)
+        return _subprocess_run(cmd)
 
     def patch_certifi():
         from certifi_win32.wrapt_certifi import apply_patches
+        from certifi_win32.wincerts import where
         assert certifi.where() != original_where
+        assert certifi.where() == where()
         assert certifi.where() == os.path.join(os.path.split(
             certifi.__file__)[0], ".certifi", "cacert.pem")
         patched_certs = pem.parse_file(certifi.where())
