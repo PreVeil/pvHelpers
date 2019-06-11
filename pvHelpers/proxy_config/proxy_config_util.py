@@ -110,7 +110,7 @@ def get_os_proxies():
     proxy_conf_str = None
     if "darwin" == sys.platform:
         try:
-            process_scutil = subprocess.Popen(["scutil", "--proxy"],
+            process_scutil = subprocess.Popen(["/usr/sbin/scutil", "--proxy"],
                                               stdout=subprocess.PIPE,
                                               shell=False)
 
