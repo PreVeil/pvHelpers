@@ -130,7 +130,7 @@ def get_os_proxies():
         # so need to write to a temp file first then read from it. :(
         temp_path = os.path.join(tempfile.gettempdir(),
                                  randUnicode(5) + ".txt")
-        g_log.debug(temp_path)
+
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
             ps, reg_internet_setting, temp_path)
 
