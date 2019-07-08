@@ -152,11 +152,8 @@ class ProxyConfigItem(object):
         for protocol in self.proxies:
             self.proxies[protocol].set_basic_auth_cred(basic_proxy_auth)
 
-    def get_proxies(self, url=None):
+    def get_proxies(self, url):
         if IPProtocol.PAC in self.proxies:
-            if url is None:
-                raise ValueError(
-                    u"Must provide url to get proxies from pac file")
             return self.proxies[IPProtocol.PAC].get_proxies(url)
 
         proxies_for_requests = {
