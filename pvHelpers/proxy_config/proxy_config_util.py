@@ -193,7 +193,7 @@ class ProxyConfig(object):
         elif self.os_proxy_setting is not None:
             self.os_proxy_setting.set_basic_auth_cred(basic_auth)
 
-    def get_proxies(self, url=None):
+    def get_proxies(self, url):
         if self.manual_proxy_setting is not None:
             return self.manual_proxy_setting.get_proxies(url)
         if self.os_proxy_setting is not None:

@@ -33,8 +33,9 @@ class Pac(object):
             else:
                 g_log.debug("pac url is a local file: {}".format(self.pac_url))
                 pacparser.parse_pac_file(self.pac_url)
-        except IOError:
+        except:
             # neither a valid url or valid file path
+            g_log.debug("cleaning up pacparser...")
             self.clean_up()
             raise
         else:
