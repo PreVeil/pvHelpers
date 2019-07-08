@@ -35,6 +35,7 @@ class Pac(object):
                 pacparser.parse_pac_file(self.pac_url)
         except IOError:
             # neither a valid url or valid file path
+            g_log.debug("cleaning up pacparser...")
             self.clean_up()
             raise
         else:

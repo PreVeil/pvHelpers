@@ -10,6 +10,9 @@ class ProxyPac(object):
         self.__proxy_auth = proxy_auth
         self.__proxy_resolver = Pac(self.pac_url, proxy_auth=self.__proxy_auth)
 
+    def __del__(self):
+        self.__proxy_resolver.clean_up()
+
     def __eq__(self, other):
         if not isinstance(other, ProxyPac):
             return False
@@ -125,6 +128,9 @@ class ProxyConfigItem(object):
 
     def add_or_update(self, type_, proxy_obj):
         if type_ in ProxyConfigItem.PROTOCOL_TYPES:
+            if type_ == IPProtocol.PAC and self.proxies.get(type_) is not None:
+                # clean up current pac parser js engine
+                del self.proxies[type_]
             self.proxies[type_] = proxy_obj
 
     # need this to work with the existing temp object interface
