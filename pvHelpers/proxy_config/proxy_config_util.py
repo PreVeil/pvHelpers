@@ -173,6 +173,8 @@ class ProxyConfig(object):
                 self.set_basic_auth_cred(proxy_config_item)
 
     def get_update(self):
+        if self.os_proxy_setting and IPProtocol.PAC in self.os_proxy_setting.proxies:
+            del self.os_proxy_setting.proxies[IPProtocol.PAC]
         self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, get_os_proxies())
 
     @property

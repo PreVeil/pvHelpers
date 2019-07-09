@@ -128,7 +128,7 @@ class ProxyConfigItem(object):
 
     def add_or_update(self, type_, proxy_obj):
         if type_ in ProxyConfigItem.PROTOCOL_TYPES:
-            if type_ == IPProtocol.PAC and self.proxies.get(type_) is not None:
+            if type_ == IPProtocol.PAC and type_ in self.proxies:
                 # clean up current pac parser js engine
                 del self.proxies[type_]
             self.proxies[type_] = proxy_obj
