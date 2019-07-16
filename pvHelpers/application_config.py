@@ -13,7 +13,8 @@ def fetchConfigFromMaster(master_port, key):
     resp.raise_for_status()
     return resp.json()["value"]
 
-MAX_ATTEMPT_COUNT = 10
+MAX_ATTEMPT_COUNT = 20
+MIN_WAIT_TIME = 2
 MAX_WAIT_TIME = 4
 
 class ApplicationConfig(object):
@@ -68,9 +69,12 @@ class ApplicationConfig(object):
                 except (ConnectionError, ConnectTimeout, ReadTimeout) as e:
                     print e
                     attempt_count = attempt_count + 1
-                    time.sleep(random.randrange(1, MAX_WAIT_TIME))
+                    time.sleep(random.randrange(MIN_WAIT_TIME, MAX_WAIT_TIME))
                 else:
                     break
+            
+            if len((set(self.config_keys) - set(self.__config__))) != 0:
+                raise ValueError(u"Process could not initialize all the configs! missing keys: {}".format(list(set(self.config_keys) - set(self.__config__))))
 
         self.initialized = True
 
