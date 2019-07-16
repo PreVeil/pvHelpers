@@ -74,8 +74,7 @@ class ApplicationConfig(object):
                     break
             
             if len((set(self.config_keys) - set(self.__config__))) != 0:
-                print 'missing keys: ', set(self.config_keys) - set(self.__config__)
-                raise ValueError(u"Process could not initialize all the configs")
+                raise ValueError(u"Process could not initialize all the configs! missing keys:", set(self.config_keys) - set(self.__config__))
 
         self.initialized = True
 
