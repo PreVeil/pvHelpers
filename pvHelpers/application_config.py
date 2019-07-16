@@ -13,9 +13,9 @@ def fetchConfigFromMaster(master_port, key):
     resp.raise_for_status()
     return resp.json()["value"]
 
-MAX_ATTEMPT_COUNT = 10
-MIN_WAIT_TIME = 40
-MAX_WAIT_TIME = 80
+MAX_ATTEMPT_COUNT = 20
+MIN_WAIT_TIME = 2
+MAX_WAIT_TIME = 4
 
 class ApplicationConfig(object):
     __config__ = {}
