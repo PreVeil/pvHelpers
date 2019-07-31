@@ -2,7 +2,7 @@
 import types, os, requests, time, random
 from requests.exceptions import ConnectTimeout, ConnectionError, ReadTimeout
 from .params import params
-from .misc import HTTP_TIMEOUT
+from .misc import HTTP_TIMEOUT, readYAMLConfig, g_log
 
 
 def fetchConfigFromMaster(master_port, key):
@@ -31,12 +31,12 @@ class ApplicationConfig(object):
         return object.__getattribute__(self, attr)
 
     @params(object, {types.NoneType, int}, {types.NoneType, unicode})
-    def initConfig(self, master_port=None, mode=None):
+    def initConfig(self, master_port=None, config_file=None, mode=None):
         if self.initialized:
             return
 
-        if master_port is None and mode is None:
-            raise ValueError(u"Process needs to be initialized either as `MASTER` or `Replica`")
+        if master_port is None and (mode is None or config_file is None):
+            raise ValueError(u"Process needs to be initialized either as `Master` or `Replica`")
 
         if mode:
             self.mode = mode
@@ -55,10 +55,11 @@ class ApplicationConfig(object):
                     self.__config__[k] = os.environ[k.replace("-", "_").upper()]
 
 
+        # replica instances
         if master_port:
             self.master_port = master_port
             def _fetchConfigFromMaster():
-                self.mode = fetchConfigFromMaster(master_port, u"mode")
+                fetched_mode = fetchConfigFromMaster(master_port, u"mode")
                 for k in self.config_keys:
                     self.__config__[k] = fetchConfigFromMaster(master_port, k)
 
@@ -67,14 +68,23 @@ class ApplicationConfig(object):
                 try:
                     _fetchConfigFromMaster()
                 except (ConnectionError, ConnectTimeout, ReadTimeout) as e:
-                    print e
+                    g_log.exception(e)
                     attempt_count = attempt_count + 1
                     time.sleep(random.randrange(MIN_WAIT_TIME, MAX_WAIT_TIME))
                 else:
                     break
-            
-            if len((set(self.config_keys) - set(self.__config__))) != 0:
-                raise ValueError(u"Process could not initialize all the configs! missing keys: {}".format(list(set(self.config_keys) - set(self.__config__))))
+
+        # master instance
+        else:
+            if config_file:
+                status, confs = readYAMLConfig(config_file)
+                if not status:
+                    raise ValueError(u"failed reading provided config_file: {}".format(config_file))
+
+
+        # assert initialization of all the expected `config_keys`
+        if len((set(self.config_keys) - set(self.__config__))) != 0:
+            raise ValueError(u"Process could not initialize all the configs! missing keys: {}".format(list(set(self.config_keys) - set(self.__config__))))
 
         self.initialized = True
 
