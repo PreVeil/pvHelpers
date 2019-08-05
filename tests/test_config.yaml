@@ -1,0 +1,16 @@
+test:
+    uidvalidity: 2094233707
+    reset-tables: False
+    mail-db-version: 25
+    actions-db-version: 3
+    update-delta: 5
+    invites: True
+    backend: http://collections.service.localdc.local.preveil.com
+    ws-backend: ws://collections.service.localdc.local.preveil.com
+    remote-webapp-url: http://www-wp-ro.service.localdc.local.preveil.com
+    imap-port: 2000
+    smtp-port: 2001
+    crypto-port: 2002
+    local-webapp-port: 2003
+    filesync-port: 2420
+    feature-flags-enabled: True

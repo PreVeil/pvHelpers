@@ -91,7 +91,6 @@ def readYAMLConfig(path):
         return False, None
 
 
-# TODO: handle deadlock
 class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
