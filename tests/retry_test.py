@@ -127,3 +127,47 @@ def test_retry_with_wait():
     assert (time.time() - start) >= (try_count-1)*_wait
     assert not failed
     assert ret_value == u"success, positional args: {}, named args: {}".format([], {})
+
+
+def test_retry_with_condition_on_retval():
+
+    def f2_no_status():
+        return ("hi")
+
+    def f3_no_status():
+        return "hi"
+
+    def f5_no_status():
+        return "hi", False, None
+
+    def f1(status=False):
+        return status
+
+    def f2():
+        return (False)
+
+    func_without_ret_status = [f2_no_status, f3_no_status, f5_no_status]
+    for fu in func_without_ret_status:
+        with pytest.raises(H.RetryError):
+            H.retry(fu, wait=0.2, count=2, ret_validator_func=lambda x: x[0])
+
+    assert H.retry(f1, args=[True], wait=0.2, count=2, ret_validator_func=lambda x: x) is True
+    assert H.retry(
+        f1, args=[True], wait=0.2, count=2,
+        ret_validator_func=lambda x: x is True) is True
+
+    with pytest.raises(H.RetryError):
+        H.retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x)
+
+    with pytest.raises(DummyException):
+        H.retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x, wrapping_exception=DummyException)
+
+    assert H.retry(
+        lambda x: x + 2,
+        args=[5],
+        wait=0.2,
+        count=2,
+        ret_validator_func=lambda x: x > 6) == 7
+
+    with pytest.raises(H.RetryError):
+        H.retry(lambda x: x + 2, args=[3], wait=0.2, count=2, ret_validator_func=lambda x: x > 6)

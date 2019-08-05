@@ -137,7 +137,7 @@ def get_os_proxies():
         status = runWindowsProcessAsCurrentUser(cmd.split(" "))
         if not status:
             g_log.warn(u"Failed to fetch os proxy settings.")
-            return None
+            return False, None
 
         with io.open(temp_path, "r", encoding="utf16") as f:
             proxy_conf_str = f.read()
@@ -150,9 +150,9 @@ def get_os_proxies():
             g_log.warn(e)
 
     if proxy_conf_str is not None:
-        return process_os_proxies(proxy_conf_str)
+        return True, process_os_proxies(proxy_conf_str)
 
-    return None
+    return False, None
 
 
 class ProxyConfig(object):
@@ -173,9 +173,12 @@ class ProxyConfig(object):
                 self.set_basic_auth_cred(proxy_config_item)
 
     def get_update(self):
-        if self.os_proxy_setting and IPProtocol.PAC in self.os_proxy_setting.proxies:
-            del self.os_proxy_setting.proxies[IPProtocol.PAC]
-        self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, get_os_proxies())
+        status, os_proxies = get_os_proxies()
+        if status:
+            if self.os_proxy_setting and IPProtocol.PAC in self.os_proxy_setting.proxies:
+                del self.os_proxy_setting.proxies[IPProtocol.PAC]
+            self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, os_proxies)
+        return status
 
     @property
     def basic_auth(self):

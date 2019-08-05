@@ -1,10 +1,13 @@
-import types, time, traceback
+import time
+import traceback
+
 
 class RetryError(Exception):
     def __init__(self, message="Retry Wrapper Exception"):
         super(RetryError, self).__init__(message)
 
-def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wrapping_exception=None):
+
+def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wrapping_exception=None, ret_validator_func=None):
     if not callable(func):
         raise RetryError(u"func must be of type callable")
     if not isinstance(args, list):
@@ -23,6 +26,8 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
         raise RetryError(u"wait must be of type float")
     if not (wrapping_exception is None or issubclass(wrapping_exception, Exception)):
         raise RetryError(u"wrapping_exception must be of type Exception/None")
+    if ret_validator_func and not callable(ret_validator_func):
+        raise RetryError(u"expect the ret validator to be a function")
 
     exception_stack = []
     for it in xrange(0, count):
@@ -41,10 +46,20 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
                 raise wrapping_exception(u"Function `{}` throwed {}: {}".format(func.__module__ + "." + func.__name__, type(e), traceback.format_exc()))
             raise
         else:
-            # TODO: we can add conditions for value of `return_value` so to perform retry upon them
+            # ret_validator_func add conditions for value of `return_value` so to perform retry upon them
+            if ret_validator_func:
+                status = ret_validator_func(return_value)
+                if status is True:
+                    return return_value
+                if wait > 0:
+                    time.sleep(wait)
+                continue
+
             return return_value
 
-    msg = u"Function failed {} times throwing {}".format(len(exception_stack), [(type(exc), exc.message) for exc in exception_stack])
+    failed_times = count if ret_validator_func else len(exception_stack)
+    msg = u"Function failed {} times throwing {}".format(
+        failed_times, [(type(exc), exc.message) for exc in exception_stack])
     if wrapping_exception:
         raise wrapping_exception(msg)
     raise RetryError(msg)
