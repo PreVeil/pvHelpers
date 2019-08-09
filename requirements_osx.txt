@@ -1,0 +1,5 @@
+https://github.com/PreVeil/vendor/raw/master/python/protobuf-3.5.2.post1-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl
+https://github.com/PreVeil/vendor/raw/master/python/pysqlite-2.8.3.1-cp27-cp27m-macosx_10_12_x86_64.whl
+https://github.com/PreVeil/vendor/raw/master/python/simplejson-3.8.2-cp27-cp27m-macosx_10_9_x86_64.whl
+https://github.com/PreVeil/vendor/raw/master/python/fipscrypto-1.1.0-py2-none-macosx_10_11_x86_64.whl
+https://github.com/PreVeil/vendor/raw/master/python/pacparser-1.3.7-cp27-cp27m-macosx_10_14_x86_64.whl

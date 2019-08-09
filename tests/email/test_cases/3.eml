@@ -1,0 +1,58 @@
+From: samanrtehrani@gmail.com
+X-Uniform-Type-Identifier: com.apple.mail-draft
+X-Apple-Base-Url: x-msg://1/
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="Apple-Mail=_C552319E-496C-410B-BDC4-D64580324F0F"
+X-Apple-Mail-Remote-Attachments: YES
+Subject:
+X-Universally-Unique-Identifier: 09C5DB31-5DCC-4D1C-A944-87C4F51406D2
+Date: Mon, 27 Mar 2017 10:18:03 -0400
+Message-Id: <787B6184-C3CF-4C9B-A5C8-D1624E156E58@gmail.com>
+X-Apple-Windows-Friendly: 1
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+
+
+--Apple-Mail=_C552319E-496C-410B-BDC4-D64580324F0F
+Content-Transfer-Encoding: 7bit
+Content-Type: text/html;
+	charset=us-ascii
+
+<html><head></head><body dir="auto" style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><div dir="auto" style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><object height="86" width="79" apple-width="yes" apple-height="yes" type="application/x-apple-msg-attachment" data="cid:502ABE90-453C-435C-A102-024167F6364A@hsd1.ma.comcast.net." apple-inline="no" id="A19C72E5-B41D-4F67-8256-288BBFAF3062"></object><object height="86" width="65" apple-width="yes" apple-height="yes" type="application/x-apple-msg-attachment" data="cid:8C125058-75D2-4A6D-B7D0-F39B71F8FEE0@hsd1.ma.comcast.net." apple-inline="no" id="DC139134-C953-45B3-A596-B56961714A86"></object></div></body></html>
+--Apple-Mail=_C552319E-496C-410B-BDC4-D64580324F0F
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename=index.html
+Content-Type: text/html;
+	x-unix-mode=0644;
+	name="index.html"
+Content-Id: <502ABE90-453C-435C-A102-024167F6364A@hsd1.ma.comcast.net.>
+
+<html>=0D
+<body>=0D
+  <iframe sandbox=3D"allow-same-origin" srcdoc=3D"<body =
+style=3D'color:red;'>hello</body>"></iframe>=0D
+  <div id=3D"res"></div>=0D
+</body>=0D
+<script>=0D
+((document) =3D> {=0D
+  let iframe =3D document.querySelector('iframe');=0D
+  document.getElementById('res').innerHTML +=3D "<p>" + typeof =
+iframe['srcdoc'] + "</p>";=0D
+=0D
+})(document);=0D
+</script>=0D
+</html>=0D
+
+--Apple-Mail=_C552319E-496C-410B-BDC4-D64580324F0F
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename=zzzz.txt
+Content-Type: text/plain;
+	x-unix-mode=0644;
+	name="zzzz.txt"
+Content-Id: <8C125058-75D2-4A6D-B7D0-F39B71F8FEE0@hsd1.ma.comcast.net.>
+
+Hello Randyyyy
+
+--Apple-Mail=_C552319E-496C-410B-BDC4-D64580324F0F--
