@@ -10,6 +10,7 @@ class Version(Command):
     """
 
     description = "Get the version number specified in setup.py"
+    user_options = [] # required by CmdClass - empty for our purposes
 
     def initialize_options(self):
         """This method must be implemented - blank for our purposes"""
