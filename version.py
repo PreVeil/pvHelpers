@@ -23,7 +23,7 @@ class Version(Command):
     def run(self):
         """Use regex on `setup.py` to extract the version number string for BuildBot"""
         pattern = re.compile('version\s*=\s*\"(.*)\"', re.MULTILINE)
-        file_path = 'version.py'
+        file_path = 'setup.py'
         with open(file_path, 'r') as setup:
             version = re.search(pattern, setup.read()).group(1)
         return version
