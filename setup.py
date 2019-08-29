@@ -1,5 +1,6 @@
 import sys
 from setuptools import setup, find_packages
+from version import Version
 
 install_requires = [
     "PyYAML==3.11", "requests==2.20.1", "simplejson==3.8.2",
@@ -17,4 +18,7 @@ setup(
     version="5.0.7",
     packages=find_packages(),
     install_requires=install_requires,
+    cmdclass={
+        'version': Version
+    }
 )
