@@ -1,4 +1,5 @@
 import random
+import sys
 
 from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri
 
@@ -45,14 +46,33 @@ def test_case_insensitive_dict():
 
 
 def test_parse_file_uri_scheme():
-    p1 = "file://C:/test/doc.txt"
-    assert parse_file_uri(p1) == "C:/test/doc.txt"
-    p2 = "file://C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
-    assert parse_file_uri(
-        p2
-    ) == "C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
+    if sys.platform == "win32":
+        p1 = "file://C:/test/doc.txt"
+        assert parse_file_uri(p1) == "C:\\test\\doc.txt"
+        p2 = "file://C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
+        assert parse_file_uri(
+            p2
+        ) == "C:\\ProgramData\\Cisco\\Cisco AnyConnect Secure Mobility Client\\aconnect.pac"
 
-    p3 = "C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
-    assert parse_file_uri(
-        p3
-    ) == "C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
+        p3 = "C:/ProgramData/Cisco/Cisco AnyConnect Secure Mobility Client/aconnect.pac"
+        assert parse_file_uri(
+            p3
+        ) == "C:\\ProgramData\\Cisco\\Cisco AnyConnect Secure Mobility Client\\aconnect.pac"
+
+        # extra / for relative path to C:\...
+        p4 = "file:///c:/path/to/the%20file.txt"
+        assert parse_file_uri(
+            p4
+        ) == "C:\\path\\to\\the file.txt"
+
+        # local network location
+        # p5 = "file://hostname/path/to/the%20file.txt"
+        # assert parse_file_uri(
+        #     p5
+        # ) == "hostname\\path\\to\\the file.txt"
+    else:
+        for p in ["file://Users/pv/test/doc A.txt",
+                  "file://Users/pv/test/doc%20fA.txt",
+                  "file:///Users/pv/test/doc A.txt",
+                  "file:///Users/pv/test/doc%20fA.txt"]:
+            assert parse_file_uri(p) == "/Users/pv/test/doc A.txt"

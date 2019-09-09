@@ -13,6 +13,7 @@ import struct
 import sys
 import time
 import types
+import urllib
 
 import requests
 import simplejson
@@ -656,4 +657,6 @@ def partition(pred, iterable):
 
 def parse_file_uri(path):
     p = urlparse.urlparse(path)
-    return os.path.abspath(os.path.join(p.netloc, p.path))
+    # url to path name, i.e: convert %20 to space
+    path = urllib.url2pathname(p.path)
+    return os.path.abspath(os.path.join(p.netloc, path))
