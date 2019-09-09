@@ -16,6 +16,7 @@ import types
 
 import requests
 import simplejson
+import urlparse
 import yaml
 from sqlalchemy import create_engine, event, orm
 
@@ -651,3 +652,8 @@ def partition(pred, iterable):
     # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
     t1, t2 = itertools.tee(iterable)
     return filter(pred, t2), filter(lambda x: not pred(x), t1)
+
+
+def parse_file_uri(path):
+    p = urlparse.urlparse(path)
+    return os.path.abspath(os.path.join(p.netloc, p.path))
