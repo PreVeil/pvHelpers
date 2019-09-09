@@ -65,14 +65,10 @@ def test_parse_file_uri_scheme():
             p4
         ) == "C:\\path\\to\\the file.txt"
 
-        # local network location
-        # p5 = "file://hostname/path/to/the%20file.txt"
-        # assert parse_file_uri(
-        #     p5
-        # ) == "hostname\\path\\to\\the file.txt"
+        # how about local network location?
     else:
-        for p in ["file://Users/pv/test/doc A.txt",
-                  "file://Users/pv/test/doc%20fA.txt",
-                  "file:///Users/pv/test/doc A.txt",
-                  "file:///Users/pv/test/doc%20fA.txt"]:
+        for p in ["file://pv/test/doc A.txt",
+                  "file://pv/test/doc%20fA.txt",
+                  "file:///pv/test/doc A.txt",
+                  "file:///pv/test/doc%20fA.txt"]:
             assert parse_file_uri(p) == "/Users/pv/test/doc A.txt"
