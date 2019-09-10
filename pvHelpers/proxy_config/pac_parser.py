@@ -1,7 +1,7 @@
 import pacparser
 import requests
 
-from ..misc import g_log
+from ..misc import g_log, parse_file_uri
 
 RETRYABLE_EXCEPTION = (requests.exceptions.ConnectionError,
                        requests.exceptions.Timeout)
@@ -32,7 +32,7 @@ class Pac(object):
                 pacparser.parse_pac_string(downloaded_pac)
             else:
                 g_log.debug("pac url is a local file: {}".format(self.pac_url))
-                pacparser.parse_pac_file(self.pac_url)
+                pacparser.parse_pac_file(parse_file_uri(self.pac_url))
         except:
             # neither a valid url or valid file path
             g_log.debug("cleaning up pacparser...")

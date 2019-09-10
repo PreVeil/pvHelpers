@@ -1,7 +1,8 @@
 import random
 import sys
+import os
 
-from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri
+from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri, getdir
 
 
 def randomize_casing(key):
@@ -59,16 +60,22 @@ def test_parse_file_uri_scheme():
             p3
         ) == "C:\\ProgramData\\Cisco\\Cisco AnyConnect Secure Mobility Client\\aconnect.pac"
 
-        # extra / for relative path to C:\...
         p4 = "file:///c:/path/to/the%20file.txt"
         assert parse_file_uri(
             p4
         ) == "C:\\path\\to\\the file.txt"
 
-        # how about local network location?
-    else:
-        for p in ["file://pv/test/doc A.txt",
-                  "file://pv/test/doc%20fA.txt",
-                  "file:///pv/test/doc A.txt",
-                  "file:///pv/test/doc%20fA.txt"]:
-            assert parse_file_uri(p) == "/Users/pv/test/doc A.txt"
+        # how about a local network location?
+        # e.g: file://hostname/path/to/the%20file.txt
+
+        for p in ["file:///pv/test/doc A.txt", "file:///pv/test/doc%20A.txt"]:
+            assert parse_file_uri(p) == "C:\\pv\\test\\doc A.txt"
+
+    valid_file = os.path.join(getdir(__file__), "misc_test.py")
+    assert parse_file_uri(
+        valid_file
+    ) == valid_file
+
+    assert parse_file_uri(
+        "file://" + valid_file
+    ) == valid_file
