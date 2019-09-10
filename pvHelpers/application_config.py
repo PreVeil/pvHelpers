@@ -40,12 +40,10 @@ class ApplicationConfig(object):
         if self.initialized:
             return
 
-        if master_port is None and (mode is None or config_file is None):
-            raise ValueError(u"Process needs to be initialized either as `Master` or `Replica`")
-
-
         # master instance
-        if (mode and config_file):
+        if mode:
+            if not config_file:
+                raise ValueError(u"missing config file")
             status, confs = readYAMLConfig(config_file)
             if not status:
                 raise ValueError(u"failed reading provided config_file: {}".format(config_file))
@@ -90,12 +88,12 @@ class ApplicationConfig(object):
                 else:
                     break
 
-        # TODO: master config initialization with environment
-        # else:
-        #     self.__config__["mode"] = unicode(os.environ["PREVEIL_MODE"])
-        #      for k in self.config_keys:
-        #          if k not in self.__config__:
-        #             self.__config__[k] = os.environ.get(k.replace("-", "_").upper())
+        else:
+            for k in self.config_keys:
+                if k not in self.__config__:
+                    if k == "mode":
+                        k = "preveil-mode"
+                    self.__config__[k] = os.environ[k.replace("-", "_").upper()]
 
 
         # assert initialization of all the expected `config_keys`

@@ -38,9 +38,10 @@ def test_master_init_config():
     master = MasterConfig()
     assert master.initialized == False
 
-    # should raise for being initialized neither as a master or replica
-    with pytest.raises(ValueError):
+    # should raise KeyError for missing enviroment variables
+    with pytest.raises(KeyError):
         master.initConfig()
+
 
     # should raise for not having `config_file`
     with pytest.raises(ValueError):
