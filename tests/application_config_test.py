@@ -4,7 +4,8 @@ import sys
 
 import pytest
 import requests
-from pvHelpers import ApplicationConfig, readYAMLConfig
+
+from pvHelpers import ApplicationConfig, randUnicode, readYAMLConfig
 
 TEST_CONFIG_PATH = unicode(os.path.join(os.path.dirname(__file__), "test_config.yaml"))
 
@@ -38,10 +39,20 @@ def test_master_init_config():
     master = MasterConfig()
     assert master.initialized == False
 
-    # should raise for being initialized neither as a master or replica
-    with pytest.raises(ValueError):
-        master.initConfig()
+    # should raise KeyError for missing enviroment variables
+    org_env, mocked_vars = os.environ, []
+    while len(master.config_keys) - len(mocked_vars) > 0:
+        with pytest.raises(KeyError):
+            master.initConfig()
+        mocked_vars.append(master.config_keys[len(mocked_vars)])
+        os.environ.update({k.replace("-", "_").upper() if k != "mode" else "PREVEIL_MODE": str(randUnicode(5)) for k in mocked_vars})
 
+    # should just go through when all the required keys are in env
+    master.initConfig()
+    os.environ = org_env
+
+    master = MasterConfig()
+    assert master.initialized == False
     # should raise for not having `config_file`
     with pytest.raises(ValueError):
         master.initConfig(mode=u"dev")
