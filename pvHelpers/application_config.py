@@ -90,9 +90,8 @@ class ApplicationConfig(object):
 
         else:
             for k in self.config_keys:
-                if k not in self.__config__:
-                    env_key = "PREVEIL_MODE" if k == "mode" else k.replace("-", "_").upper()
-                    self.__config__[k] = os.environ[env_key]
+                env_key = "PREVEIL_MODE" if k == "mode" else k.replace("-", "_").upper()
+                self.__config__[k] = os.environ[env_key]
 
 
         # assert initialization of all the expected `config_keys`
