@@ -15,27 +15,24 @@ class Pac(object):
         self.__parse_pac()
 
     def __parse_pac(self):
-        retry, downloaded_pac = download_url(self.pac_url, download_pac)
-
-        # connection error, we are gonna retry
-        # when get_proxies() gets called.
-        if retry:
-            self.fetched = False
-            return
-
-        # either download succeeded, or it is not a valid url, then falls back to
-        # a file path.
+        required_download, url = parse_file_uri(self.pac_url)
         try:
-            pacparser.init()
-            if downloaded_pac is not None:
-                g_log.debug("pac url is a url: {}".format(self.pac_url))
-                pacparser.parse_pac_string(downloaded_pac)
+            if required_download:
+                downloaded_pac = download_pac([url])
+                if downloaded_pac:
+                    pacparser.init()
+                    pacparser.parse_pac_string(downloaded_pac)
+                else:
+                    # retryable exceptions
+                    self.fetched = False
+                    return
             else:
-                g_log.debug("pac url is a local file: {}".format(self.pac_url))
-                pacparser.parse_pac_file(parse_file_uri(self.pac_url))
+                pacparser.init()
+                pacparser.parse_pac_file(url)
         except:
             # neither a valid url or valid file path
-            g_log.debug("cleaning up pacparser...")
+            g_log.error("Unsupported pac url {}".format(self.pac_url))
+            g_log.debug("Cleaning up pacparser...")
             self.clean_up()
             raise
         else:
@@ -84,18 +81,6 @@ class Pac(object):
         pacparser.cleanup()
 
 
-def download_url(url, download_handler):
-    """
-    :return: retryable, content of the pac url
-    """
-    try:
-        return False, download_handler([url])
-    except requests.RequestException as e:
-        if isinstance(e, RETRYABLE_EXCEPTION):
-            return True, None
-    return False, None
-
-
 """
 The following helpers are lifted from pypac.
 """
@@ -135,11 +120,10 @@ def download_pac(candidate_urls, timeout=1, allowed_content_types=None):
                 continue
             if resp.ok:
                 return resp.text
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as e:
+        except RETRYABLE_EXCEPTION as e:
             g_log.exception(e)
             continue
-
+    return None
 
 def parse_pac_value(value, proxy_auth=None, socks_scheme=None):
     """

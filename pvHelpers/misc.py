@@ -656,7 +656,18 @@ def partition(pred, iterable):
 
 
 def parse_file_uri(path):
+    """
+        Process the given path url to determine the scheme.
+        :return: required_download, processed_url
+    """
     p = urlparse.urlparse(path)
-    # url to path name, i.e: convert %20 to space
-    path = urllib.url2pathname(p.path)
-    return os.path.abspath(os.path.join(p.netloc, path))
+
+    if p.scheme in ["https", "http"]:
+        return True, urllib.unquote(path)
+    elif p.scheme == "file":
+        # url to path name, i.e: convert %20 to space
+        path = urllib.url2pathname(p.path)
+        return False, os.path.abspath(os.path.join(p.netloc, path))
+    else:
+        # treat as a local file
+        return False, urllib.unquote(path)

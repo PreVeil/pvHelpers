@@ -2,7 +2,7 @@ import os
 import pytest
 import requests
 from requests.auth import HTTPProxyAuth
-from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, ProxyKey, getdir, download_url
+from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, ProxyKey, getdir
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -169,33 +169,12 @@ def test_OS_proxy_processer():
             "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}
 
 
-def test_download_pac_retry():
-    def no_retry_handler(url):
-        raise requests.exceptions.InvalidURL
-
-    def retryable_one(url):
-        raise requests.exceptions.ConnectTimeout
-
-    def retryable_two(url):
-        raise requests.exceptions.Timeout
-
-    def retryable_three(url):
-        raise requests.exceptions.ConnectionError
-
-    retry, content = download_url("some url", no_retry_handler)
-    assert retry is False
-    assert content is None
-
-    for h in [retryable_one, retryable_two, retryable_three]:
-        retry, content = download_url("some url", h)
-        assert retry is True
-        assert content is None
-
-
 def test_bad_pacfile():
     # make sure we don't crash if provided bad pac file
+    assert not Pac("http://not_exist_pac.pac").fetched 
+
     with pytest.raises(IOError):
-        Pac("http://not_exist_pac.pac")
+        Pac("some url")
 
     with pytest.raises(IOError):
         Pac("C:\Users\\some_where.pac")
@@ -208,20 +187,21 @@ def test_bad_pacfile():
     with pytest.raises(Exception):
         a.get_proxies("https://preveil.test.com")
 
-    test_pac_file = os.path.join(getdir(__file__), "test_pac_file.pac")
-    pac = Pac(test_pac_file)
+    for s in ["", "file://"]:
+        test_pac_file = s + os.path.join(getdir(__file__), "test_pac_file.pac")
+        pac = Pac(test_pac_file)
 
-    assert pac.get_proxies("https://collections.preveil.com") == \
-        [
-            {"https": "http://199.168.151.10:10975",
-             "http": "http://199.168.151.10:10975"},
-            {"https": "http://104.129.194.41:10975",
-             "http": "http://104.129.194.41:10975"}
-    ]
+        assert pac.get_proxies("https://collections.preveil.com") == \
+            [
+                {"https": "http://199.168.151.10:10975",
+                "http": "http://199.168.151.10:10975"},
+                {"https": "http://104.129.194.41:10975",
+                "http": "http://104.129.194.41:10975"}
+        ]
 
-    assert pac.get_proxies("adsfads") is None
+        assert pac.get_proxies("adsfads") is None
 
-    proxy_pac = ProxyPac(test_pac_file)
+    proxy_pac = ProxyPac(os.path.join(getdir(__file__), "test_pac_file.pac"))
     proxy_pac.set_basic_auth_cred(HTTPProxyAuth("user", "pass"))
     assert proxy_pac.get_proxies("https://collections.preveil.com") == \
         [
