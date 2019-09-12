@@ -663,7 +663,7 @@ def parse_file_uri(path):
     p = urlparse.urlparse(path)
 
     if p.scheme in ["https", "http"]:
-        return True, urllib.unquote(path)
+        return True, path
     elif p.scheme == "file":
         # url to path name, i.e: convert %20 to space
         path = urllib.url2pathname(p.path)

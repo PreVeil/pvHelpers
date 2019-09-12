@@ -92,4 +92,4 @@ def test_parse_file_uri_scheme():
         u = "{}://pv.%7Etest%20hi.com".format(s)
         required_download, uri = parse_file_uri(u)
         assert required_download
-        assert uri == "{}://pv.~test hi.com".format(s)
+        assert uri == u
