@@ -13,9 +13,11 @@ import struct
 import sys
 import time
 import types
+import urllib
 
 import requests
 import simplejson
+import urlparse
 import yaml
 from sqlalchemy import create_engine, event, orm
 
@@ -651,3 +653,21 @@ def partition(pred, iterable):
     # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
     t1, t2 = itertools.tee(iterable)
     return filter(pred, t2), filter(lambda x: not pred(x), t1)
+
+
+def parse_file_uri(path):
+    """
+        Process the given path url to determine the scheme.
+        :return: required_download, processed_url
+    """
+    p = urlparse.urlparse(path)
+
+    if p.scheme in ["https", "http"]:
+        return True, path
+    elif p.scheme == "file":
+        # url to path name, i.e: convert %20 to space
+        path = urllib.url2pathname(p.path)
+        return False, os.path.abspath(os.path.join(p.netloc, path))
+    else:
+        # treat as a local file
+        return False, urllib.unquote(path)
