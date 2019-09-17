@@ -596,76 +596,71 @@ class WinPopen(subprocess.Popen):
         super(WinPopen, self).__del__()
 
 
+def list_active_sessions():
+    return filter(
+        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0, 
+        win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
+    )
+
 def runWindowsProcessAsCurrentUser(command):
+    user_token, thread_handle, process_handle = None, None, None
     try:
-        # This process is running as SYSTEM, but we must to run the command
-        # as the current luser. The first step is to determine the
-        # "active" session. If a user sits down and logins into a computer,
-        # he uses the console session. When the box is accessed thru remote
-        # desktop, the rdp session is used.
-        sessions = win32ts.WTSEnumerateSessions(
-            win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
-        SessionId = None
-        for s in sessions:
-            SessionId = s.get("SessionId")
-            State = s.get("State")
+        sessions = list_active_sessions()
 
-            if State == win32ts.WTSActive:
-                break
+        if len(sessions) != 1:
+            g_log.debug("multiple active sessions: {}".format(sessions))
+            console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
+            # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
+            session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
+        else:
+            session_id = sessions[0]["SessionId"]
+        
+        user_token = win32ts.WTSQueryUserToken(session_id)
 
-        if SessionId is None:
-            g_log.error("Failed to determine active session")
+        startupinfo = win32process.STARTUPINFO()
+        startupinfo.dwX = 0
+        startupinfo.dwY = 0
+        startupinfo.dwXSize = 0
+        startupinfo.dwYSize = 0
+        startupinfo.dwXCountChars = 0
+        startupinfo.dwYCountChars = 0
+        startupinfo.dwFillAttribute = 0
+        startupinfo.dwFlags = 0
+        startupinfo.wShowWindow = win32con.SW_HIDE
+        startupinfo.hStdInput = 0
+        startupinfo.hStdOutput = 0
+        startupinfo.hStdError = 0
+        startupinfo.lpDesktop = None
+        startupinfo.lpTitle = None
+
+        command = map(lambda x: unicode(x), command)
+        process_handle, thread_handle, process_id, thread_id = \
+            win32process.CreateProcessAsUser(
+                user_token,
+                command[0],
+                u" ".join(command),  # FIXME: how to quote this?
+                None,  # process attributes
+                None,  # thread attributes
+                0,  # inherit handles
+                win32con.CREATE_NO_WINDOW,  # creation flags
+                None,  # environment
+                None,  # current directory
+                startupinfo)
+        status = win32event.WaitForSingleObject(process_handle, 10000)
+        if status != win32event.WAIT_OBJECT_0:
+            g_log.error("win32event.WaitForSingleObject failed")
             return False
 
-        user_token = win32ts.WTSQueryUserToken(SessionId)
-        try:
-            startupinfo = win32process.STARTUPINFO()
-            startupinfo.dwX = 0
-            startupinfo.dwY = 0
-            startupinfo.dwXSize = 0
-            startupinfo.dwYSize = 0
-            startupinfo.dwXCountChars = 0
-            startupinfo.dwYCountChars = 0
-            startupinfo.dwFillAttribute = 0
-            startupinfo.dwFlags = 0
-            startupinfo.wShowWindow = win32con.SW_HIDE
-            startupinfo.hStdInput = 0
-            startupinfo.hStdOutput = 0
-            startupinfo.hStdError = 0
-            startupinfo.lpDesktop = None
-            startupinfo.lpTitle = None
-
-            command = map(lambda x: unicode(x), command)
-            process_handle, thread_handle, process_id, thread_id = \
-                win32process.CreateProcessAsUser(
-                    user_token,
-                    command[0],
-                    u" ".join(command),  # FIXME: how to quote this?
-                    None,  # process attributes
-                    None,  # thread attributes
-                    0,  # inherit handles
-                    win32con.CREATE_NO_WINDOW,  # creation flags
-                    None,  # environment
-                    None,  # current directory
-                    startupinfo)
-
-            try:
-                status = win32event.WaitForSingleObject(process_handle, 10000)
-                if status != win32event.WAIT_OBJECT_0:
-                    g_log.error("win32event.WaitForSingleObject failed")
-                    return False
-
-                exit_code = win32process.GetExitCodeProcess(process_handle)
-                if exit_code != 0:
-                    g_log.error("bad exit code {} from cmd {}".format(
-                        exit_code, command))
-                    return False
-            finally:
-                win32api.CloseHandle(thread_handle)
-                win32api.CloseHandle(process_handle)
-        finally:
-            win32api.CloseHandle(user_token)
+        exit_code = win32process.GetExitCodeProcess(process_handle)
     except win32api.error as e:
         g_log.exception(e)
         return False
-    return True
+    else:
+        if exit_code != 0:
+            g_log.error("bad exit code {} from cmd {}".format(exit_code, command))
+            return False
+        return True
+    finally:
+        win32api.CloseHandle(thread_handle)
+        win32api.CloseHandle(process_handle)
+        win32api.CloseHandle(user_token)
