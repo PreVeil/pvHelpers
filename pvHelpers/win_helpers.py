@@ -597,6 +597,7 @@ class WinPopen(subprocess.Popen):
 
 
 def list_active_sessions():
+    # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation. 
     return filter(
         lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0, 
         win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
@@ -608,7 +609,7 @@ def runWindowsProcessAsCurrentUser(command):
         sessions = list_active_sessions()
 
         if len(sessions) != 1:
-            g_log.debug("multiple active sessions: {}".format(sessions))
+            g_log.debug(u"multiple active sessions: {}".format(sessions))
             console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
             # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
             session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
