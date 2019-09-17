@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 
 from .constants import IPProtocol, ProxyKey
 from ..misc import g_log
@@ -158,6 +159,7 @@ def get_os_proxies():
 class ProxyConfig(object):
     def __init__(self, os_proxy_settings=None, manual_proxy_settings=None):
         self.proxies = {}
+        self.last_update_attempt = 0
 
     def add_or_update(self, type_, proxy_config_item):
         if type_ in [
@@ -178,6 +180,8 @@ class ProxyConfig(object):
             if self.os_proxy_setting and IPProtocol.PAC in self.os_proxy_setting.proxies:
                 del self.os_proxy_setting.proxies[IPProtocol.PAC]
             self.add_or_update(ProxyKey.OS_PROXY_SETTINGS, os_proxies)
+        
+        self.last_update_attempt = time.time()
         return status
 
     @property
