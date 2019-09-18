@@ -608,13 +608,15 @@ def runWindowsProcessAsCurrentUser(command):
     try:
         sessions = list_active_sessions()
 
-        if len(sessions) != 1:
+        if len(sessions) == 0: # no active session!
+            return False
+        elif len(sessions) == 1:
+            session_id = sessions[0]["SessionId"]
+        else:
             g_log.debug(u"multiple active sessions: {}".format(sessions))
             console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
             # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
             session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
-        else:
-            session_id = sessions[0]["SessionId"]
         
         user_token = win32ts.WTSQueryUserToken(session_id)
 
