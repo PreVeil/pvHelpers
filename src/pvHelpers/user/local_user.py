@@ -1,6 +1,6 @@
 import types
 
-from pvHelpers.crypto import UserKeyBase
+from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.utils import NOT_ASSIGNED, params
 
 from .local_device import LocalDevice

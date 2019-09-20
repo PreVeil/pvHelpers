@@ -3,7 +3,8 @@ import sys
 import types
 import uuid
 
-from pvHelpers.crypto import PublicUserKeyBase, PVKeyFactory
+from pvHelpers.crypto import PVKeyFactory
+from pvHelpers.crypto.user_key import PublicUserKeyBase
 from pvHelpers.utils import params
 
 CURRENT_PLATFORM = u"windows" if sys.platform == "win32" else \

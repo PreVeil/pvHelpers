@@ -3,7 +3,10 @@ import types
 
 from flanker import addresslib, mime
 
-import pvHelpers as H
+from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.logger import g_log
+from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, b64enc,
+                             encodeContentIfUnicode)
 
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
@@ -85,7 +88,7 @@ class EmailV1(EmailHelpers, EmailBase):
         except mime.MimeError as e:
             raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
 
-        return cls(H.NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, snippet)
 
     @staticmethod
@@ -119,7 +122,7 @@ class EmailV1(EmailHelpers, EmailBase):
         if t not in ("attachment", "inline"):
             return msg, []
         else:
-            att_hash = H.HexEncode(H.Sha256Sum(msg.to_string()))
+            att_hash = HexEncode(Sha256Sum(msg.to_string()))
             # Insert a dummy node into the message tree so we know where to insert
             # this attachment when reconstructing the email
             placeholder = mime.create.attachment(DUMMY_CONTENT_TYPE, u"placeholder for an attachment", filename=att_hash, disposition=DUMMY_DISPOSITION)
@@ -223,7 +226,7 @@ class EmailV1(EmailHelpers, EmailBase):
             # Reporting the server reception time,
             # 1) similar to what we report to browser,
             # 2) Dates added by MUAs can be incorrect
-            if not isinstance(self.server_attr, H.NOT_ASSIGNED) and self.server_attr.server_time != None:
+            if not isinstance(self.server_attr, NOT_ASSIGNED) and self.server_attr.server_time != None:
                 date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_attr.server_time)
                 message.headers["Date"] = date
 
@@ -235,7 +238,7 @@ class EmailV1(EmailHelpers, EmailBase):
     def toBrowser(self, with_body=False):
         # check loaded!?
         o = {}
-        if not isinstance(self.server_attr, H.NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NOT_ASSIGNED):
             o["unique_id"] = self.server_attr.server_id
             o["uid"] = self.server_attr.uid
             o["thread_id"] = self.server_attr.thread_id
@@ -287,10 +290,10 @@ class EmailV1(EmailHelpers, EmailBase):
                 content_id = att_mime.headers.get("Content-Id", None)
 
                 try:
-                    encoded = H.encodeContentIfUnicode(part_content)
-                    b64encoded = H.b64enc(encoded)
-                except H.EncodingException as e:
-                    H.g_log.exception(e)
+                    encoded = encodeContentIfUnicode(part_content)
+                    b64encoded = b64enc(encoded)
+                except EncodingException as e:
+                    g_log.exception(e)
                     continue
 
                 browser_atts.append({

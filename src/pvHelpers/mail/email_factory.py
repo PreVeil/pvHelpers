@@ -1,6 +1,7 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, MergeDicts,
+                             WrapExceptions, jloads, params, toInt)
 
 from .email.attachment import Attachment, AttachmentMetadata
 from .email.content import Content
@@ -36,16 +37,16 @@ class EmailFactory(object):
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
     @staticmethod
-    @H.WrapExceptions(EmailException, [H.EncodingException])
+    @WrapExceptions(EmailException, [EncodingException])
     def fromDB(revision_id, version, server_id, metadata, server_time, flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
         if server_id is None: # An email not having server_id means it's a local email
-            server_info =H.NOT_ASSIGNED()
+            server_info = NOT_ASSIGNED()
         else:
             server_info = ServerAttributes(server_id, revision_id, mailbox_server_id, mailbox_name, version, uid, thread_id, server_time, expunged)
 
-        flags = H.jloads(flags)
-        metadata = H.jloads(metadata)
-        status, v = H.toInt(metadata.get("protocol_version"))
+        flags = jloads(flags)
+        metadata = jloads(metadata)
+        status, v = toInt(metadata.get("protocol_version"))
         if status == False:
             raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")
 
@@ -57,20 +58,20 @@ class EmailFactory(object):
         })
 
         if v is PROTOCOL_VERSION.V1:
-            return EmailV1(**H.MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV1(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V2:
-            return EmailV2(**H.MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV2(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V3:
-            return EmailV3(**H.MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
-            return EmailV4(**H.MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
     @staticmethod
     # TODO: give required props. in params
-    @H.params(dict, unicode, int, {object, types.NoneType})
+    @params(dict, unicode, int, {object, types.NoneType})
     def fromServerMessage(msg, wrapped_key, key_version, mailbox):
         email_dict = {
             "server_attr": ServerAttributes(

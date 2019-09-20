@@ -1,9 +1,16 @@
 # vim: set fileencoding=utf-8 :
-import StringIO, time, email.utils, re
-from pvHelpers import randUnicode, Attachment, AttachmentMetadata, randStr, createMime, parseMime, AttachmentType, EmailException, EmailHelpers
-from werkzeug.datastructures import FileStorage
-from flanker import addresslib, mime
+import email.utils
+import re
+import StringIO
+import time
+
 import pytest
+from flanker import addresslib, mime
+from werkzeug.datastructures import FileStorage
+
+from pvHelpers.mail.email import (Attachment, AttachmentMetadata, AttachmentType,
+                       EmailException, EmailHelpers, createMime, parseMime)
+from pvHelpers.utils import randStr, randUnicode
 
 
 def test_create_plain_mime():

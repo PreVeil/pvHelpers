@@ -1,6 +1,6 @@
 import types
 
-from pvHelpers.crypto import UserKeyBase
+from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.utils import params
 
 from .device import CURRENT_PLATFORM, Device

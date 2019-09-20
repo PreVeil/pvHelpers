@@ -1,11 +1,14 @@
 import uuid
 
 import pvHelpers as H
+from pvHelpers.utils import (EncodingException, WrapExceptions,
+                             encodeContentIfUnicode, jdumps, jloads, params,
+                             utf8Decode)
+
 
 DUMMY_DISPOSITION = u"dummy"
 DUMMY_CONTENT_TYPE = u"dummy/dummy"
 MAILBOX_ALIAS = {u"INBOX":u"inbox", u"Drafts":u"drafts", u"Sent Messages":u"sent", u"Deleted Messages":u"trash"}
-
 
 class PROTOCOL_VERSION(object):
     V1 = 1
@@ -39,17 +42,17 @@ class EmailHelpers(object):
 
 
     @staticmethod
-    @H.WrapExceptions(EmailException, [H.EncodingException])
-    @H.params(dict)
+    @WrapExceptions(EmailException, [EncodingException])
+    @params(dict)
     def serializeBody(body):
-        return H.encodeContentIfUnicode(H.jdumps({"text": body.get("text"), "html": body.get("html")}))
+        return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
 
     @staticmethod
-    @H.WrapExceptions(EmailException, [H.EncodingException])
-    @H.params(bytes)
+    @WrapExceptions(EmailException, [EncodingException])
+    @params(bytes)
     def deserializeBody(body):
-        body = H.jloads(H.utf8Decode(body))
+        body = jloads(utf8Decode(body))
         return body
 
 

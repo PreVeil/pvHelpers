@@ -2,7 +2,7 @@ import email.utils
 
 from flanker import addresslib, mime
 
-import pvHelpers as H
+from pvHelpers.utils import encodeContentIfUnicode
 
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
@@ -142,7 +142,7 @@ def parseMime(raw_mime):
             # it'll be `unicode` if content_type is `text/*`
             # this is troublesome for attachment files of `.html` `.txt` `.py`
             # hence should encode them if an attachment
-            encoded = H.encodeContentIfUnicode(part_content)
+            encoded = encodeContentIfUnicode(part_content)
 
             attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
@@ -192,16 +192,16 @@ def parseMime(raw_mime):
                      # message container parts also fall here message/rfc, message/news
                     pass
 
-                encoded = H.encodeContentIfUnicode(part_content)
+                encoded = encodeContentIfUnicode(part_content)
                 attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.INLINE, content_id), Content(encoded)))
 
             else:
                 # this part has no info on it's presentation and is not text or html, hence, should default to attachment
-                encoded = H.encodeContentIfUnicode(part_content)
+                encoded = encodeContentIfUnicode(part_content)
                 attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
         else: # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
-            encoded = H.encodeContentIfUnicode(part_content)
+            encoded = encodeContentIfUnicode(part_content)
             attachments.append(Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
     return text, html, attachments

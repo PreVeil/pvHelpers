@@ -1,4 +1,4 @@
-import pvHelpers as H
+from pvHelpers.logger import g_log
 
 from .email_helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
 from .email_v2 import EmailV2
@@ -23,7 +23,7 @@ class EmailV4(EmailV2):
         try:
             body = EmailHelpers.deserializeBody(self.body.content)
         except EmailException as e:
-            H.g_log.exception(e)
+            g_log.exception(e)
             return u""
 
         return body["text"]

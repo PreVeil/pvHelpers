@@ -3,9 +3,11 @@ import types
 
 from flanker import addresslib, mime
 
-import content as cnt
-import pvHelpers as H
+from pvHelpers.logger import g_log
+from pvHelpers.utils import (ASCIIToUnicode, EncodingException, WrapExceptions,
+                             encodeContentIfUnicode, toInt)
 
+from .content import Content
 from .email_helpers import EmailException
 
 
@@ -17,17 +19,17 @@ class AttachmentType(object):
 class AttachmentMetadata(object):
     __initialized = False
 
-    @H.WrapExceptions(EmailException, [H.EncodingException])
+    @WrapExceptions(EmailException, [EncodingException])
     def __init__(self, filename=None, content_type=None, content_disposition=AttachmentType.ATTACHMENT, content_id=None, size=None):
         if isinstance(filename, str):
-            filename = H.H.ASCIIToUnicode(filename)
+            filename = ASCIIToUnicode(filename)
 
         if not isinstance(filename, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__: filename must be unicode, {}".format(filename))
         self.filename = filename
 
         if isinstance(content_type, str):
-            content_type = H.H.ASCIIToUnicode(content_type)
+            content_type = ASCIIToUnicode(content_type)
 
         if not isinstance(content_type, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__:: content_type must be of type unicode, {}".format(content_type))
@@ -42,23 +44,23 @@ class AttachmentMetadata(object):
         # and keep it MIME consistent with object
         content_disposition = AttachmentType.ATTACHMENT if content_disposition is None else content_disposition
         if isinstance(content_disposition, str):
-            content_disposition = H.H.ASCIIToUnicode(content_disposition)
+            content_disposition = ASCIIToUnicode(content_disposition)
 
         if not isinstance(content_disposition, unicode):
             raise EmailException(u"AttachmentMetadata.__init__: content_disposition must be unicode, value: {}".format(content_disposition))
         self.content_disposition = content_disposition
 
         if isinstance(content_id, str):
-            content_id = H.ASCIIToUnicode(content_id)
+            content_id = ASCIIToUnicode(content_id)
 
         if not isinstance(content_id, (unicode, types.NoneType)):
             raise EmailException(u"AttachmentMetadata.__init__: content_id must be unicode, value: {}".format(content_id))
         self.content_id = content_id
 
         if isinstance(size, (str, unicode)):
-            status, int_size = H.toInt(size)
+            status, int_size = toInt(size)
             if status == False:
-                H.g_log.error(u"AttachmentMetadata.__init__: size int coercion failed {}".format(size))
+                g_log.error(u"AttachmentMetadata.__init__: size int coercion failed {}".format(size))
                 size = 0
             size = int_size
 
@@ -90,13 +92,13 @@ class Attachment(object):
     __initialized = False
 
     @staticmethod
-    @H.WrapExceptions(EmailException, [H.EncodingException])
+    @WrapExceptions(EmailException, [EncodingException])
     def fromFileStorage(_file, metadata):
         if not isinstance(metadata, AttachmentMetadata):
             raise EmailException(u"metadata must be of type AttachmentMetadata")
 
         content = _file.read()
-        content = H.encodeContentIfUnicode(content)
+        content = encodeContentIfUnicode(content)
 
         # flanker defaults the mime header to (application/octet-stream) if c-t not specified
         # it also makes some assumptions based on filename if c-t is (application/octet-stream)
@@ -109,7 +111,7 @@ class Attachment(object):
             raise EmailException(u"fromFileStorage: flanker exception, value: {}".format(e))
 
         metadata.size = len(content)
-        return Attachment(metadata, cnt.Content(content))
+        return Attachment(metadata, Content(content))
 
     @staticmethod
     def fromDict(data):
@@ -121,11 +123,11 @@ class Attachment(object):
             metadata.get("content_id"),
             metadata.get("size")
         )
-        return Attachment(metadata, cnt.Content(**data.get("content")))
+        return Attachment(metadata, Content(**data.get("content")))
 
     # should use Email.fromDict() unless certain about types
     def __init__(self, metadata, content):
-        if not isinstance(content, cnt.Content):
+        if not isinstance(content, Content):
             raise EmailException(u"__init__: Bad content, reference_id: {}".format(reference_id))
         self.content = content
 

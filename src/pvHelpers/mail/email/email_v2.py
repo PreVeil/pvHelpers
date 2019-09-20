@@ -2,7 +2,8 @@ import email.utils
 
 from flanker import addresslib, mime
 
-import pvHelpers as H
+from pvHelpers.logger import g_log
+from pvHelpers.utils import NOT_ASSIGNED, EncodingException, b64enc
 
 from .content import Content
 from .email_base import EmailBase
@@ -49,7 +50,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
         body = EmailHelpers.deserializeBody(self.body.content)
         time = None
-        if not isinstance(self.server_attr, H.NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
 
         raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
@@ -62,7 +63,7 @@ class EmailV2(EmailHelpers, EmailBase):
     # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
         o = {}
-        if not isinstance(self.server_attr, H.NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NOT_ASSIGNED):
             o["unique_id"] = self.server_attr.server_id
             o["uid"] = self.server_attr.uid
             o["thread_id"] = self.server_attr.thread_id
@@ -93,9 +94,9 @@ class EmailV2(EmailHelpers, EmailBase):
             browser_atts = []
             for att in self.attachments:
                 try:
-                    encoded = H.b64enc(att.content.content)
-                except H.EncodingException as e:
-                    H.g_log.exception(e)
+                    encoded = b64enc(att.content.content)
+                except EncodingException as e:
+                    g_log.exception(e)
                     continue
 
                 browser_atts.append({
@@ -193,5 +194,5 @@ class EmailV2(EmailHelpers, EmailBase):
         body = EmailHelpers.serializeBody({"text": text, "html":html})
         body = Content(body)
 
-        return cls(H.NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)

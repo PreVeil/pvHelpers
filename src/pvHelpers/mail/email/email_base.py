@@ -1,7 +1,7 @@
 import copy
 import types
 
-import pvHelpers as H
+from pvHelpers.utils import NOT_ASSIGNED
 
 from .attachment import Attachment
 from .content import Content
@@ -17,7 +17,7 @@ class EmailBase(object):
 
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs, sender, reply_tos, \
                  subject, body,  attachments, references, in_reply_to, message_id, snippet):
-        if not isinstance(server_attr, (ServerAttributes, H.NOT_ASSIGNED)):
+        if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
         self.server_attr = server_attr
 
@@ -147,10 +147,10 @@ class EmailBase(object):
     # def toDB(self):
     #     return {
     #         "server_id" : self.server_attr.server_id, "revision_id" : self.revision_id, "version" : self.server_attr.version,
-    #         "flags" : H.jdumps(self.flags), "uid" : self.server_attr.uid,
+    #         "flags" : jdumps(self.flags), "uid" : self.server_attr.uid,
     #         "expunged" : 1 if self.server_attr.expunged == True else 0, "mailbox_server_id" : self.server_attr.mailbox_server_id,
     #         "server_time" : self.server_attr.server_time, "thread_id" : self.server_attr.thread_id,
-    #         "metadata": H.jdumps({
+    #         "metadata": jdumps({
     #             "sender": self.sender,
     #             "tos": self.tos,
     #             "ccs": self.ccs,

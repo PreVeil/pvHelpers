@@ -1,9 +1,16 @@
 # vim: set fileencoding=utf-8 :
-import os, StringIO
-from pvHelpers import EmailV1, EmailHelpers, NOT_ASSIGNED, Content, Attachment, randUnicode, randStr, AttachmentType, \
-    DUMMY_CONTENT_TYPE, Sha256Sum, HexEncode, createMime, AttachmentMetadata
+import os
+import StringIO
+
 from flanker import mime
 from werkzeug.datastructures import FileStorage
+
+from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.mail.email import (DUMMY_CONTENT_TYPE, Attachment,
+                                  AttachmentMetadata, AttachmentType, Content,
+                                  EmailHelpers, EmailV1, createMime)
+from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
+
 
 class User():
     def __init__(self):

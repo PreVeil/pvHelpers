@@ -1,8 +1,17 @@
 # vim: set fileencoding=utf-8 :
-import unittest, StringIO, os
-from pvHelpers import EmailFactory, EmailV4, EmailHelpers, NOT_ASSIGNED, Content, Attachment, randUnicode, randStr, \
-    AttachmentType, DUMMY_CONTENT_TYPE, PROTOCOL_VERSION, AttachmentMetadata
+import os
+import StringIO
+import unittest
+
 from werkzeug.datastructures import FileStorage
+
+from pvHelpers.mail import EmailFactory
+from pvHelpers.mail.email import (DUMMY_CONTENT_TYPE, PROTOCOL_VERSION,
+                                  Attachment, AttachmentMetadata,
+                                  AttachmentType, Content, EmailHelpers,
+                                  EmailV4)
+from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
+
 
 class User():
     def __init__(self):

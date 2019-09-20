@@ -1,8 +1,8 @@
 
 
 from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
-                              SYMM_KEY_PROTOCOL_VERSION, CryptoException,
-                              PVKeyFactory)
+                              SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory)
+from pvHelpers.crypto.utils import CryptoException
 from pvHelpers.mail.email import EmailBase
 from pvHelpers.user import LocalUser, User
 from pvHelpers.utils import b64enc, params

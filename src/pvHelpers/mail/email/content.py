@@ -1,13 +1,13 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.utils import params
 
 from .email_helpers import EmailException
 
 
 class Content(object):
     __initialized = False
-    @H.params(object, {bytes, str, types.NoneType}, [unicode], {unicode, types.NoneType}, {int, long, types.NoneType})
+    @params(object, {bytes, str, types.NoneType}, [unicode], {unicode, types.NoneType}, {int, long, types.NoneType})
     def __init__(self, content=None, block_ids=[], wrapped_key=None, key_version=None):
         self.content = content
         self.block_ids = block_ids

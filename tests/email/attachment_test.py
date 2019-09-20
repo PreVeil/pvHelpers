@@ -1,8 +1,15 @@
 # vim: set fileencoding=utf-8 :
-import copy, os, simplejson, random
-from pvHelpers import AttachmentMetadata, Attachment, AttachmentType, randUnicode, jdumps, randStr, randStream, getdir, EmailException, EmailV1, Content
+import copy
+import os
+import random
+
+import simplejson
 from werkzeug.datastructures import FileStorage
 
+from pvHelpers.mail.email import (Attachment, AttachmentMetadata,
+                                  AttachmentType, Content, EmailException,
+                                  EmailV1)
+from pvHelpers.utils import getdir, jdumps, randStr, randStream, randUnicode
 
 mime_tests = {
   "mime_to_preveil_entity" : {

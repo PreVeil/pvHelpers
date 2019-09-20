@@ -1,7 +1,8 @@
-import pvHelpers as H
+from pvHelpers.crypto import SYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto.utils import CryptoException
+from pvHelpers.utils import b64enc, utf8Encode
 
 FILE_BLOCK_SIZE = 2 * 1024 * 1024 # max 2MB block size
-
 
 #########################################
 ######### Factory Common Mixins #########
@@ -11,13 +12,13 @@ class PreparedMessageHelpers(object):
         details = {}
         try:
             if is_text:
-                if self.opaque_key.protocol_version == H.SYMM_KEY_PROTOCOL_VERSION.V1:
-                    ciphertext = H.b64enc(self.opaque_key.encrypt(H.utf8Encode(data), details))
+                if self.opaque_key.protocol_version == SYMM_KEY_PROTOCOL_VERSION.V1:
+                    ciphertext = b64enc(self.opaque_key.encrypt(utf8Encode(data), details))
                 else:
-                    ciphertext = H.b64enc(self.opaque_key.encrypt(H.utf8Encode(data), details, is_text=True))
+                    ciphertext = b64enc(self.opaque_key.encrypt(utf8Encode(data), details, is_text=True))
             else:
-                ciphertext = H.b64enc(self.opaque_key.encrypt(data, details))
-        except H.CryptoException as e:
+                ciphertext = b64enc(self.opaque_key.encrypt(data, details))
+        except CryptoException as e:
             raise PreparedMessageError(e)
 
         return {
