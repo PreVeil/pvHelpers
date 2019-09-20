@@ -1,8 +1,12 @@
 import os
+
 import pytest
 import requests
 from requests.auth import HTTPProxyAuth
-from pvHelpers import ProxyConfig, process_os_proxies, ProxyPac, Pac, ProxyKey, getdir
+
+from pvHelpers.proxy_config import (Pac, ProxyConfig, ProxyKey, ProxyPac,
+                                    process_os_proxies)
+from pvHelpers.utils import getdir
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -171,7 +175,7 @@ def test_OS_proxy_processer():
 
 def test_bad_pacfile():
     # make sure we don't crash if provided bad pac file
-    assert not Pac("http://not_exist_pac.pac").fetched 
+    assert not Pac("http://not_exist_pac.pac").fetched
 
     with pytest.raises(IOError):
         Pac("some url")

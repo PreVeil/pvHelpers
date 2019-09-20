@@ -3,7 +3,8 @@ import subprocess
 import sys
 import time
 
-import pvHelpers as H
+from pvHelpers.logger import g_log
+from pvHelpers.utils import randUnicode
 
 from .constants import IPProtocol, ProxyKey
 from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
@@ -67,7 +68,7 @@ def __process_win_proxies(config):
                     # on window 10
                     s = e.split(":")
                     if len(s) != 2:
-                        H.g_log.warn("encounter invalid ip:port {}".format(e))
+                        g_log.warn("encounter invalid ip:port {}".format(e))
                         continue
                     ip, port = s[0], s[1]
                     proxy_item.add_or_update(
@@ -79,7 +80,7 @@ def __process_win_proxies(config):
                     pc = scheme[0]
                     s = scheme[1].split(":")
                     if len(s) != 2:
-                        H.g_log.warn("encounter invalid ip:port {}".format(
+                        g_log.warn("encounter invalid ip:port {}".format(
                             scheme[1]))
                         continue
                     ip, port = s[0], s[1]
@@ -118,7 +119,7 @@ def get_os_proxies():
             proxy_conf_str = process_scutil.communicate()[0]
 
         except subprocess.CalledProcessError as e:
-            H.g_log.exception(e)
+            g_log.exception(e)
             proxy_conf_str = None
 
     elif "win32" == sys.platform:
@@ -130,14 +131,14 @@ def get_os_proxies():
         # does not give us access to the process's stdout.
         # so need to write to a temp file first then read from it. :(
         temp_path = os.path.join(tempfile.gettempdir(),
-                                 H.randUnicode(5) + ".txt")
+                                 randUnicode(5) + ".txt")
 
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
             ps, reg_internet_setting, temp_path)
 
         status = runWindowsProcessAsCurrentUser(cmd.split(" "))
         if not status:
-            H.g_log.warn(u"Failed to fetch os proxy settings.")
+            g_log.warn(u"Failed to fetch os proxy settings.")
             return False, None
 
         with io.open(temp_path, "r", encoding="utf16") as f:
@@ -148,7 +149,7 @@ def get_os_proxies():
         try:
             os.remove(temp_path)
         except Exception as e:
-            H.g_log.warn(e)
+            g_log.warn(e)
 
     if proxy_conf_str is not None:
         return True, process_os_proxies(proxy_conf_str)

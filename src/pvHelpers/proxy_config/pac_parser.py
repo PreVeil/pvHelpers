@@ -1,7 +1,8 @@
 import pacparser
 import requests
 
-import pvHelpers as H
+from pvHelpers.logger import g_log
+from pvHelpers.utils import parse_file_uri
 
 RETRYABLE_EXCEPTION = (requests.exceptions.ConnectionError,
                        requests.exceptions.Timeout)
@@ -15,7 +16,7 @@ class Pac(object):
         self.__parse_pac()
 
     def __parse_pac(self):
-        required_download, url = H.parse_file_uri(self.pac_url)
+        required_download, url = parse_file_uri(self.pac_url)
         try:
             if required_download:
                 downloaded_pac = download_pac([url])
@@ -31,8 +32,8 @@ class Pac(object):
                 pacparser.parse_pac_file(url)
         except:
             # neither a valid url or valid file path
-            H.g_log.error("Unsupported pac url {}".format(self.pac_url))
-            H.g_log.debug("Cleaning up pacparser...")
+            g_log.error("Unsupported pac url {}".format(self.pac_url))
+            g_log.debug("Cleaning up pacparser...")
             self.clean_up()
             raise
         else:
@@ -50,7 +51,7 @@ class Pac(object):
         try:
             proxy_str = pacparser.find_proxy(url, host)
         except pacparser.URLError as e:
-            H.g_log.error(e)
+            g_log.error(e)
             return None
         else:
             return parse_pac_value(proxy_str, self.proxy_auth)
@@ -121,7 +122,7 @@ def download_pac(candidate_urls, timeout=1, allowed_content_types=None):
             if resp.ok:
                 return resp.text
         except RETRYABLE_EXCEPTION as e:
-            H.g_log.exception(e)
+            g_log.exception(e)
             continue
     return None
 
@@ -147,7 +148,7 @@ def parse_pac_value(value, proxy_auth=None, socks_scheme=None):
         try:
             config.append(proxy_url(element, proxy_auth, socks_scheme))
         except ValueError as e:
-            H.g_log.warn(e)
+            g_log.warn(e)
     return config
 
 

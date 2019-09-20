@@ -1,4 +1,4 @@
-import pvHelpers as H
+from pvHelpers.logger import g_log
 
 from .constants import IPProtocol
 from .pac_parser import Pac
@@ -32,7 +32,7 @@ class ProxyPac(object):
         try:
             return self.__proxy_resolver.get_proxies(url)
         except Exception as e:
-            H.g_log.debug("ProxyResolver.get_proxies {}".format(e))
+            g_log.debug("ProxyResolver.get_proxies {}".format(e))
             self.__proxy_resolver.clean_up()
             return None
 
