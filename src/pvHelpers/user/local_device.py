@@ -1,0 +1,52 @@
+import types
+
+import pvHelpers as H
+
+from .device import CURRENT_PLATFORM, Device
+
+
+class LocalDevice(Device):
+    @H.params(object, unicode, {types.NoneType, unicode}, H.UserKeyBase, dict, unicode, unicode)
+    def __init__(self, id_, name, key, metadata, status, platform=CURRENT_PLATFORM):
+        super(LocalDevice, self).__init__(id_, name, key.public_user_key, metadata, status, platform)
+        self.key = key
+
+    @property
+    def public_key(self):
+        return self.key.public_user_key
+
+    def toDB(self):
+        return {
+            "device_id": self.id,
+            "device_name": self.name,
+            "key": self.key.serialize(),
+            "metadata": self.metadata,
+            "status": self.status
+        }
+
+    @classmethod
+    def newDevice(cls, key_version=1):
+        return cls(
+            unicode(uuid.uuid4()), None,
+            PVKeyFactory.newUserKey(key_version), {}, DeviceStatus.LOCAL
+        )
+
+    @classmethod
+    def fromDB(cls, device_data):
+        return cls(
+            device_data["device_id"],
+            device_data["device_name"],
+            PVKeyFactory.userKeyfromDB(device_data["key"]),
+            device_data["metadata"],
+            device_data["status"]
+        )
+
+    def __eq__(self, other):
+
+        return isinstance(other, LocalDevice) and \
+            self.id == other.id and \
+            self.name == other.name and \
+            self.key == other.key
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

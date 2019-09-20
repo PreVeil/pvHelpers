@@ -1,5 +1,6 @@
 import sys
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 install_requires = [
     "PyYAML==3.11", "requests==2.20.1", "simplejson==3.8.2",
@@ -15,6 +16,7 @@ if sys.platform == "win32":
 setup(
     name="pvHelpers",
     version="5.0.8",
-    packages=find_packages(),
+    package_dir={'': 'src'},
+    packages=find_packages(where='src', exclude=('tests')),
     install_requires=install_requires,
 )
