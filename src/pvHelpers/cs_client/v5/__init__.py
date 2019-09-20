@@ -1,4 +1,4 @@
-import pvHelpers as H
+from pvHelpers.utils import b64enc, jdumps, utf8Encode
 
 from ..v4 import APIClientV4
 from .approvals import ApprovalsV5
@@ -23,30 +23,30 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
         if body is None:
             raw_body = u""
         else:
-            raw_body = H.jdumps(body)
+            raw_body = jdumps(body)
 
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
         if not ignore_device_sign:
-            device_key_version, device_signature = signer.signWithDeviceKey(H.utf8Encodecanonical_request))
+            device_key_version, device_signature = signer.signWithDeviceKey(utf8Encode(canonical_request))
             user_key_version, user_signature = signer.signWithUserKey(device_signature)
         else:
-            user_key_version, user_signature = signer.signWithUserKey(H.utf8Encodecanonical_request))
-        encoded_user_id = H.utf8Encodesigner.user_id)
+            user_key_version, user_signature = signer.signWithUserKey(utf8Encode(canonical_request))
+        encoded_user_id = utf8Encode(signer.user_id)
         export_id, member_id = None, None
         if export:
             export_id, member_id = export
-            member_id = H.utf8Encodemember_id)
+            member_id = utf8Encode(member_id)
         headers = {
             "content-type" : "application/json",
             "x-user-key-version": str(user_key_version),
             "x-user-id"    : encoded_user_id,
-            "x-user-signature": H.b64enc(user_signature),
+            "x-user-signature": b64enc(user_signature),
             "accept-version" : str(self.__api_version__),
-            "x-device-signature"  : None if ignore_device_sign else H.b64enc(device_signature),
+            "x-device-signature"  : None if ignore_device_sign else b64enc(device_signature),
             "x-device-id": None if ignore_device_sign else signer.device.id,
             "x-device-key-version": None if ignore_device_sign else str(device_key_version),
             "x-data-export-id": export_id,
             "x-for-user-id": member_id,
         }
-        encoded_raw_body = H.utf8Encoderaw_body)
+        encoded_raw_body = utf8Encode(raw_body)
         return url, encoded_raw_body, headers

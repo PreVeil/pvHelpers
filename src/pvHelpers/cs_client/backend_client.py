@@ -3,8 +3,11 @@ import inspect
 
 import requests
 
-import pvHelpers as H
+from pvHelpers.logger import g_log
+from pvHelpers.user import LocalUser, UserDBNode
 
+from .utils import (ExpiredDeviceKey, ExpiredUserKey, RequestError,
+                    UnauthorizedReqLimitException)
 from .v4 import APIClientV4
 from .v5 import APIClientV5
 from .v6 import APIClientV6
@@ -29,14 +32,14 @@ class BackendClient(object):
     # TODO: use this method to reset 401 count after CryptoStore has updated the user; eg in the case of rekey
     def resetUserUnauthorizedState(self, user_id):
         if user_id not in self.users_sync:
-            H.g_log.warn(
+            g_log.warn(
                 "{} does not encounter any unauthorized request yet.".format(user_id))
             return
         self.users_sync.pop(user_id)
 
     def _handlersWrapper(self, fun):
         def __wrapper(*args, **kwargs):
-            if args and isinstance(args[0], (H.UserDBNode, H.LocalUser)):
+            if args and isinstance(args[0], (UserDBNode, LocalUser)):
                 user_id = args[0].user_id
                 if not self._isUserSynced(user_id):
                     # user has too many 401 unauthorized response
@@ -46,18 +49,18 @@ class BackendClient(object):
                         # reset 401 exceptions allowances after one day
                         self.users_sync.pop(user_id)
                     else:
-                        raise H.UnauthorizedReqLimitException(
+                        raise UnauthorizedReqLimitException(
                             "User {} reached max limit of 401 unauthorized req!".format(user_id))
 
                 try:
                     return fun(*args, **kwargs)
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 440:
-                        raise H.ExpiredDeviceKey(e)
+                        raise ExpiredDeviceKey(e)
                     elif e.response.status_code == 498:
                         error_ = e.response.json()
                         # can server do something malicious by returning bad expected key_version ?
-                        raise H.ExpiredUserKey(
+                        raise ExpiredUserKey(
                             e, error_["errors"][0]["cause"]["expected_version"])
                     elif e.response.status_code == 401:
                         if user_id not in self.users_sync:
@@ -70,14 +73,14 @@ class BackendClient(object):
 
                     elif e.response.status_code == 407:
                         g_log.exception(e)
-                        raise H.RequestError.ProxyAuth(
+                        raise RequestError.ProxyAuth(
                             [{"cause": u"proxy config required auth", "source": unicode(fun.__name__)}])
 
                     raise
 
                 except requests.exceptions.ProxyError as e:
                     if str(407) in str(e):
-                        raise H.RequestError.ProxyAuth(
+                        raise RequestError.ProxyAuth(
                             [{"cause": u"proxy config required auth", "source": unicode(fun.__name__)}])
 
                     raise

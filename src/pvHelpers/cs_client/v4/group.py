@@ -1,8 +1,12 @@
-import pvHelpers as H
+from pvHelpers.crypto import PVKeyFactory
+from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.utils import b64enc, params
+
+from ..utils import ServerResponseError
 
 
 class GroupV4(object):
-    @H.params(object, H.LocalUser, unicode)
+    @params(object, LocalUser, unicode)
     def getGroupInfo(self, user, group_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/groups", "GET", None
@@ -12,7 +16,7 @@ class GroupV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode)
+    @params(object, LocalUser, unicode)
     def createGroup(self, user, group_name):
         user_public_key = user.user_key.encryption_key.public_key
 
@@ -54,15 +58,15 @@ class GroupV4(object):
 
         group_id = data.get("group_id")
         if group_id is None:
-            raise H.ServerResponseError("createGroup: server response missing group_id")
+            raise ServerResponseError("createGroup: server response missing group_id")
 
         return group_id, admin_group_public_user_key, wrapped_group_private_key
 
 # UGH, get rid of this!!!!
 def createCollectionKey(version, public_key):
-    new_key = H.PVKeyFactory.newUserKey(version)
+    new_key = PVKeyFactory.newUserKey(version)
 
     # don't B64 encode for filesync
-    wrapped_private_key = H.b64enc(public_key.seal(new_key.buffer.SerializeToString()))
+    wrapped_private_key = b64enc(public_key.seal(new_key.buffer.SerializeToString()))
 
     return new_key, new_key.public_user_key.serialize(), wrapped_private_key

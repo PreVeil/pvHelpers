@@ -1,11 +1,15 @@
 import calendar
 import time
 
-import pvHelpers as H
+from pvHelpers.mail import PreparedMessageBase
+from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.utils import b64enc, params
+
+from ..utils import ServerResponseError
 
 
 class MailV4(object):
-    @H.params(object, H.LocalUser, H.PreparedMessageBase)
+    @params(object, LocalUser, PreparedMessageBase)
     def sendEmail(self, user, prepared_message):
         self.uploadEmailBlocks(user, prepared_message)
         url, raw_body, headers = self.prepareSignedRequest(
@@ -15,7 +19,7 @@ class MailV4(object):
         resp = self.post(url, headers, raw_body)
         resp.raise_for_status()
 
-    @H.params(object, H.LocalUser, H.PreparedMessageBase, unicode)
+    @params(object, LocalUser, PreparedMessageBase, unicode)
     def appendEmailToMailbox(self, user, prepared_message, mailbox_id):
         self.uploadEmailBlocks(user, prepared_message)
         url, raw_body, headers = self.prepareSignedRequest(
@@ -29,10 +33,10 @@ class MailV4(object):
             # converting timestamp to unix epoch int
             data["timestamp"] = calendar.timegm(time.strptime(data["timestamp"], "%Y-%m-%dT%H:%M:%S"))
         except (KeyError, ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
         return data
 
-    @H.params(object, {H.LocalUser, H.UserDBNode}, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
+    @params(object, {LocalUser, UserDBNode}, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
     def updateFlags(self, user, mailbox_id, updates):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
@@ -44,9 +48,9 @@ class MailV4(object):
             data = resp.json()
             return data["data"]
         except (KeyError. ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
 
-    @H.params(object, {H.LocalUser, H.UserDBNode}, unicode, unicode, [{int, long}])
+    @params(object, {LocalUser, UserDBNode}, unicode, unicode, [{int, long}])
     def dupeMessages(self, user, src_mailbox_id, dest_mailbox_id, uids):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages/copy".format(user.mail_cid, dest_mailbox_id),
@@ -61,11 +65,11 @@ class MailV4(object):
                 timestamp = update["result"]["timestamp"]
                 update["result"]["timestamp"] = calendar.timegm(time.strptime(timestamp, "%Y-%m-%dT%H:%M:%S"))
         except (KeyError, ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
 
         return data
 
-    @H.params(object, {H.LocalUser, H.UserDBNode}, {int, long})
+    @params(object, {LocalUser, UserDBNode}, {int, long})
     def getMailHistory(self, user, last_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),
@@ -77,7 +81,7 @@ class MailV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, {H.LocalUser, H.UserDBNode}, unicode, unicode)
+    @params(object, {LocalUser, UserDBNode}, unicode, unicode)
     def expungeEmail(self, user, mailbox_id, email_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/mail/{}/mailboxes/{}/messages/{}".format(user.mail_cid, mailbox_id, email_id),
@@ -87,7 +91,7 @@ class MailV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, {H.LocalUser, H.UserDBNode}, unicode)
+    @params(object, {LocalUser, UserDBNode}, unicode)
     def getMailboxUnseenCount(self, user, mailbox_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes/{}/unseen_count".format(user.mail_cid, mailbox_id),

@@ -1,9 +1,10 @@
-import pvHelpers as H
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
 
 
 # For PreVeil privileged admins
 class PVAdminV4(object):
-    @H.params(object, H.LocalUser, object)
+    @params(object, LocalUser, object)
     def deleteUser(self, user, params):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users", "DELETE", None
@@ -12,7 +13,7 @@ class PVAdminV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, bool, {int, long}, {int, long})
+    @params(object, LocalUser, bool, {int, long}, {int, long})
     def getUsersList(self, user, show_unclaimed, limit, offset):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/list", "GET", None

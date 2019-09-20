@@ -1,7 +1,9 @@
-import pvHelpers as H
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
+
 
 class TestV7(object):
-    @H.params(object, H.LocalUser, unicode)
+    @params(object, LocalUser, unicode)
     def expireDevice(self, user, device_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/devices/{}/expire".format(device_id), "PATCH", None

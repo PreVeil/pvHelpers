@@ -1,11 +1,14 @@
 import calendar
 import time
 
-import pvHelpers as H
+from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.utils import b64enc, params, toInt
+
+from ..utils import ServerResponseError
 
 
 class MailboxV4(object):
-    @H.params(object, {H.UserDBNode, H.LocalUser}, unicode)
+    @params(object, {UserDBNode, LocalUser}, unicode)
     def createMailbox(self, user, name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes".format(user.mail_cid),
@@ -17,9 +20,9 @@ class MailboxV4(object):
             data = resp.json()
             return data["mailbox_id"], data["rev_id"]
         except (KeyError, ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
 
-    @H.params(object, {H.UserDBNode, H.LocalUser}, unicode, unicode)
+    @params(object, {UserDBNode, LocalUser}, unicode, unicode)
     def renameMailbox(self, user, server_id, new_name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
@@ -31,9 +34,9 @@ class MailboxV4(object):
             data = resp.json()
             return data["rev_id"]
         except (KeyError, ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
 
-    @H.params(object, {H.UserDBNode, H.LocalUser}, unicode)
+    @params(object, {UserDBNode, LocalUser}, unicode)
     def deleteMailbox(self, user, server_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
@@ -45,9 +48,9 @@ class MailboxV4(object):
             data = resp.json()
             return data["rev_id"]
         except (KeyError, ValueError) as e:
-            raise H.ServerResponseError(e)
+            raise ServerResponseError(e)
 
-    @H.params(object, {H.UserDBNode, H.LocalUser}, unicode)
+    @params(object, {UserDBNode, LocalUser}, unicode)
     def getMailboxNextUID(self, user, mailbox_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes/{}/uid".format(user.mail_cid, mailbox_id),
@@ -58,13 +61,13 @@ class MailboxV4(object):
         data = resp.json()
         next_uid = data.get("next_uid")
         if not next_uid:
-            raise H.ServerResponseError("'next_uid' missing")
-        status, next_uid = H.toInt(next_uid)
+            raise ServerResponseError("'next_uid' missing")
+        status, next_uid = toInt(next_uid)
         if not status:
-            raise H.ServerResponseError("int coercion failed")
+            raise ServerResponseError("int coercion failed")
         return next_uid
 
-    @H.params(object, {H.UserDBNode, H.LocalUser}, int)
+    @params(object, {UserDBNode, LocalUser}, int)
     def getUserMailboxes(self, user, since_rev_id=0):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),

@@ -1,10 +1,12 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.crypto.user_key import UserKeyBase
+from pvHelpers.user import LocalDevice
+from pvHelpers.utils import params, toInt
 
 
 class PublicV4(object):
-    @H.params(object, unicode, unicode, H.UserKeyBase, unicode, unicode, H.LocalDevice)
+    @params(object, unicode, unicode, UserKeyBase, unicode, unicode, LocalDevice)
     def claimUser(self, user_id, secret, user_key, wrapped_log_viewer_private_key, serialized_log_viewer_key, device):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users", "PUT", {
@@ -25,7 +27,7 @@ class PublicV4(object):
         return resp.json()
 
 
-    @H.params(object, unicode, unicode)
+    @params(object, unicode, unicode)
     def createUser(self, user_id, name):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users", "POST", {
@@ -47,7 +49,7 @@ class PublicV4(object):
         resp.raise_for_status()
 
 
-    @H.params(object, unicode, unicode)
+    @params(object, unicode, unicode)
     def fetchApprovalGroupWithSecret(self, user_id, secret):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users/approvers/info", "GET", None

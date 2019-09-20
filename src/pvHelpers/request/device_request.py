@@ -1,9 +1,10 @@
-import pvHelpers as H
+from pvHelpers.user import LocalDevice
+from pvHelpers.utils import params
 
 
 class DeviceRequest(object):
     @classmethod
-    @H.params(object, unicode, H.LocalDevice)
+    @params(object, unicode, LocalDevice)
     def newForRecovery(cls, user_id, device):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=7)
@@ -16,7 +17,7 @@ class DeviceRequest(object):
         }), [])
 
     @classmethod
-    @H.params(object, unicode, H.LocalDevice)
+    @params(object, unicode, LocalDevice)
     def newForTransfer(cls, user_id, device):
         return cls(device, jdumps(device.toDict()), [])
 
@@ -35,7 +36,7 @@ class DeviceRequest(object):
     @classmethod
     def fromDB(cls, request_dict):
         return cls(
-            H.LocalDevice.fromDB(request_dict["device"]),
+            LocalDevice.fromDB(request_dict["device"]),
             request_dict["serialized_req"],
             request_dict["signatures"]
         )

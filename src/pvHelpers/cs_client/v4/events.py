@@ -1,23 +1,23 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.utils import b64enc, params, utf8Encode
 
 EXISTS = "exists"
 
 class UserEventsV4(object):
-
-    @H.params(object, H.LocalUser, unicode, {"approvers": [{"user_id": unicode, "key_version": {int, long}, "secret": unicode}]})
+    @params(object, LocalUser, unicode, {"approvers": [{"user_id": unicode, "key_version": {int, long}, "secret": unicode}]})
     def handleSetEDiscShardsEvent(self, user, event_id, request_data):
         return self.respondToUserEvent(user, event_id, request_data)
 
-    @H.params(object, H.LocalUser, {types.NoneType, unicode}, unicode)
+    @params(object, LocalUser, {types.NoneType, unicode}, unicode)
     def createUserEvent(self, user, member_id, payload):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/events", "POST", {
                 "user_id" : member_id,
                 "requester_id" : user.user_id,
                 "requester_key_version" : user.user_key.key_version,
-                "signature" : H.b64enc(user.user_key.signing_key.sign(H.utf8Encode(payload))),
+                "signature" : b64enc(user.user_key.signing_key.sign(utf8Encode(payload))),
                 "payload" : payload
             }
         )
@@ -25,7 +25,7 @@ class UserEventsV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, {H.UserDBNode, H.LocalUser}, int)
+    @params(object, {UserDBNode, LocalUser}, int)
     def getUserEvents(self, user, last_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/events", "GET", None
@@ -37,7 +37,7 @@ class UserEventsV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, dict)
+    @params(object, LocalUser, unicode, dict)
     def respondToUserEvent(self, user, event_id, response):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/events/{}".format(event_id), "PUT", {

@@ -1,8 +1,8 @@
-import pvHelpers as H
+from pvHelpers.utils import params
 
 
 class TestV4(object):
-    @H.params(object, unicode, unicode)
+    @params(object, unicode, unicode)
     def getUserSecret(self, user_id, secret_type):
         url, raw_body, headers = self.preparePublicRequest(
             u"/test/users/secret", "GET", None
@@ -11,7 +11,7 @@ class TestV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, unicode)
+    @params(object, unicode)
     def createRecoveryRequest(self, user_id):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users/approvers/secret", "GET", None

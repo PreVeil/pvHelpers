@@ -1,6 +1,5 @@
-import types
-
-import pvHelpers as H
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
 
 
 class EDiscoveryV5(object):
@@ -13,7 +12,7 @@ class EDiscoveryV5(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode)
     def getEDiscoveryShards(self, user, org_id, export_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/export/{}/group/shards".format(org_id),

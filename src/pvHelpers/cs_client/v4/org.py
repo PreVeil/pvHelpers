@@ -1,8 +1,8 @@
-import pvHelpers as H
-
+from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.utils import b64enc, params, toInt
 
 class OrgV4(object):
-    @H.params(object, {H.UserDBNode, H.LocalUser}, unicode)
+    @params(object, {UserDBNode, LocalUser}, unicode)
     def getOrgInfo(self, user, org_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}".format(org_id), "GET", None
@@ -11,7 +11,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, {int, long})
+    @params(object, LocalUser, unicode, {int, long})
     def getOrgAdminChanges(self, user, org_id, since_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/admins".format(org_id), "GET", None
@@ -20,7 +20,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, object)
+    @params(object, LocalUser, object)
     def createOrg(self, user, params):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs", "POST", params
@@ -29,7 +29,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, unicode, {int, long}, object)
+    @params(object, LocalUser, unicode, unicode, {int, long}, object)
     def createOrgAG(self, user, org_id, name, optionals_required, approvers):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/groups".format(org_id), "POST", {
@@ -42,7 +42,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode)
     def deleteOrgAG(self, user, org_id, group_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/groups/{}".format(org_id, group_id), "DELETE", None
@@ -51,7 +51,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, object)
+    @params(object, LocalUser, unicode, object)
     def updateOrg(self, user, org_id, params):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}".format(org_id), "PATCH", params
@@ -60,7 +60,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, list)
+    @params(object, LocalUser, unicode, list)
     def addOrgMembers(self, user, org_id, new_members):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/members".format(org_id), "POST", {
@@ -71,7 +71,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode)
+    @params(object, LocalUser, unicode)
     def getOrgAGs(self, user, org_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/groups".format(org_id), "GET", None
@@ -80,7 +80,7 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, unicode, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode, unicode, unicode)
     def updateOrgMemberDepartment(self, user, org_id, member_id, role, department):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/members".format(org_id), "PATCH",{

@@ -1,9 +1,10 @@
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
 
-import pvHelpers as H
 
 # For PreVeil privileged admins
 class PVAdminV6(object):
-    @H.params(object, H.LocalUser)
+    @params(object, LocalUser)
     def getStorageBackends(self, user):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/storage/backends", "GET", None
@@ -12,7 +13,7 @@ class PVAdminV6(object):
         resp.raise_for_status()
         return resp.json()
 
-    @H.params(object, H.LocalUser, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode)
     def setStorageBackend(self, user, org_id, backend):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/storage_backend".format(org_id), "PATCH", None
