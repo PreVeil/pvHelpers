@@ -1,5 +1,8 @@
+from pvHelpers.crypto.utils import KeyBuffer
+from pvHelpers.utils import b64enc
+
 from .sign_key_v0 import SignKeyV0, VerifyKeyV0
-from ..utils import KeyBuffer, b64enc
+
 
 class VerifyKeyV1(VerifyKeyV0):
     protocol_version = 1

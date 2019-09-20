@@ -5,15 +5,13 @@ import sys
 import types
 from ctypes import wintypes
 
-import win32con
-
 import win32api
+import win32con
 import win32event
 import win32process
 import win32security as ws
 import win32ts
-
-from .misc import g_log
+from pvHelpers.logger import g_log
 
 DWORD = ctypes.c_ulong
 ULONG = ctypes.c_ulong
@@ -597,9 +595,9 @@ class WinPopen(subprocess.Popen):
 
 
 def list_active_sessions():
-    # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation. 
+    # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation.
     return filter(
-        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0, 
+        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0,
         win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
     )
 
@@ -617,7 +615,7 @@ def runWindowsProcessAsCurrentUser(command):
             console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
             # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
             session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
-        
+
         user_token = win32ts.WTSQueryUserToken(session_id)
 
         startupinfo = win32process.STARTUPINFO()

@@ -1,5 +1,12 @@
-import subprocess, sys, re, socket, struct, collections
-from pvHelpers import g_log, NOT_ASSIGNED, toInt, LUserInfoWin, LUserInfo, params
+import collections
+import re
+import socket
+import struct
+import subprocess
+import sys
+
+from pvHelpers.user import LUserInfo, LUserInfoWin
+from pvHelpers.utils import NOT_ASSIGNED, g_log, params, toInt
 
 if sys.platform == "win32":
     from .win_helpers import *
@@ -18,7 +25,7 @@ def resolve_connection_info(remote_addr, remote_port, local_process_addr, local_
         return _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, local_process_port)
     elif sys.platform in ["win32"]:
         return _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr, local_process_port)
-    
+
     raise NotImplementedError(u"platform not supported")
 
 def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, local_process_port):

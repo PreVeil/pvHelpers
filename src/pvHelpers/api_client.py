@@ -1,4 +1,3 @@
-
 # this import will generate a cert bundle that includes
 # both os and certifi.
 # it also patches certifi.where() to point to the
@@ -6,12 +5,13 @@
 from certifi_win32.wrapt_certifi import apply_patches
 import certifi_win32.wincerts as certifi_patch
 
-
 import types
 
 import requests
 
-from pvHelpers import ProxyConfig, g_log, jdumps, params
+from pvHelpers.logger import g_log
+from pvHelpers.proxy_config import ProxyConfig
+from pvHelpers.utils import jdumps, params
 
 
 # If no authentication method is given with the auth argument, Requests will

@@ -1,4 +1,3 @@
-from ..utils import jdumps
 class UserKeyBase(object):
     def __init__(self, protocol_version, key_version):
         self.protocol_version = protocol_version
@@ -28,6 +27,7 @@ class UserKeyBase(object):
     @classmethod
     def deserialize(cls, *args, **kwargs):
         raise NotImplementedError("children must implement deserialize")
+
 
 class PublicUserKeyBase(object):
     def __init__(self, protocol_version, key_version):

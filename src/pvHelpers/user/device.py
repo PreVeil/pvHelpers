@@ -3,7 +3,8 @@ import sys
 import types
 import uuid
 
-import pvHelpers as H
+from pvHelpers.crypto import PublicUserKeyBase, PVKeyFactory
+from pvHelpers.utils import params
 
 CURRENT_PLATFORM = u"windows" if sys.platform == "win32" else \
                 u"macos" if sys.platform == "darwin" else \
@@ -16,7 +17,7 @@ class DeviceStatus(object):
     LOCKED = u"locked"
 
 class Device(object):
-    @H.params(object, unicode, {types.NoneType, unicode}, H.PublicUserKeyBase, dict, unicode, unicode)
+    @params(object, unicode, {types.NoneType, unicode}, PublicUserKeyBase, dict, unicode, unicode)
     def __init__(self, id_, name, public_key, metadata, status, platform):
         self.id = id_
         self.name = name
@@ -43,7 +44,7 @@ class Device(object):
         return cls(
             device_data["device_id"],
             device_data["device_name"],
-            H.PVKeyFactory.deserializePublicUserKey(device_data["public_key"]),
+            PVKeyFactory.deserializePublicUserKey(device_data["public_key"]),
             device_data["metadata"],
             device_data.get("status", DeviceStatus.LOCAL),
             device_data["platform"]

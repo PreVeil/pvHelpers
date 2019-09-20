@@ -1,8 +1,10 @@
 import pvHelpers as H
 
-from .prepared_message import (PreparedMessageBase, PreparedMessageError,
-                               PreparedMessageV1, PreparedMessageV2,
-                               PreparedMessageV3, PreparedMessageV4)
+from .prepared_message.prepared_message_helpers import PreparedMessageError
+from .prepared_message.prepared_message_v1 import PreparedMessageV1
+from .prepared_message.prepared_message_v2 import PreparedMessageV2
+from .prepared_message.prepared_message_v3 import PreparedMessageV3
+from .prepared_message.prepared_message_v4 import PreparedMessageV4
 
 
 #########################################

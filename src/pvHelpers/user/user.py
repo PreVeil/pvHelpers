@@ -2,7 +2,7 @@ import types
 
 import requests
 
-import pvHelpers as H
+from pvHelpers.utils import params
 
 from .luser_info import LUserInfo
 
@@ -32,7 +32,7 @@ class User(object):
     def isClaimed(self):
         return len(self.public_user_keys) > 0
 
-    @H.params(object, {int, long})
+    @params(object, {int, long})
     def getPublicUserKeyWithVersion(self, version=-1):
         if version == -1:
             return self.public_user_key

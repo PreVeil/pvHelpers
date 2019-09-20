@@ -1,7 +1,8 @@
 import abc
 import sys
 
-import pvHelpers as H
+from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, jdumps, jloads,
+                             toInt)
 
 if sys.platform in ["win32"]:
     from pvHelpers.win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
@@ -44,11 +45,11 @@ class LUserInfo(object):
     # Temp helper to unpack user_store value
     @staticmethod
     def deserialize(json_str):
-        if json_str == str(H.NOT_ASSIGNED()):
-            return H.NOT_ASSIGNED()
+        if json_str == str(NOT_ASSIGNED()):
+            return NOT_ASSIGNED()
         try:
-            _dict = H.jloads(json_str)
-        except H.EncodingException as e:
+            _dict = jloads(json_str)
+        except EncodingException as e:
             raise ValueError(e)
 
         platform = _dict["platform"]
@@ -112,7 +113,7 @@ class LUserInfoWin(LUserInfo):
         ssid = ws.ConvertSidToStringSid(self.sid)
         spsids = [ws.ConvertSidToStringSid(psid) for psid in self.psids]
 
-        return H.jdumps({
+        return jdumps({
             "platform": self.platform,
             "info": {
                 "sid": ssid,
@@ -140,7 +141,7 @@ class LUserInfoUnix(LUserInfo):
         if platform != cls.platform:
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
-        status, uid = H.toInt(suid)
+        status, uid = toInt(suid)
         if status == False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 
@@ -152,7 +153,7 @@ class LUserInfoUnix(LUserInfo):
         super(LUserInfoUnix, self).__init__(LUserInfoUnix.platform)
 
     def serialize(self):
-        return H.jdumps({
+        return jdumps({
             "platform": self.platform,
             "info": {
                 "uid": self.uid
@@ -182,7 +183,7 @@ class LUserInfoLinux(LUserInfo):
         if platform != cls.platform:
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
-        status, uid = H.toInt(suid)
+        status, uid = toInt(suid)
         if status == False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 
@@ -193,7 +194,7 @@ class LUserInfoLinux(LUserInfo):
         super(LUserInfoLinux, self).__init__(LUserInfoLinux.platform)
 
     def serialize(self):
-        return H.jdumps({
+        return jdumps({
             "platform": self.platform,
             "info": {
                 "uid": self.uid

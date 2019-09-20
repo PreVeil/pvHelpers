@@ -1,7 +1,8 @@
 import os
 import random
 
-from pvHelpers import AsymmBoxV3, PVKeyFactory
+from pvHelpers.crypto import AsymmBoxV3, PVKeyFactory
+
 
 def test_get_shared_key():
   for _ in range(500):

@@ -1,14 +1,18 @@
-import types, semver
-from . import misc
-from sqlalchemy import create_engine, event, orm, exc
-from sqlalchemy.pool import SingletonThreadPool
+import os
+import types
+
+import semver
 from pysqlite2 import dbapi2 as sqlite3
+from sqlalchemy import create_engine, event, exc, orm
+from sqlalchemy.pool import SingletonThreadPool
+
+from pvHelpers.utils import DoAsPreVeil
 
 # TODO: be more specific on these errors, i.e. :
 # no need to retry on NoSuchColumnError, while can retry on TimeoutError
 DBRetryableErrors = [exc.SQLAlchemyError]
 
-class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
+class GetDBSessionAsPreVeil(DoAsPreVeil):
     DRIVER = sqlite3
     PYSQLITE_VERSION = semver.parse_version_info(sqlite3.version)
     SQLITE_DRIVER_VERSION = semver.parse_version_info(sqlite3.sqlite_version)
@@ -74,18 +78,34 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
             self.session.close()
         super(GetDBSessionAsPreVeil, self).__exit__(type_, value, traceback)
 
+
 class GetActionsDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode_dir):
-        super(GetActionsDBSessionAsPreVeil, self).__init__(misc.getActionsDatabasePath(mode_dir))
+        super(GetActionsDBSessionAsPreVeil, self).__init__(getActionsDatabasePath(mode_dir))
+
 
 class GetMailDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode_dir):
-        super(GetMailDBSessionAsPreVeil, self).__init__(misc.getMailDatabasePath(mode_dir))
+        super(GetMailDBSessionAsPreVeil, self).__init__(getMailDatabasePath(mode_dir))
+
 
 class GetUserDBSessionAsPreVeil(GetDBSessionAsPreVeil):
     def __init__(self, mode_dir):
-        super(GetUserDBSessionAsPreVeil, self).__init__(misc.getUserDatabasePath(mode_dir))
+        super(GetUserDBSessionAsPreVeil, self).__init__(getUserDatabasePath(mode_dir))
+
 
 class DBException(Exception):
     def __init__(self, message="DBException"):
         super(DBException, self).__init__(message)
+
+
+def getUserDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "user_db.sqlite")
+
+
+def getMailDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "db.sqlite")
+
+
+def getActionsDatabasePath(mode_dir):
+    return os.path.join(mode_dir, "actions_db.sqlite")

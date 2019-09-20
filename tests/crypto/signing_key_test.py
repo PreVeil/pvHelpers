@@ -1,9 +1,10 @@
 import base64
 import os
 import random
+
 import pytest
 
-from pvHelpers import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
+from pvHelpers.crypto import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
 @pytest.mark.parametrize("protocol_version", [

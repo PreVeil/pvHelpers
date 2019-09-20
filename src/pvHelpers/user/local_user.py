@@ -1,6 +1,7 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.crypto import UserKeyBase
+from pvHelpers.utils import NOT_ASSIGNED, params
 
 from .local_device import LocalDevice
 from .luser_info import LUserInfo
@@ -8,7 +9,7 @@ from .user import OrganizationInfo, User
 
 
 class LocalUser(User):
-    @H.params(object, unicode, unicode, unicode, {OrganizationInfo, types.NoneType}, {H.NOT_ASSIGNED, LUserInfo}, unicode, [H.UserKeyBase], {types.NoneType, LocalDevice})
+    @params(object, unicode, unicode, unicode, {OrganizationInfo, types.NoneType}, {NOT_ASSIGNED, LUserInfo}, unicode, [UserKeyBase], {types.NoneType, LocalDevice})
     def __init__(self, user_id, display_name, mail_cid, org_info, luser_info, password, user_keys, device):
         super(LocalUser, self).__init__(user_id, display_name, mail_cid, map(lambda k: k.public_user_key, user_keys), org_info)
         self.luser_info = luser_info
@@ -31,7 +32,7 @@ class LocalUser(User):
             raise KeyError("User missing device key")
         return self.device.key.key_version, self.device.key.signing_key.sign(data)
 
-    @H.params(object, {int, long})
+    @params(object, {int, long})
     def getKeyWithVersion(self, version=-1):
         if version == -1:
             return self.user_key

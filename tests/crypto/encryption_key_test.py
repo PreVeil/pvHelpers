@@ -3,7 +3,7 @@ import base64
 import random
 import pytest
 
-from pvHelpers import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
 
 @pytest.mark.parametrize("protocol_version", [
     ASYMM_KEY_PROTOCOL_VERSION.V0,

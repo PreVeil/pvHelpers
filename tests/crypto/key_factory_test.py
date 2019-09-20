@@ -1,8 +1,15 @@
-import os, base64, random
+import base64
+import os
+import random
 
-from pvHelpers import USER_KEY_PROTOCOL_VERSION, ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION, \
-    SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory, CryptoException, b64dec
 import pytest
+
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+                              SIGN_KEY_PROTOCOL_VERSION,
+                              SYMM_KEY_PROTOCOL_VERSION,
+                              USER_KEY_PROTOCOL_VERSION, PVKeyFactory)
+from pvHelpers.crypto.utils import CryptoException
+from pvHelpers.utils import b64dec
 
 
 @pytest.mark.parametrize('protocol_version', [

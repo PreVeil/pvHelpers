@@ -1,12 +1,13 @@
 import types
 
-import pvHelpers as H
+from pvHelpers.crypto import UserKeyBase
+from pvHelpers.utils import params
 
 from .device import CURRENT_PLATFORM, Device
 
 
 class LocalDevice(Device):
-    @H.params(object, unicode, {types.NoneType, unicode}, H.UserKeyBase, dict, unicode, unicode)
+    @params(object, unicode, {types.NoneType, unicode}, UserKeyBase, dict, unicode, unicode)
     def __init__(self, id_, name, key, metadata, status, platform=CURRENT_PLATFORM):
         super(LocalDevice, self).__init__(id_, name, key.public_user_key, metadata, status, platform)
         self.key = key

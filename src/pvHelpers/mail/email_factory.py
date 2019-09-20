@@ -2,9 +2,14 @@ import types
 
 import pvHelpers as H
 
-from .email import (PROTOCOL_VERSION, Attachment, AttachmentMetadata, Content,
-                    EmailException, EmailV1, EmailV2, EmailV3, EmailV4,
-                    ServerAttributes)
+from .email.attachment import Attachment, AttachmentMetadata
+from .email.content import Content
+from .email.email_helpers import PROTOCOL_VERSION, EmailException
+from .email.email_v1 import EmailV1
+from .email.email_v2 import EmailV2
+from .email.email_v3 import EmailV3
+from .email.email_v4 import EmailV4
+from .email.server_attributes import ServerAttributes
 
 
 #########################################

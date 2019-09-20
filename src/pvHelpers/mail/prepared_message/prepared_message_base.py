@@ -1,4 +1,11 @@
-import pvHelpers as H
+
+
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+                              SYMM_KEY_PROTOCOL_VERSION, CryptoException,
+                              PVKeyFactory)
+from pvHelpers.mail.email import EmailBase
+from pvHelpers.user import LocalUser, User
+from pvHelpers.utils import b64enc, params
 
 from .prepared_message_helpers import PreparedMessageError
 
@@ -8,7 +15,7 @@ from .prepared_message_helpers import PreparedMessageError
 #########################################
 class PreparedMessageBase(object):
     __initialized = False
-    @H.params(object, H.LocalUser, H.EmailBase, H.User)
+    @params(object, LocalUser, EmailBase, User)
     def __init__(self, sender, email, recipient):
         self.sender = sender
         self.recipient = recipient
@@ -18,15 +25,15 @@ class PreparedMessageBase(object):
         self.body = {}
         self.private_metadata = {}
         try:
-            self.opaque_key = H.PVKeyFactory.newSymmKey(
-                H.SYMM_KEY_PROTOCOL_VERSION.Latest)
-            if self.recipient.public_user_key.public_key.protocol_version == H.ASYMM_KEY_PROTOCOL_VERSION.V3:
-                self.sealed_opaque_key = H.b64enc(self.recipient.public_user_key.public_key.seal(
+            self.opaque_key = PVKeyFactory.newSymmKey(
+                SYMM_KEY_PROTOCOL_VERSION.Latest)
+            if self.recipient.public_user_key.public_key.protocol_version == ASYMM_KEY_PROTOCOL_VERSION.V3:
+                self.sealed_opaque_key = b64enc(self.recipient.public_user_key.public_key.seal(
                     self.opaque_key.serialize()))
             else:
-                self.sealed_opaque_key = H.b64enc(self.recipient.public_user_key.public_key.seal(
+                self.sealed_opaque_key = b64enc(self.recipient.public_user_key.public_key.seal(
                     self.opaque_key.serialize(), is_text=True))
-        except H.CryptoException as e:
+        except CryptoException as e:
             raise PreparedMessageError(e)
 
         self.__initialized = True

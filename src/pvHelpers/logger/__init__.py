@@ -1,0 +1,1 @@
+from .logger import g_log

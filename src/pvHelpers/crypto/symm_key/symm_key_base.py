@@ -1,4 +1,4 @@
-from ..utils import params
+from pvHelpers.utils import params
 
 class SymmKeyBase(object):
     @params(object, int)

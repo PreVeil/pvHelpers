@@ -2,8 +2,9 @@ import base64
 import os
 import random
 
-from pvHelpers import SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory
 import pytest
+
+from pvHelpers.crypto import SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
 @pytest.mark.parametrize("protocol_version", [
