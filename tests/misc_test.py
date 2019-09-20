@@ -1,10 +1,11 @@
+import os
 import random
 import sys
-import os
 
 import pytest
 
-from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri, getdir
+from pvHelpers.utils import (CaseInsensitiveDict, getdir, parse_file_uri,
+                             randUnicode)
 
 
 def randomize_casing(key):

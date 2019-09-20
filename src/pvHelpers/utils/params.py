@@ -1,4 +1,5 @@
-import functools, inspect
+import functools
+import inspect
 
 
 # check if the provided types are valid Type Annotations

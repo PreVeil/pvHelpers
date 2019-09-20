@@ -1,5 +1,9 @@
-import types, pytest
-from pvHelpers import params
+import types
+
+import pytest
+
+from pvHelpers.utils import params
+
 
 class DummyClass(object):
     pass

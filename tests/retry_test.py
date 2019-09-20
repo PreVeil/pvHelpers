@@ -1,6 +1,11 @@
+import time
+
 import pytest
-import time, requests, sqlalchemy
-import pvHelpers as H
+import requests
+import sqlalchemy
+
+from pvHelpers.utils.retry import RetryError, retry
+
 
 class DummyCount:
     def __init__(self):
@@ -32,8 +37,8 @@ def test_failing_retry():
     func = function_maker(raises=raising_exceptions)
     failed = False
 
-    with pytest.raises(H.RetryError) as exc:
-        ret_value = H.retry(func, count=try_count)
+    with pytest.raises(RetryError) as exc:
+        ret_value = retry(func, count=try_count)
 
     # messages are important, so not to loose trace of what has happened internal to the retry wrapper
     assert exc.value.message == \
@@ -46,7 +51,7 @@ def test_retry_with_unexpected_exception():
     try_count = 3
     failed = False
     try:
-        ret_value = H.retry(func, exceptions=raising_exceptions[:1], count=try_count)
+        ret_value = retry(func, exceptions=raising_exceptions[:1], count=try_count)
     except Exception as e:
         failed = True
 
@@ -62,7 +67,7 @@ def test_retry_with_exception_wrapping():
     failed = False
     try:
         # not including last exception type so it dummmy function throws in the third call.
-        ret_value = H.retry(func, exceptions=raising_exceptions[:2], wrapping_exception=DummyException, count=try_count)
+        ret_value = retry(func, exceptions=raising_exceptions[:2], wrapping_exception=DummyException, count=try_count)
     except Exception as e:
         failed = True
 
@@ -74,7 +79,7 @@ def test_retry_with_exception_wrapping():
     try_count = 2
     failed = False
     try:
-        ret_value = H.retry(func, exceptions=raising_exceptions, wrapping_exception=DummyException, count=try_count)
+        ret_value = retry(func, exceptions=raising_exceptions, wrapping_exception=DummyException, count=try_count)
     except Exception as e:
         failed = True
 
@@ -90,7 +95,7 @@ def test_passing_retry():
     try_count = 3
     failed = False
     try:
-        ret_value = H.retry(func, exceptions=raising_exceptions, count=try_count)
+        ret_value = retry(func, exceptions=raising_exceptions, count=try_count)
     except Exception as e:
         failed = True
 
@@ -105,7 +110,7 @@ def test_retry_with_arguments():
     _kwargs = {"hi": "bye"}
     failed = False
     try:
-        ret_value = H.retry(func, _args, _kwargs, exceptions=raising_exceptions, count=try_count)
+        ret_value = retry(func, _args, _kwargs, exceptions=raising_exceptions, count=try_count)
     except Exception as e:
         failed = True
 
@@ -120,7 +125,7 @@ def test_retry_with_wait():
     failed = False
     start = time.time()
     try:
-        ret_value = H.retry(func, wait=_wait, exceptions=raising_exceptions, count=try_count)
+        ret_value = retry(func, wait=_wait, exceptions=raising_exceptions, count=try_count)
     except Exception as e:
         failed = True
 
@@ -148,26 +153,26 @@ def test_retry_with_condition_on_retval():
 
     func_without_ret_status = [f2_no_status, f3_no_status, f5_no_status]
     for fu in func_without_ret_status:
-        with pytest.raises(H.RetryError):
-            H.retry(fu, wait=0.2, count=2, ret_validator_func=lambda x: x[0])
+        with pytest.raises(RetryError):
+            retry(fu, wait=0.2, count=2, ret_validator_func=lambda x: x[0])
 
-    assert H.retry(f1, args=[True], wait=0.2, count=2, ret_validator_func=lambda x: x) is True
-    assert H.retry(
+    assert retry(f1, args=[True], wait=0.2, count=2, ret_validator_func=lambda x: x) is True
+    assert retry(
         f1, args=[True], wait=0.2, count=2,
         ret_validator_func=lambda x: x is True) is True
 
-    with pytest.raises(H.RetryError):
-        H.retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x)
+    with pytest.raises(RetryError):
+        retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x)
 
     with pytest.raises(DummyException):
-        H.retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x, wrapping_exception=DummyException)
+        retry(f2, wait=0.2, count=2, ret_validator_func=lambda x: x, wrapping_exception=DummyException)
 
-    assert H.retry(
+    assert retry(
         lambda x: x + 2,
         args=[5],
         wait=0.2,
         count=2,
         ret_validator_func=lambda x: x > 6) == 7
 
-    with pytest.raises(H.RetryError):
-        H.retry(lambda x: x + 2, args=[3], wait=0.2, count=2, ret_validator_func=lambda x: x > 6)
+    with pytest.raises(RetryError):
+        retry(lambda x: x + 2, args=[3], wait=0.2, count=2, ret_validator_func=lambda x: x > 6)

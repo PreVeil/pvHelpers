@@ -5,7 +5,8 @@ import sys
 import pytest
 import requests
 
-from pvHelpers import ApplicationConfig, randUnicode, readYAMLConfig
+from pvHelpers.application_config import ApplicationConfig
+from pvHelpers.utils import randUnicode, readYAMLConfig
 
 TEST_CONFIG_PATH = unicode(os.path.join(os.path.dirname(__file__), "test_config.yaml"))
 
