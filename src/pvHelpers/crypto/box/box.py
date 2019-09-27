@@ -5,7 +5,7 @@ import libnacl
 from pvHelpers.crypto.asymm_key import AsymmKeyBase, PublicKeyBase
 from pvHelpers.crypto.header_bytes import (ASYMM_BIT, BINARY_BIT,
                                            HEADER_LENGTH, TEXT_BIT)
-from pvHelpers.crypto.utils import HexEncode, Sha512Sum
+from pvHelpers.crypto.utils import HexEncode, Sha512Sum, CryptoException
 from pvHelpers.utils import WrapExceptions, params
 
 
