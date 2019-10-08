@@ -85,6 +85,7 @@ class EmailFactory(object):
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
     @staticmethod
+    @WrapExceptions(EmailException, [KeyError])
     # TODO: give required props. in params
     @params(unicode, dict, unicode, int, {object, types.NoneType})
     def fromServerMessage(for_user_id, decrypted_msg, wrapped_key, key_version, mailbox):
