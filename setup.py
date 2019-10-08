@@ -14,7 +14,7 @@ if sys.platform == "win32":
 
 setup(
     name="pvHelpers",
-    version="5.0.9",
+    version="5.1.0",
     packages=find_packages(),
     install_requires=install_requires,
 )

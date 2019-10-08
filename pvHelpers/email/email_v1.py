@@ -1,12 +1,15 @@
+import types
+
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
-from ..misc import MergeDicts, b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode, EncodingException
+from ..misc import b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode, EncodingException
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
-import email.utils, types
+import email.utils
 from .parsers import parseMime
 from ..crypto import Sha256Sum, HexEncode
+
 
 # Using this with the flanker MIME class forces it to always reparse the
 # entire object before outputting it in the to_string() method.  This is
@@ -14,18 +17,33 @@ from ..crypto import Sha256Sum, HexEncode
 def was_changed_always(self, ignore_prepends=False):
     return True
 
+
 class EmailV1(EmailHelpers, EmailBase):
     """Production version: Protocol version 1 is mime based email entity"""
     protocol_version = PROTOCOL_VERSION.V1
 
-    def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id, snippet=None, **kwargs):
+    def __init__(self,
+                 server_attr,
+                 flags,
+                 tos,
+                 ccs,
+                 bccs,
+                 sender,
+                 reply_tos,
+                 subject,
+                 body,
+                 attachments,
+                 references,
+                 in_reply_to,
+                 message_id,
+                 snippet=None,
+                 **kwargs):
 
-        super(EmailV1, self).__init__(server_attr, self.__class__.protocol_version, flags, tos, \
-                                      ccs, bccs, sender, reply_tos, subject, body, \
-                                      attachments, references, in_reply_to, message_id, snippet)
+        super(EmailV1, self).__init__(
+            server_attr, self.__class__.protocol_version, flags, tos, ccs,
+            bccs, sender, reply_tos, subject, body, attachments, references,
+            in_reply_to, message_id, snippet)
         # TODO: check body content mime validity
-
 
         self.__initialized = True
 
@@ -80,8 +98,9 @@ class EmailV1(EmailHelpers, EmailBase):
         except mime.MimeError as e:
             raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
 
-        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, snippet)
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender,
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id,
+                   snippet)
 
     @staticmethod
     def convertStringToMime(message):
@@ -322,21 +341,29 @@ class EmailV1(EmailHelpers, EmailBase):
             "sender": self.sender,
             "tos": self.tos,
             "ccs": self.ccs,
-            "bccs" : self.bccs,
-            "in_reply_to" : self.in_reply_to,
+            "bccs": self.bccs,
+            "in_reply_to": self.in_reply_to,
             "reply_tos": self.reply_tos,
-            "references" : self.references,
-            "attachments" : self.attachments,
+            "references": self.references,
+            "attachments": self.attachments,
             "body": self.body,
             "message_id": self.message_id,
-            "server_attr": self.server_attr
+            "server_attr": self.server_attr,
         }
 
     def indexableAttachmentNames(self):
-        return u" ".join(map(lambda att: att.metadata.filename, filter(lambda att: att.metadata.filename != None or att.metadata.filename != u"untitled", self.attachments)))
+        return u" ".join(
+            map(
+                lambda att: att.metadata.filename,
+                filter(
+                    lambda att: att.metadata.filename is not None or att.metadata.
+                    filename != u"untitled", self.attachments)))
 
     def indexableRecipients(self):
-        all_recips = [recip["display_name"] + u" " + recip["user_id"] for recip in [self.sender] + self.tos + self.ccs + self.bccs]
+        all_recips = [
+            recip["display_name"] + u" " + recip["user_id"]
+            for recip in [self.sender] + self.tos + self.ccs + self.bccs
+        ]
         return u" ".join(all_recips)
 
     def indexableBody(self):
