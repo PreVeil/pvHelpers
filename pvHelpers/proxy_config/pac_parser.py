@@ -18,7 +18,7 @@ class Pac(object):
         required_download, url = parse_file_uri(self.pac_url)
         try:
             if required_download:
-                downloaded_pac = download_pac([url])
+                downloaded_pac = download_pac([url], timeout=30)
                 if downloaded_pac:
                     pacparser.init()
                     pacparser.parse_pac_string(downloaded_pac)
