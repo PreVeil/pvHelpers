@@ -2,16 +2,24 @@ import calendar
 import time
 
 from ..misc import utf8Encode, utf8Decode, jloads, b64dec, \
-    MergeDicts, CaseInsensitiveSet
+    MergeDicts, CaseInsensitiveSet, g_log
 from ..crypto import Sha256Sum
 from . import PROTOCOL_VERSION, EmailException
 
 from pvHelpers.hook_decorators import WrapExceptions
 
 
+# https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
+def flatten_recipient_groups(recip_groups):
+    return [
+        u for sublist in map(lambda g: g["users"], recip_groups)
+        for u in sublist
+    ]
+
+
 @WrapExceptions(EmailException, [KeyError])
 def verifyServerMessage(message, verify_key):
-    if message["protocol_version"] == PROTOCOL_VERSION.V5:
+    if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         utf8_decode_pvm = utf8Decode(message["raw_private_metadata"])
         signature = b64dec(message["signature"])
         canonical_str = Sha256Sum(utf8Encode(utf8_decode_pvm))
@@ -34,7 +42,7 @@ def verifyServerMessage(message, verify_key):
 
 @WrapExceptions(EmailException, [KeyError])
 def getSender(message):
-    if message["protocol_version"] == PROTOCOL_VERSION.V5:
+    if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         return (message["private_metadata"]["sender"], int(message["sender_key_version"]))
     elif message["protocol_version"] == PROTOCOL_VERSION.V4:
         return (message["private_metadata"]["sender"], int(message["private_metadata"]["signing_key_version"]))
@@ -50,7 +58,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         user_encryption_key: user's private key or api to decrypt using user's pv key
         mail_decrypt_key: symmetric key used to wrap email's props
     """
-    if message["protocol_version"] == PROTOCOL_VERSION.V5:
+    if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         raw_private_metadata = mail_decrypt_key.decrypt(
             b64dec(message["private_metadata"]))
         decrypted_private_metadata = jloads(utf8Decode(raw_private_metadata))
@@ -64,14 +72,45 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
                 b64dec(message["wrapped_bccs"]))))
 
         # verify the integrity of the wrapped_recipients against private metadata
+        tos_groups = decrypted_private_metadata.get("tos_groups", [])
+        ccs_groups = decrypted_private_metadata.get("ccs_groups", [])
+
+        tos_groups_flatten = flatten_recipient_groups(tos_groups)
+        ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
+
         server_recips = CaseInsensitiveSet(map(lambda u: u["user_id"], recipients))
-        pvm_recips = CaseInsensitiveSet(map(
-                                          lambda u: u["user_id"],
-                                          decrypted_private_metadata["ccs"] +
-                                          decrypted_private_metadata["tos"]
-                                        ))
+        pvm_recips = CaseInsensitiveSet(
+                map(
+                    lambda u: u["user_id"], decrypted_private_metadata["ccs"] +
+                    decrypted_private_metadata["tos"] + tos_groups_flatten +
+                    ccs_groups_flatten
+                )
+            )
         if server_recips != pvm_recips:
+            # g_log.debug("---xxxxxxxx>  server recips {}".format(server_recips))
+            # g_log.debug("---xxxxxxxx> +++++++++ pvm_recips {}".format(pvm_recips))
+            g_log.debug("---> flatten tosss {}".format(tos_groups_flatten))
+            g_log.debug("---xxxxxxxx>  tos {}".format(tos_groups))
+            g_log.debug("---xxxxxxxx>  ccs {}".format(ccs_groups))
+            g_log.debug("---> REACHHCHCCH flatten ccs {}".format(ccs_groups_flatten))
+            g_log.debug("---> bccs {}".format(bccs))
             raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
+
+        # combine group alias into tos and ccs for display purpose
+        for tos_group in tos_groups:
+            decrypted_private_metadata["tos"].append({
+                "user_id": tos_group["alias"],
+                "key_version": None
+            })
+
+        for ccs_group in ccs_groups:
+            decrypted_private_metadata["ccs"].append({
+                "user_id": ccs_group["alias"],
+                "key_version": None
+            })
+
+        decrypted_private_metadata["tos_groups"] = tos_groups_flatten
+        decrypted_private_metadata["ccs_groups"] = ccs_groups_flatten
 
         decrypted_private_metadata["bccs"] = bccs
         return MergeDicts(message, {
@@ -95,7 +134,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
 
 @WrapExceptions(EmailException, [KeyError])
 def getWrappedKey(server_message):
-    if server_message["protocol_version"] == PROTOCOL_VERSION.V5:
+    if server_message["protocol_version"] >= PROTOCOL_VERSION.V5:
         return server_message["recipient_key_version"], server_message["wrapped_key"]
 
     for block in server_message["body"]["blocks"]:

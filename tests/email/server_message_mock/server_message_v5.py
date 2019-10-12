@@ -1,17 +1,15 @@
 from pvHelpers import MergeDicts, randUnicode, jdumps, utf8Encode, \
     PVKeyFactory, Sha256Sum, b64enc
 
-from . import MockServerMessageBase
+from . import MockServerMessageBase, recipient
 
 from random import randint
 
 
-def recipient():
-    return {"user_id": randUnicode(5), "key_version": 0}
-
-
 # TODO: mock attachments
 class MockPrivateMetadataV5(object):
+    protocol_version = 5
+
     def __init__(self,
                  subject=None,
                  sender=None,

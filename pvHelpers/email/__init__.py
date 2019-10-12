@@ -9,4 +9,5 @@ from .content import Content
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .server_attributes import ServerAttributes
 from .parsers import createMime, parseMime
-from .server_message_helpers import (verifyServerMessage, decryptServerMessage, getWrappedKey, getSender)
+from .server_message_helpers import (verifyServerMessage, decryptServerMessage, getWrappedKey, getSender,
+                                     flatten_recipient_groups)

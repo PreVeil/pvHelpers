@@ -15,7 +15,8 @@ class PROTOCOL_VERSION(object):
     V3 = 3
     V4 = 4
     V5 = 5
-    Latest = 4
+    V6 = 6
+    Latest = 5
 
 
 class EmailRecipients():

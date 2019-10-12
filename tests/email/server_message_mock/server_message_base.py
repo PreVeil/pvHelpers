@@ -1,5 +1,11 @@
 from pvHelpers import randUnicode
 
+from random import randint
+
+
+def recipient():
+    return {"user_id": randUnicode(5), "key_version": randint(0, 100)}
+
 
 class MockServerMessageBase(object):
     def __init__(self, protocol_version, private_metadata):
