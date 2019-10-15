@@ -1,10 +1,10 @@
 import types
 
 import fipscrypto as FC
-
 from pvHelpers.crypto.utils import (CURVE25519_PUB_KEY_LENGTH,
                                     EC_SECRET_LENGTH, NISTP256_PUB_KEY_LENGTH,
-                                    CryptoException, KeyBuffer)
+                                    CryptoException)
+from pvHelpers.protos import Key as KeyBuffer
 from pvHelpers.utils import b64enc, params
 
 from .asymm_key_base import AsymmKeyBase, PublicKeyBase

@@ -9,9 +9,9 @@ from .user import OrganizationInfo, User
 
 
 class LocalUser(User):
-    @params(object, unicode, unicode, unicode, {OrganizationInfo, types.NoneType}, {NOT_ASSIGNED, LUserInfo}, unicode, [UserKeyBase], {types.NoneType, LocalDevice})
-    def __init__(self, user_id, display_name, mail_cid, org_info, luser_info, password, user_keys, device):
-        super(LocalUser, self).__init__(user_id, display_name, mail_cid, map(lambda k: k.public_user_key, user_keys), org_info)
+    @params(object, unicode, int, unicode, unicode, {OrganizationInfo, types.NoneType}, {NOT_ASSIGNED, LUserInfo}, unicode, [UserKeyBase], {types.NoneType, LocalDevice})
+    def __init__(self, user_id, account_version, display_name, mail_cid, org_info, luser_info, password, user_keys, device):
+        super(LocalUser, self).__init__(user_id, account_version, display_name, mail_cid, map(lambda k: k.public_user_key, user_keys), org_info)
         self.luser_info = luser_info
         self.user_keys = user_keys
         self.password = password

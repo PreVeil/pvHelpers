@@ -1,9 +1,9 @@
 import types
 
 import fipscrypto as FC
-
-from pvHelpers.crypto.utils import (CryptoException, HexEncode, KeyBuffer,
-                                    RandomBytes, Sha256Sum)
+from pvHelpers.crypto.utils import (CryptoException, HexEncode, RandomBytes,
+                                    Sha256Sum)
+from pvHelpers.protos import Key as KeyBuffer
 from pvHelpers.utils import params
 
 from .symm_key_base import SymmKeyBase

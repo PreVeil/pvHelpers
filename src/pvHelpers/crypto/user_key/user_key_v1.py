@@ -1,6 +1,7 @@
 from pvHelpers.crypto.asymm_key import AsymmKeyBase, PublicKeyBase
 from pvHelpers.crypto.sign_key import SignKeyBase, VerifyKeyBase
-from pvHelpers.crypto.utils import PublicUserKeyBuffer, UserKeyBuffer
+from pvHelpers.protos import PublicUserKey as PublicUserKeyBuffer
+from pvHelpers.protos import UserKey as UserKeyBuffer
 from pvHelpers.utils import b64enc, params
 
 from .user_key_v0 import PublicUserKeyV0, UserKeyV0

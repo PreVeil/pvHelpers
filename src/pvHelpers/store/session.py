@@ -8,19 +8,15 @@ from sqlalchemy.pool import SingletonThreadPool
 
 from pvHelpers.utils import DoAsPreVeil
 
-# TODO: be more specific on these errors, i.e. :
-# no need to retry on NoSuchColumnError, while can retry on TimeoutError
-DBRetryableErrors = [exc.SQLAlchemyError]
 
-class GetDBSessionAsPreVeil(DoAsPreVeil):
+class GetDBSession(object):
     DRIVER = sqlite3
     PYSQLITE_VERSION = semver.parse_version_info(sqlite3.version)
     SQLITE_DRIVER_VERSION = semver.parse_version_info(sqlite3.sqlite_version)
     __session_factory = {}
 
     def __init__(self, path):
-        super(GetDBSessionAsPreVeil, self).__init__()
-        self.db_path = path
+        self.path = path
         self.session = None
 
     @classmethod
@@ -69,43 +65,19 @@ class GetDBSessionAsPreVeil(DoAsPreVeil):
         return cls.__session_factory[path]["factory"]()
 
     def __enter__(self):
-        super(GetDBSessionAsPreVeil, self).__enter__()
-        self.session = self.getSession(self.db_path)
+        self.session = self.getSession(self.path)
         return self.session
 
     def __exit__(self, type_, value, traceback):
         if self.session:
             self.session.close()
-        super(GetDBSessionAsPreVeil, self).__exit__(type_, value, traceback)
-
-
-class GetActionsDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode_dir):
-        super(GetActionsDBSessionAsPreVeil, self).__init__(getActionsDatabasePath(mode_dir))
-
-
-class GetMailDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode_dir):
-        super(GetMailDBSessionAsPreVeil, self).__init__(getMailDatabasePath(mode_dir))
-
-
-class GetUserDBSessionAsPreVeil(GetDBSessionAsPreVeil):
-    def __init__(self, mode_dir):
-        super(GetUserDBSessionAsPreVeil, self).__init__(getUserDatabasePath(mode_dir))
 
 
 class DBException(Exception):
-    def __init__(self, message="DBException"):
+    def __init__(self, message=""):
         super(DBException, self).__init__(message)
 
 
-def getUserDatabasePath(mode_dir):
-    return os.path.join(mode_dir, "user_db.sqlite")
-
-
-def getMailDatabasePath(mode_dir):
-    return os.path.join(mode_dir, "db.sqlite")
-
-
-def getActionsDatabasePath(mode_dir):
-    return os.path.join(mode_dir, "actions_db.sqlite")
+# TODO: be more specific on these errors, i.e. :
+# no need to retry on NoSuchColumnError, while can retry on TimeoutError
+DBRetryableErrors = [exc.SQLAlchemyError]

@@ -1,4 +1,4 @@
-from pvHelpers.crypto.utils import KeyBuffer
+from pvHelpers.protos import Key as KeyBuffer
 from pvHelpers.utils import b64enc
 
 from .sign_key_v0 import SignKeyV0, VerifyKeyV0

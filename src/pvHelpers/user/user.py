@@ -8,8 +8,9 @@ from .luser_info import LUserInfo
 
 
 class User(object):
-    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organiztion_info):
+    def __init__(self, user_id, account_version, display_name, mail_cid, public_user_keys, organiztion_info):
         self.user_id = user_id
+        self.account_version = account_version
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.public_user_keys = public_user_keys
@@ -25,6 +26,7 @@ class User(object):
     def toDict(self):
         return {
             "user_id" : self.user_id,
+            "account_version": self.account_version,
             "display_name" : self.display_name,
             "mail_cid" : self.mail_cid,
             "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()

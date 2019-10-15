@@ -1,10 +1,3 @@
-# this import will generate a cert bundle that includes
-# both os and certifi.
-# it also patches certifi.where() to point to the
-# path of the newly expanded cert bundle.
-from certifi_win32.wrapt_certifi import apply_patches
-import certifi_win32.wincerts as certifi_patch
-
 import types
 
 import requests

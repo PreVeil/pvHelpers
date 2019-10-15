@@ -47,6 +47,7 @@ class PublicV4(object):
         )
         resp = self.get(url, headers, raw_body, timeout=1)
         resp.raise_for_status()
+        return resp.text
 
 
     @params(object, unicode, unicode)

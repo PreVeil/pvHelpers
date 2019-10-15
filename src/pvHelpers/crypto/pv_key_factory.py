@@ -7,14 +7,17 @@ from pvHelpers.crypto.symm_key import SymmKeyV0, SymmKeyV1
 from pvHelpers.crypto.user_key import (PublicUserKeyV0, PublicUserKeyV1,
                                        UserKeyV0, UserKeyV1)
 from pvHelpers.logger import g_log
+from pvHelpers.protos import Key as KeyBuffer
+from pvHelpers.protos import ProtobufErrors
+from pvHelpers.protos import PublicUserKey as PublicUserKeyBuffer
+from pvHelpers.protos import UserKey as UserKeyBuffer
 from pvHelpers.utils import EncodingException, b64dec
 
 from .key_protocols import (ASYMM_KEY_PROTOCOL_VERSION,
                             SIGN_KEY_PROTOCOL_VERSION,
                             SYMM_KEY_PROTOCOL_VERSION,
                             USER_KEY_PROTOCOL_VERSION)
-from .utils import (EC_SECRET_LENGTH, CryptoException, KeyBuffer,
-                    ProtobufErrors, PublicUserKeyBuffer, UserKeyBuffer)
+from .utils import EC_SECRET_LENGTH, CryptoException
 
 
 class PVKeyFactory(object):

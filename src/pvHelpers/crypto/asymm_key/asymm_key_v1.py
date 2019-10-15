@@ -2,9 +2,8 @@ import struct
 import types
 
 import libnacl
-
-from pvHelpers.crypto.utils import (CryptoException, KeyBuffer, RandomBytes,
-                                    Sha512Sum)
+from pvHelpers.crypto.utils import CryptoException, RandomBytes, Sha512Sum
+from pvHelpers.protos import Key as KeyBuffer
 from pvHelpers.utils import b64enc, params
 
 from .asymm_key_v0 import AsymmKeyV0, PublicKeyV0

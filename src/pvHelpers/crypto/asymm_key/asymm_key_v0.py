@@ -3,12 +3,12 @@ import types
 
 import libnacl
 import libnacl.public
-
 from pvHelpers.crypto.header_bytes import (BINARY_BIT, HEADER_LENGTH, SEAL_BIT,
                                            TEXT_BIT)
-from pvHelpers.crypto.utils import (CryptoException, b64dec, b64enc, g_log,
-                                    params, utf8Decode, utf8Encode)
-from pvHelpers.utils import WrapExceptions
+from pvHelpers.crypto.utils import CryptoException
+from pvHelpers.logger import g_log
+from pvHelpers.utils import (WrapExceptions, b64dec, b64enc, params,
+                             utf8Decode, utf8Encode)
 
 from .asymm_key_base import *
 

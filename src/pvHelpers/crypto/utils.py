@@ -1,13 +1,7 @@
 import fipscrypto as FC
 import libnacl
+from pvHelpers.utils import params
 
-from pvHelpers.logger import g_log
-from pvHelpers.protos import Key as KeyBuffer
-from pvHelpers.protos import ProtobufErrors
-from pvHelpers.protos import PublicUserKey as PublicUserKeyBuffer
-from pvHelpers.protos import UserKey as UserKeyBuffer
-from pvHelpers.utils import (b64dec, b64enc, jdumps, jloads, params,
-                             utf8Decode, utf8Encode)
 
 EC_SECRET_LENGTH  = FC.EC_PRIVATE_KEY_LENGTH
 CURVE25519_PUB_KEY_LENGTH = FC.CURVE25519_PUB_KEY_LENGTH

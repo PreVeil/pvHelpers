@@ -73,6 +73,11 @@ def resolvePreVeilMode(mode_file_path):
     return True, u"dev"
 
 
+def read_yaml_config(path):
+    with open(path, u"r") as f:
+        y = yaml.load(f.read())
+    return y
+
 def readYAMLConfig(path):
     if not isinstance(path, unicode):
         return False, None
