@@ -62,3 +62,19 @@ class EmailHelpers(object):
     @staticmethod
     def isLocalEmail(email_id):
         return email_id.startswith(u"__local__")
+
+
+    @staticmethod
+    @params(dict)
+    def format_recip(recip):
+        if "members" in recip:
+            # group recipient
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["user_id"],
+                "members": recip["members"]
+            }
+        return {
+            "user_id": recip["user_id"],
+            "display_name": recip["user_id"],
+        }

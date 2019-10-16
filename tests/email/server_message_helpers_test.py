@@ -26,10 +26,29 @@ def _verify_recipients(email, pvm):
             map(lambda u: u["user_id"], email.tos)) == H.CaseInsensitiveSet(
                 map(lambda u: u["user_id"], pvm.tos) +
                 map(lambda u: u["alias"], pvm.tos_groups))
+
+        # check group mapping is correct in the Email obj
+        t = {}
+        for tg in pvm.tos_groups:
+            t[tg["alias"]] = tg["users"]
+
+        for to in email.tos:
+            if to.get("members", None):
+                assert to["members"] == t[to["user_id"]]
+
         assert H.CaseInsensitiveSet(
             map(lambda u: u["user_id"], email.ccs)) == H.CaseInsensitiveSet(
                 map(lambda u: u["user_id"], pvm.ccs) +
                 map(lambda u: u["alias"], pvm.ccs_groups))
+
+        t = {}
+        for tg in pvm.ccs_groups:
+            t[tg["alias"]] = tg["users"]
+
+        for cc in email.ccs:
+            if cc.get("members", None):
+                assert cc["members"] == t[cc["user_id"]]
+
     else:
         raise ValueError("unsupported protocol version {}".format(pvm.protocol_version))
 

@@ -100,12 +100,14 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         for tos_group in tos_groups:
             decrypted_private_metadata["tos"].append({
                 "user_id": tos_group["alias"],
+                "members": tos_group["users"],
                 "key_version": None
             })
 
         for ccs_group in ccs_groups:
             decrypted_private_metadata["ccs"].append({
                 "user_id": ccs_group["alias"],
+                "members": ccs_group["users"],
                 "key_version": None
             })
 

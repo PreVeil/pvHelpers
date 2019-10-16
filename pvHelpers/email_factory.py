@@ -142,9 +142,9 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
-            tos = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+            tos = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"]["tos"])
-            ccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+            ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
             # if sender, we can see all bccs
