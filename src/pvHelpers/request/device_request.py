@@ -1,5 +1,5 @@
 from pvHelpers.user import LocalDevice
-from pvHelpers.utils import params
+from pvHelpers.utils import jdumps, params
 
 
 class DeviceRequest(object):

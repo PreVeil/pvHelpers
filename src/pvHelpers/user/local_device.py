@@ -1,9 +1,11 @@
 import types
+import uuid
 
+from pvHelpers.crypto import PVKeyFactory
 from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.utils import params
 
-from .device import CURRENT_PLATFORM, Device
+from .device import CURRENT_PLATFORM, Device, DeviceStatus
 
 
 class LocalDevice(Device):
