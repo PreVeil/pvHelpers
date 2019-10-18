@@ -103,7 +103,7 @@ class UserV4(object):
                 public_user_keys = [PVKeyFactory.deserializePublicUserKey(u["public_key"])]
 
             user = User(
-                u["user_id"], u["display_name"], u["mail_collection_id"],
+                u["user_id"], u["account_version"], u["display_name"], u["mail_collection_id"],
                 public_user_keys, organiztion_info
             )
             if user.user_id in output:
@@ -140,7 +140,7 @@ class UserV4(object):
                     public_user_keys = [PVKeyFactory.deserializePublicUserKey(u["public_key"])]
 
                 invitee_user = User(
-                    u["user_id"], u["display_name"], u["mail_collection_id"],
+                    u["user_id"], u["account_version"], u["display_name"], u["mail_collection_id"],
                     public_user_keys, organiztion_info
                 )
         except (KeyError, ValueError) as e:
