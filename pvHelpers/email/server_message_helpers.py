@@ -87,13 +87,8 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
                 )
             )
         if server_recips != pvm_recips:
-            # g_log.debug("---xxxxxxxx>  server recips {}".format(server_recips))
-            # g_log.debug("---xxxxxxxx> +++++++++ pvm_recips {}".format(pvm_recips))
-            g_log.debug("---> flatten tosss {}".format(tos_groups_flatten))
-            g_log.debug("---xxxxxxxx>  tos {}".format(tos_groups))
-            g_log.debug("---xxxxxxxx>  ccs {}".format(ccs_groups))
-            g_log.debug("---> REACHHCHCCH flatten ccs {}".format(ccs_groups_flatten))
-            g_log.debug("---> bccs {}".format(bccs))
+            g_log.debug("pvm recips={}".format(list(pvm_recips)))
+            g_log.debug("decrypted server recips={}".format(list(server_recips)))
             raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
 
         # combine group alias into tos and ccs for display purpose
