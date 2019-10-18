@@ -4,7 +4,7 @@ import types
 from pvHelpers import EncodingException, WrapExceptions
 from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata,
                     EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment,
-                    EmailV5, EmailHelpers)
+                    EmailV5, EmailV6, EmailHelpers)
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt
 from .params import params
 
@@ -31,6 +31,8 @@ class EmailFactory(object):
             return EmailV4(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V5:
             return EmailV5(*args, **kwargs)
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(*args, **kwargs)
 
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
@@ -79,8 +81,10 @@ class EmailFactory(object):
             return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
             return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
-        elif v >= PROTOCOL_VERSION.V5:
+        elif v is PROTOCOL_VERSION.V5:
             return EmailV5(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
@@ -183,7 +187,9 @@ class EmailFactory(object):
             return EmailV3(**email_dict)
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V4:
             return EmailV4(**email_dict)
-        elif decrypted_msg["protocol_version"] >= PROTOCOL_VERSION.V5:
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V5:
             return EmailV5(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V6:
+            return EmailV6(**email_dict)
 
         raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))

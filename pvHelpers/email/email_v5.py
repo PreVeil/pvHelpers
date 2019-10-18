@@ -3,7 +3,7 @@ from .email_helpers import PROTOCOL_VERSION
 
 
 class EmailV5(EmailV4):
-    """Production version: Protocol version 5 is identical to protocol version 4
+    """Production version: Email version 5 is identical to that of version 4
         Just for optic with the prepare_message V5
     """
     protocol_version = PROTOCOL_VERSION.V5

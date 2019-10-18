@@ -10,13 +10,16 @@ MAILBOX_ALIAS = {u"INBOX": u"inbox", u"Drafts": u"drafts", u"Sent Messages": u"s
 
 
 class PROTOCOL_VERSION(object):
+    """This protocol version represents the structure of a prepared message, which indicates
+    how it should be parsed.
+    """
     V1 = 1
     V2 = 2
     V3 = 3
     V4 = 4
     V5 = 5
     V6 = 6
-    Latest = 5
+    Latest = 6
 
 
 class EmailRecipients():
