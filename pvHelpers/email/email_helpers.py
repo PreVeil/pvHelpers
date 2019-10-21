@@ -10,12 +10,16 @@ MAILBOX_ALIAS = {u"INBOX": u"inbox", u"Drafts": u"drafts", u"Sent Messages": u"s
 
 
 class PROTOCOL_VERSION(object):
+    """This protocol version represents the structure of a prepared message, which indicates
+    how it should be parsed.
+    """
     V1 = 1
     V2 = 2
     V3 = 3
     V4 = 4
     V5 = 5
-    Latest = 4
+    V6 = 6
+    Latest = 6
 
 
 class EmailRecipients():
@@ -61,3 +65,19 @@ class EmailHelpers(object):
     @staticmethod
     def isLocalEmail(email_id):
         return email_id.startswith(u"__local__")
+
+
+    @staticmethod
+    @params(dict)
+    def format_recip(recip):
+        if "members" in recip:
+            # group recipient
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["user_id"],
+                "members": recip["members"]
+            }
+        return {
+            "user_id": recip["user_id"],
+            "display_name": recip["user_id"],
+        }

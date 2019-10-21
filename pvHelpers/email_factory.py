@@ -1,10 +1,10 @@
 import types
 
 
-from pvHelpers import EncodingException, WrapExceptions, g_log
+from pvHelpers import EncodingException, WrapExceptions
 from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata,
                     EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment,
-                    EmailV5, EmailHelpers)
+                    EmailV5, EmailV6, EmailHelpers)
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt
 from .params import params
 
@@ -31,6 +31,8 @@ class EmailFactory(object):
             return EmailV4(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V5:
             return EmailV5(*args, **kwargs)
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(*args, **kwargs)
 
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
@@ -81,6 +83,8 @@ class EmailFactory(object):
             return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V5:
             return EmailV5(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
@@ -132,7 +136,7 @@ class EmailFactory(object):
                 bccs = map(lambda u: {"user_id": u, "display_name": u},
                            decrypted_msg["private_metadata"].get("bccs", []))
 
-        elif decrypted_msg["protocol_version"] == PROTOCOL_VERSION.V5:
+        elif decrypted_msg["protocol_version"] >= PROTOCOL_VERSION.V5:
             body = Content(
                 None, decrypted_msg["private_metadata"]["body"]["block_ids"], wrapped_key, key_version, decrypted_msg["private_metadata"]["body"]["size"])
             snippet = decrypted_msg["private_metadata"]["body"]["snippet"]
@@ -142,19 +146,27 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
-            tos = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+            tos = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"]["tos"])
-            ccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+            ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
+            # if sender, we can see all bccs
+            # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
             if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower():
                 bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
-            elif lfor_user_id not in [recip["user_id"].lower() for recip in decrypted_msg["private_metadata"]["tos"] + decrypted_msg["private_metadata"]["ccs"]]:
-                bccs = [
-                    {"user_id": for_user_id, "display_name": for_user_id}]
+            elif lfor_user_id not in [
+                    recip["user_id"].lower()
+                    for recip in decrypted_msg["private_metadata"]["tos"] +
+                    decrypted_msg["private_metadata"]["ccs"] +
+                    decrypted_msg["private_metadata"]["tos_groups"] +
+                    decrypted_msg["private_metadata"]["ccs_groups"]
+            ]:
+                bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
             else:
+                # neither the sender or bcced, so cannot see the bccs
                 bccs = []
 
         protocol_dependent_props = {
@@ -177,5 +189,7 @@ class EmailFactory(object):
             return EmailV4(**email_dict)
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V5:
             return EmailV5(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V6:
+            return EmailV6(**email_dict)
 
         raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))
