@@ -4,7 +4,7 @@ from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.crypto.utils import HexEncode, Sha256Sum
 from pvHelpers.mail import PreparedMessageBase
 from pvHelpers.user import LocalUser, UserDBNode
-from pvHelpers.utils import jdumps, params
+from pvHelpers.utils import jdumps, params, b64dec
 
 from ..utils import ServerResponseError
 
@@ -26,6 +26,7 @@ class StorageV4(object):
 
     @params(object, {LocalUser, UserDBNode}, [unicode], {types.NoneType, unicode})
     def downloadBlocks(self, user, block_ids, collection_id=None):
+        print "downloadBlocks"
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/storage/{}/blocks".format(
                 user.mail_cid if not collection_id else collection_id),
