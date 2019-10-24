@@ -6,14 +6,15 @@ from pvHelpers.utils import MergeDicts, b64enc, params, utf8Encode
 
 
 class OrgV5(object):
-    @params(object, LocalUser, unicode, {types.NoneType, unicode}, {types.NoneType, bool}, {types.NoneType, int}, {types.NoneType, int})
-    def getOrgRequests(self, user, org_id, status=None, hide_expired=None, limit=None, offset=None):
+    @params(object, LocalUser, unicode, {types.NoneType, unicode}, {types.NoneType, bool}, {types.NoneType, unicode}, {types.NoneType, int}, {types.NoneType, int})
+    def getOrgRequests(self, user, org_id, status=None, hide_expired=None, request_type=None, limit=None, offset=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests".format(org_id),
             "GET", None
         )
         hide_expired = str(hide_expired).lower() if hide_expired != None else hide_expired
-        resp = self.get(url, headers, params={"user_id": user.user_id, "status": status,"hide_expired": hide_expired, "limit": limit, "offset": offset})
+        request_type = str(request_type).lower() if request_type != None else request_type
+        resp = self.get(url, headers, params={"user_id": user.user_id, "status": status, "hide_expired": hide_expired, "request_type": request_type, "limit": limit, "offset": offset})
         resp.raise_for_status()
         return resp.json()
 

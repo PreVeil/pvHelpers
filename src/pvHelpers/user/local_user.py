@@ -6,6 +6,7 @@ from pvHelpers.utils import NOT_ASSIGNED, params
 from .local_device import LocalDevice
 from .luser_info import LUserInfo
 from .user import OrganizationInfo, User
+from pvHelpers.utils import MergeDicts
 
 
 class LocalUser(User):
@@ -45,7 +46,7 @@ class LocalUser(User):
         # NOTE: this method is used when serializing user info to respond
         # to clients. MUST not expose user keys in this.
         return MergeDicts(super(LocalUser, self).toDict(), {
-            "public_user_key": self.public_user_key.serialize(),
+            # "public_user_key": self.public_user_key.serialize(),
             "password": self.password,
             "luser_info": str(self.luser_info),
             "device":  self.device.toDict() if self.hasDeviceKey() else None,
