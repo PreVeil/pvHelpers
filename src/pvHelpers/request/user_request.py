@@ -152,12 +152,11 @@ class ExportRequest(UserRequest):
     @params(object, LocalUser, {"until": unicode, "users": [{"user_id": unicode, "key_version": {int, long}}]})
     def new(cls, user, export_params):
         timestamp = datetime.datetime.utcnow()
-        expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
         payload = jdumps({
             "user_id": user.user_id,
             "device_id": user.device.id,
             "timestamp": timestamp.isoformat(),
-            "expiration": expiration.isoformat(),
+            "expiration": export_params["until"],
             "type": cls.__type__,
             "data": export_params,
             "protocol_version": cls.__protocol_version__
