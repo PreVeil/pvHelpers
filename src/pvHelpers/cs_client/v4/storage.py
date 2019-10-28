@@ -26,7 +26,6 @@ class StorageV4(object):
 
     @params(object, {LocalUser, UserDBNode}, [unicode], {types.NoneType, unicode})
     def downloadBlocks(self, user, block_ids, collection_id=None):
-        print "downloadBlocks"
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/storage/{}/blocks".format(
                 user.mail_cid if not collection_id else collection_id),
