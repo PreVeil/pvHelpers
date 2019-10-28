@@ -22,6 +22,7 @@ class UserRequest(object):
         self.signature = signature
         self.request_id = request_id
 
+
 class MemberAPGChangeRequest(UserRequest):
     __type__ = u"set_member_approval_group"
 
@@ -45,6 +46,7 @@ class MemberAPGChangeRequest(UserRequest):
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
         super(MemberAPGChangeRequest, self).__init__(serialized_req, signature, request_id)
+
 
 class MemberRekeyAndAPGChangeRequest(UserRequest):
     __type__ = u"member_rekey_and_set_approval_group"
@@ -70,6 +72,7 @@ class MemberRekeyAndAPGChangeRequest(UserRequest):
     def __init__(self, serialized_req, signature, request_id):
         super(MemberRekeyAndAPGChangeRequest, self).__init__(serialized_req, signature, request_id)
 
+
 class APGChangeRequest(UserRequest):
     __type__ = u"change_approval_group"
 
@@ -93,6 +96,7 @@ class APGChangeRequest(UserRequest):
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
         super(APGChangeRequest, self).__init__(serialized_req, signature, request_id)
+
 
 class RekeyAndAPGChangeRequest(UserRequest):
     __type__ = u"rekey_and_change_approval_group"
@@ -121,6 +125,7 @@ class RekeyAndAPGChangeRequest(UserRequest):
     def __init__(self, serialized_req, signature, request_id):
         super(RekeyAndAPGChangeRequest, self).__init__(serialized_req, signature, request_id)
 
+
 class GroupRoleChangeRequest(UserRequest):
     __type__ = u"change_org_approval_group_role"
 
@@ -145,6 +150,7 @@ class GroupRoleChangeRequest(UserRequest):
     def __init__(self, serialized_req, signature, request_id):
         super(GroupRoleChangeRequest, self).__init__(serialized_req, signature, request_id)
 
+
 class ExportRequest(UserRequest):
     __type__ = u"export"
 
@@ -152,11 +158,12 @@ class ExportRequest(UserRequest):
     @params(object, LocalUser, {"until": unicode, "users": [{"user_id": unicode, "key_version": {int, long}}]})
     def new(cls, user, export_params):
         timestamp = datetime.datetime.utcnow()
+        expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
         payload = jdumps({
             "user_id": user.user_id,
             "device_id": user.device.id,
             "timestamp": timestamp.isoformat(),
-            "expiration": export_params["until"],
+            "expiration": expiration.isoformat(),
             "type": cls.__type__,
             "data": export_params,
             "protocol_version": cls.__protocol_version__
@@ -174,6 +181,7 @@ class ExportRequest(UserRequest):
             "signature": self.signature,
             "request_id": self.request_id
         }
+
 
 class MemberRoleChangeRequest(UserRequest):
     __type__ = u"change_admin_status"
@@ -199,6 +207,7 @@ class MemberRoleChangeRequest(UserRequest):
     def __init__(self, serialized_req, signature, request_id):
         super(MemberRoleChangeRequest, self).__init__(serialized_req, signature, request_id)
 
+
 class MemberDeletionRequest(UserRequest):
     __type__ = u"delete_user"
 
@@ -222,6 +231,7 @@ class MemberDeletionRequest(UserRequest):
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
         super(MemberDeletionRequest, self).__init__(serialized_req, signature, request_id)
+
 
 class SubsumeAccountRequest(UserRequest):
     __type__ = u"subsume_account"

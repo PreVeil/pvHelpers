@@ -1,7 +1,8 @@
-from pvHelpers.utils import params, jdumps, jloads, b64enc, b64dec
-from pvHelpers.crypto.user_key import UserKeyBase, PublicUserKeyBase
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+                              SIGN_KEY_PROTOCOL_VERSION)
 from pvHelpers.crypto.box import AsymmBox
-from pvHelpers.crypto import SIGN_KEY_PROTOCOL_VERSION, ASYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
+from pvHelpers.utils import b64dec, b64enc, jdumps, jloads, params
 
 
 class ENCRYPTED_SHARD_VERSIONS(object):
@@ -10,10 +11,8 @@ class ENCRYPTED_SHARD_VERSIONS(object):
 
     Latest = 1
 
-
 class EncryptedShardV1(object):
     protocol_version = 1
-
 
     @params(object, unicode, {int, long}, unicode, bool)
     def __init__(self, sharee_user_id, sharee_key_version, secret, required=False):
@@ -22,13 +21,11 @@ class EncryptedShardV1(object):
         self.secret = secret
         self.required = required
 
-
     @classmethod
     @params(object, UserKeyBase, unicode, PublicUserKeyBase, bytes, bool)
     def new(cls, sharer_key, sharee_id, sharee_key, raw_shard, required=False):
         box = AsymmBox(sharer_key.encryption_key, sharee_key.public_key)
         return cls(sharee_id, sharee_key.key_version, b64enc(box.encrypt(raw_shard)), required)
-
 
     @params(object, UserKeyBase, PublicUserKeyBase)
     def decryptShard(self, sharee_key, sharer_key):
@@ -36,7 +33,6 @@ class EncryptedShardV1(object):
             raise ValueError(u"provided key has wrong key_version {}".format(sharee_key.key_version))
         box = AsymmBox(sharee_key.encryption_key, sharer_key.public_key)
         return box.decrypt(b64dec(self.secret))
-
 
     def toDict(self):
         return {
@@ -51,7 +47,6 @@ class EncryptedShardV1(object):
 class EncryptedShardV2(EncryptedShardV1):
     protocol_version = 2
 
-
     @classmethod
     @params(object, UserKeyBase, unicode, PublicUserKeyBase, bytes, bool)
     def new(cls, sharer_key, sharee_id, sharee_key, raw_shard, required=False):
@@ -59,7 +54,6 @@ class EncryptedShardV2(EncryptedShardV1):
             "shard": b64enc(sharee_key.public_key.seal(raw_shard)),
             "signature": b64enc(sharer_key.signing_key.sign(raw_shard))
         }), required)
-
 
     @params(object, UserKeyBase, PublicUserKeyBase)
     def decryptShard(self, sharee_key, sharer_key):

@@ -1,7 +1,9 @@
-from pvHelpers.utils import b64dec, b64enc, jdumps, jloads, params
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+                              SIGN_KEY_PROTOCOL_VERSION)
 from pvHelpers.crypto.box import AsymmBox
-from pvHelpers.crypto.user_key import UserKeyBase, PublicUserKeyBase
-from pvHelpers.crypto import SIGN_KEY_PROTOCOL_VERSION, ASYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
+from pvHelpers.utils import b64dec, b64enc, jdumps, jloads, params
+
 
 class EXPORT_ENCRYPTED_SHARD_VERSIONS(object):
     V1 = 1
@@ -13,7 +15,6 @@ class EXPORT_ENCRYPTED_SHARD_VERSIONS(object):
 class ExportEncryptedShardV1(object):
     protocol_version = 1
 
-
     @params(object, unicode, {int, long}, {int, long}, {int, long}, unicode, bool)
     def __init__(self, sharee_user_id, sharee_key_version, sharer_key_version, wrapped_key_version, secret, required=False):
         self.sharee_user_id = sharee_user_id
@@ -23,7 +24,6 @@ class ExportEncryptedShardV1(object):
         self.secret = secret
         self.required = required
 
-
     @classmethod
     @params(object, UserKeyBase, unicode, PublicUserKeyBase, {int, long}, bytes, bool)
     def new(cls, sharer_key, sharee_id, sharee_key, sharded_key_version, raw_shard, required=False):
@@ -31,7 +31,6 @@ class ExportEncryptedShardV1(object):
         return cls(
             sharee_id, sharee_key.key_version, sharer_key.key_version,
             sharded_key_version, b64enc(box.encrypt(raw_shard)), required)
-
 
     @params(object, UserKeyBase, PublicUserKeyBase)
     def decryptShard(self, sharee_key, sharer_key):
@@ -41,7 +40,6 @@ class ExportEncryptedShardV1(object):
             raise ValueError(u"provided key has wrong key_version {}".format(sharer_key.key_version))
         box = AsymmBox(sharee_key.encryption_key, sharer_key.public_key)
         return box.decrypt(b64dec(self.secret))
-
 
     def toDict(self):
         return {
@@ -58,7 +56,6 @@ class ExportEncryptedShardV1(object):
 class ExportEncryptedShardV2(ExportEncryptedShardV1):
     protocol_version = 2
 
-
     @classmethod
     @params(object, UserKeyBase, unicode, PublicUserKeyBase, {int, long}, bytes, bool)
     def new(cls, sharer_key, sharee_id, sharee_key, sharded_key_version, raw_shard, required=False):
@@ -68,7 +65,6 @@ class ExportEncryptedShardV2(ExportEncryptedShardV1):
             "shard": b64enc(sharee_key.public_key.seal(raw_shard)),
             "signature": b64enc(sharer_key.signing_key.sign(raw_shard))
         }), required)
-
 
     @params(object, UserKeyBase, PublicUserKeyBase)
     def decryptShard(self, sharee_key, sharer_key):

@@ -1,5 +1,6 @@
 import calendar
 import time
+import types
 
 from pvHelpers.mail import PreparedMessageBase
 from pvHelpers.user import LocalUser, UserDBNode
@@ -69,11 +70,11 @@ class MailV4(object):
 
         return data
 
-    @params(object, {LocalUser, UserDBNode}, {int, long}, unicode, unicode, unicode)
-    def getMailHistory(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
+    @params(object, {LocalUser, UserDBNode}, {int, long})
+    def getMailHistory(self, user, last_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
-            user,  u"/mail/{}/mailboxes".format(for_user_cid),
-            "GET", None, False, (export_id, for_user_id)
+            user,  u"/mail/{}/mailboxes".format(user.mail_cid),
+            "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
             "since_rev_id" : last_rev_id,

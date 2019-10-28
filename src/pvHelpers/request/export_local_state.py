@@ -1,5 +1,7 @@
-from pvHelpers.utils import params, MergeDicts, CaseInsensitiveDict
+from pvHelpers.utils import CaseInsensitiveDict, MergeDicts, params
+
 from .user_request import ExportRequest
+
 
 class ExportRequestLocalState(object):
     INIT = u"init"
