@@ -1,10 +1,13 @@
 import types
-from SSSA import sssa
-from .shard import new as newShard
-from .export_shard import new as newExportShard
-from pvHelpers.utils import params, utf8Encode, utf8Decode
-from pvHelpers.crypto.user_key import UserKeyBase, PublicUserKeyBase
+
+from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
 from pvHelpers.user.user import User
+from pvHelpers.utils import params, utf8Decode, utf8Encode
+from SSSA import sssa
+
+from .export_shard import new as newExportShard
+from .shard import new as newShard
+
 
 # Information provided by the backend about an approver
 class ApproverData(object):
