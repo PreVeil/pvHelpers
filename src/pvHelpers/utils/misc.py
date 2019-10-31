@@ -357,12 +357,12 @@ def initDaemonDataDirs(wd, mode, is_test=False):
 
 class CaseInsensitiveSet(collections.Set):
     def __init__(self, lyst):
-        self.data = dict()
+        self.data = CaseInsensitiveDict()
         for e in lyst:
-            self.data[e.upper()] = e
+            self.data[e] = e
 
     def __contains__(self, item):
-        return item.upper() in self.data
+        return item in self.data
 
     def __iter__(self):
         for _, n in self.data.iteritems():
@@ -375,9 +375,10 @@ class CaseInsensitiveSet(collections.Set):
         if not isinstance(other, list):
             g_log.error(u"other must be of type list")
             raise TypeError(u"other must be of type list")
-        new = copy.deepcopy(self.data)
+
+        new = CaseInsensitiveDict(copy.deepcopy(self.data))
         for o in other:
-            new[o.upper()] = o
+            new[o] = o
 
         return CaseInsensitiveSet(new.values())
 
@@ -385,10 +386,10 @@ class CaseInsensitiveSet(collections.Set):
         if not isinstance(other, list):
             g_log.error(u"other must be of type list")
             raise TypeError(u"other must be of type list")
-        new = copy.deepcopy(self.data)
+        new = CaseInsensitiveDict(copy.deepcopy(self.data))
         for o in other:
-            if o.upper() in new:
-                del new[o.upper()]
+            if o in new:
+                del new[o]
 
         return CaseInsensitiveSet(new.values())
 
