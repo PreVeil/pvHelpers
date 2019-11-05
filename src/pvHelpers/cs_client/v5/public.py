@@ -7,7 +7,7 @@ from pvHelpers.utils import params
 
 class PublicV5(object):
     @params(object, unicode, unicode, UserKeyBase, unicode, unicode, LocalDevice)
-    def claimUser(self, user_id, secret, user_key, wrapped_log_viewer_private_key, serialized_log_viewer_key, device):
+    def claim_user(self, user_id, secret, user_key, wrapped_log_viewer_private_key, serialized_log_viewer_key, device):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users", "PUT", {
                 "user_id": user_id,

@@ -38,14 +38,14 @@ def getSession(backend, default_headers={}):
 
 class APIClient(object):
     @params(object, unicode, dict, {types.NoneType, ProxyConfig})
-    def __init__(self, backend, default_headers={}, proxy_config=None):
-        self.backend = backend
+    def __init__(self, url, default_headers={}, proxy_config=None):
+        self.url = url
         self.default_headers = default_headers
         self.proxy_config = proxy_config
 
     @property
     def session(self):
-        return getSession(self.backend, self.default_headers)
+        return getSession(self.url, self.default_headers)
 
     # try each proxies in order
     def _request_with_proxies_fall_over(self, request_handle, method, url,
@@ -83,13 +83,8 @@ class APIClient(object):
             return request_handle(
                 method, url, headers=headers, proxies=None, **kwargs)
 
-    def _request_common(self,
-                        method,
-                        url,
-                        headers,
-                        raw_body=None,
-                        params=None,
-                        timeout=HTTP_TIMEOUT):
+    def _request_common(
+        self, method, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
         session = self.session
         headers.update(session.headers)
         return self._request_with_proxies_fall_over(
@@ -101,7 +96,8 @@ class APIClient(object):
             data=raw_body,
             params=params,
             timeout=timeout,
-            allow_redirects=False)
+            allow_redirects=False,
+            **kwargs)
 
     def get(self,
             url,
@@ -112,14 +108,8 @@ class APIClient(object):
         return self._request_common("GET", url, headers, raw_body, params,
                                     timeout)
 
-    def put(self,
-            url,
-            headers,
-            raw_body=None,
-            params=None,
-            timeout=HTTP_TIMEOUT):
-        return self._request_common("PUT", url, headers, raw_body, params,
-                                    timeout)
+    def put(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("PUT", url, headers, raw_body, params, timeout, **kwargs)
 
     def post(self,
              url,

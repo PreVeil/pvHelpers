@@ -9,8 +9,13 @@ class ServerResponseError(Exception):
 
 
 class ExpiredDeviceKey(Exception):
-    def __init__(self, exception=u""):
+    def __init__(self, user_id, account_version, key_version, exception=u""):
         super(ExpiredDeviceKey, self).__init__(exception)
+        self.user_id = user_id
+        self.account_version = account_version
+        self.key_version = key_version
+
+        self.exception = exception
 
 
 class ExpiredUserKey(Exception):

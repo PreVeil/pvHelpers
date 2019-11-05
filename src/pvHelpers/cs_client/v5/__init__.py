@@ -19,7 +19,7 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
     def prepareSignedRequest(self, signer, resource, method, body, ignore_device_sign=False, export=None):
         if not ignore_device_sign and not signer.hasDeviceKey():
             raise MissingDeviceKey("V5 requires device key")
-        url = self.backend + resource
+        url = self.url + resource
         if body is None:
             raw_body = u""
         else:

@@ -40,35 +40,35 @@ class BackendClient(object):
     def _handlersWrapper(self, fun):
         def __wrapper(*args, **kwargs):
             if args and isinstance(args[0], (UserDBNode, LocalUser)):
-                user_id = args[0].user_id
-                if not self._isUserSynced(user_id):
+                u = args[0]
+                if not self._isUserSynced(u.user_id):
                     # user has too many 401 unauthorized response
                     time_diff = datetime.datetime.now(
-                    ) - self.users_sync[user_id]["latest_req_time"]
+                    ) - self.users_sync[u.user_id]["latest_req_time"]
                     if time_diff.days >= 1:
                         # reset 401 exceptions allowances after one day
-                        self.users_sync.pop(user_id)
+                        self.users_sync.pop(u.user_id)
                     else:
                         raise UnauthorizedReqLimitException(
-                            "User {} reached max limit of 401 unauthorized req!".format(user_id))
+                            "User {} reached max limit of 401 unauthorized req!".format(u.user_id))
 
                 try:
                     return fun(*args, **kwargs)
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 440:
-                        raise ExpiredDeviceKey(e)
+                        raise ExpiredDeviceKey(u.user_id, u.account_version, u.device.key.key_version, e)
                     elif e.response.status_code == 498:
                         error_ = e.response.json()
                         # can server do something malicious by returning bad expected key_version ?
                         raise ExpiredUserKey(
                             e, error_["errors"][0]["cause"]["expected_version"])
                     elif e.response.status_code == 401:
-                        if user_id not in self.users_sync:
-                            self.users_sync[user_id] = {
+                        if u.user_id not in self.users_sync:
+                            self.users_sync[u.user_id] = {
                                 "401_exception_count": 1, "latest_req_time": datetime.datetime.now()}
                         else:
-                            self.users_sync[user_id]["401_exception_count"] += 1
-                            self.users_sync[user_id]["latest_req_time"] = datetime.datetime.now(
+                            self.users_sync[u.user_id]["401_exception_count"] += 1
+                            self.users_sync[u.user_id]["latest_req_time"] = datetime.datetime.now(
                             )
 
                     elif e.response.status_code == 407:

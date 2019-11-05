@@ -25,7 +25,6 @@ from .hook_decorators import WrapExceptions
 from .params import params
 
 DATA_DIR_MODE = 0o750
-HTTP_TIMEOUT = 15
 
 
 class EncodingException(Exception):

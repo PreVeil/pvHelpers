@@ -45,7 +45,6 @@ class LocalDevice(Device):
         )
 
     def __eq__(self, other):
-
         return isinstance(other, LocalDevice) and \
             self.id == other.id and \
             self.name == other.name and \

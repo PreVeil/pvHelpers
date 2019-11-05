@@ -3,7 +3,7 @@ from pvHelpers.utils import params
 
 class TestV4(object):
     @params(object, unicode, unicode)
-    def getUserSecret(self, user_id, secret_type):
+    def get_user_secret(self, user_id, secret_type):
         url, raw_body, headers = self.preparePublicRequest(
             u"/test/users/secret", "GET", None
         )

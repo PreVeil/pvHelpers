@@ -13,14 +13,14 @@ from .test import TestV4
 from .user import UserV4
 
 
-class APIClientV4(APIClient, PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEventsV4, GroupV4, StorageV4, TestV4):
+class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEventsV4, GroupV4, StorageV4, TestV4, APIClient):
     __api_version__ = u"v4"
 
     def __init__(self, backend):
         super(APIClientV4, self).__init__(backend)
 
     def preparePublicRequest(self, resource, method, body):
-        url = self.backend + resource
+        url = self.url + resource
         if body is None:
             raw_body = u""
         else:
@@ -34,7 +34,7 @@ class APIClientV4(APIClient, PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdmin
         return url, encoded_raw_body, headers
 
     def prepareSignedRequest(self, signer, resource, method, body):
-        url = self.backend + resource
+        url = self.url + resource
         if body is None:
             raw_body = u""
         else:
