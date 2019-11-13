@@ -14,12 +14,12 @@ from .user import UserV4
 
 
 class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEventsV4, GroupV4, StorageV4, TestV4, APIClient):
-    __api_version__ = u"v4"
+    __api_version__ = 4
 
     def __init__(self, backend):
         super(APIClientV4, self).__init__(backend)
 
-    def preparePublicRequest(self, resource, method, body):
+    def _preparePublicRequest(self, resource, method, body):
         url = self.url + resource
         if body is None:
             raw_body = u""
@@ -28,12 +28,12 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
 
         headers = {
             "content-type" : "application/json",
-            "accept-version" : self.__api_version__
+            "accept-version" : str(self.accept_version())
         }
         encoded_raw_body = utf8Encode(raw_body)
         return url, encoded_raw_body, headers
 
-    def prepareSignedRequest(self, signer, resource, method, body):
+    def _prepareSignedRequest(self, signer, resource, method, body):
         url = self.url + resource
         if body is None:
             raw_body = u""
@@ -45,10 +45,10 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
         encoded_user_id = utf8Encode(signer.user_id)
         user_key_version, user_signature = signer.signWithUserKey(utf8Encode(canonical_request))
         headers = {
-            "content-type" : "application/json",
-            "x-user-id"    : encoded_user_id,
+            "content-type": "application/json",
+            "x-user-id": encoded_user_id,
             "x-signature": b64enc(user_signature),
-            "accept-version" : self.__api_version__,
+            "accept-version" :  str(self.accept_version())
         }
         encoded_raw_body = utf8Encode(raw_body)
 

@@ -3,15 +3,10 @@ import types
 from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, MergeDicts,
                              WrapExceptions, jloads, params, toInt)
 
+from .email import EmailV1, EmailV2, EmailV3, EmailV4, EmailV5, EmailV6
 from .email.attachment import Attachment, AttachmentMetadata
 from .email.content import Content
-from .email.email_helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
-from .email.email_v1 import EmailV1
-from .email.email_v2 import EmailV2
-from .email.email_v3 import EmailV3
-from .email.email_v4 import EmailV4
-from .email.email_v5 import EmailV5
-from .email.email_v6 import EmailV6
+from .email.helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
 from .email.server_attributes import ServerAttributes
 
 

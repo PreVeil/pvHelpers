@@ -2,7 +2,7 @@
 from pvHelpers.mail.email import PROTOCOL_VERSION
 from pvHelpers.utils import b64enc, utf8Encode
 
-from .prepared_message_v1 import PreparedMessageV1
+from .v1 import PreparedMessageV1
 
 
 class PreparedMessageV3(PreparedMessageV1):

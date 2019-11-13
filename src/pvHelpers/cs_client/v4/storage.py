@@ -11,13 +11,13 @@ from ..utils import ServerResponseError
 STORAGE_REQUEST_TIMEOUT = 120
 
 class StorageV4(object):
-    @params(object, LocalUser, PreparedMessageBase)
-    def uploadEmailBlocks(self, user, prepared_message):
+    # NOTEXX: needs fixing on consumers
+    @params(object, LocalUser, unicode, PreparedMessageBase)
+    def uploadEmailBlocks(self, user, collection_id, prepared_message):
         for block_id, block in prepared_message.uploads.iteritems():
             url, raw_body, headers = self.prepareSignedRequest(
                 user,
-                "/storage/{}/blocks/{}".format(
-                    prepared_message.recipient.mail_cid, block_id),
+                "/storage/{}/blocks/{}".format(collection_id, block_id),
                 "PUT", block
             )
             resp = self.put(url, headers, raw_body,

@@ -6,8 +6,8 @@ from pvHelpers.logger import g_log
 from pvHelpers.utils import NOT_ASSIGNED, EncodingException, b64enc
 
 from .content import Content
-from .email_base import EmailBase
-from .email_helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
+from .base import EmailBase
+from .helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
 from .parsers import createMime, parseMime
 
 

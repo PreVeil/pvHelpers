@@ -4,11 +4,11 @@ from pvHelpers.utils import b64enc, utf8Encode
 
 FILE_BLOCK_SIZE = 2 * 1024 * 1024 # max 2MB block size
 
-#########################################
-######### Factory Common Mixins #########
-#########################################
+
 class PreparedMessageHelpers(object):
-    def _encrypt(self, data, is_text = False):
+    """PreparedMessage entiry mixins"""
+
+    def _encrypt(self, data, is_text=False):
         details = {}
         try:
             if is_text:
@@ -27,40 +27,60 @@ class PreparedMessageHelpers(object):
             "length": details.get("length")
         }
 
-    def _prepareBody(self, body):
+    def wrapped_key_for(self, opaque_key, for_user):
+        if for_user.public_user_key.public_key.protocol_version >= ASYMM_KEY_PROTOCOL_VERSION.V3:
+            return b64enc(for_user.public_user_key.public_key.seal(opaque_key.serialize()))
+        return b64enc(for_user.public_user_key.public_key.seal(opaque_key.serialize(), is_text=True))
+
+    def _key_version(self, protocol_version):
+        if protocol_version <= PROTOCOL_VERSION.V4:
+            return self.recipient.public_user_key.key_version
+        elif protocol_version >= PROTOCOL_VERSION.V5:
+            return self.sender.public_user_key.key_version
+        raise PreparedMessageError(u"Invalid protocol version {}".format(protocol_version))
+
+    def _prepareBody(self, body, protocol_version):
         blocks, totalsize = self._encryptBlock(body)
         for block in blocks:
             self.uploads[block["cipherhash"]] = {
                 "data": block["ciphertext"],
-                "key_version":  self.recipient.public_user_key.key_version,
+                "key_version":  self._key_version(protocol_version),
                 "wrapped_key": self.sealed_opaque_key
             }
 
-        encrypted_snippet = self._encrypt(self.email.snippet(), is_text=True)
+        if protocol_version <= PROTOCOL_VERSION.V4:
+            snippet = self._encrypt(self.email.snippet(), is_text=True)[
+                "ciphertext"]
+        elif protocol_version >= PROTOCOL_VERSION.V5:
+            snippet = self.email.snippet()
         self.email.body.block_ids = [unicode(block["cipherhash"]) for block in blocks]
         self.body = {
-            "snippet": encrypted_snippet["ciphertext"],
+            "snippet": snippet,
             "block_ids": self.email.body.block_ids,
             "size": totalsize
         }
 
-    def _prepareAttachments(self, attachments):
+    def _prepareAttachments(self, attachments, protocol_version):
         for attachment in attachments:
             blocks, totalsize = self._encryptBlock(attachment.content.content)
-            encrypted_name = self._encrypt(attachment.metadata.filename, is_text=True)
-            encrypted_name = encrypted_name["ciphertext"]
+
+            if protocol_version <= PROTOCOL_VERSION.V4:
+                name = self._encrypt(
+                    attachment.metadata.filename, is_text=True)["ciphertext"]
+            elif protocol_version >= PROTOCOL_VERSION.V5:
+                name = attachment.metadata.filename
 
             for block in blocks:
                 self.uploads[block["cipherhash"]] = {
                     "data": block["ciphertext"],
-                    "key_version":  self.recipient.public_user_key.key_version,
+                    "key_version":  self._key_version(protocol_version),
                     "wrapped_key": self.sealed_opaque_key
                 }
             attachment.content.block_ids = [unicode(block["cipherhash"]) for block in blocks]
             self.attachments.append({
                 "block_ids": attachment.content.block_ids,
                 "size": totalsize,
-                "name": encrypted_name,
+                "name": name,
                 "metadata": {
                     "content_type": attachment.metadata.content_type,
                     "content_id": attachment.metadata.content_id,
@@ -85,8 +105,8 @@ class PreparedMessageHelpers(object):
             "message_id": self.email.message_id,
             "in_reply_to": self.email.in_reply_to,
             "references": self.email.references,
-            "flags": self.email.flags, # should sender enforce flags?!,
-            "protocol_version": self.email.protocol_version,
+            "flags": self.email.flags,  # should sender enforce flags?
+            "protocol_version": self.protocol_version,
             "private_metadata": self.private_metadata,
             "attachments": self.attachments,
             "body": self.body

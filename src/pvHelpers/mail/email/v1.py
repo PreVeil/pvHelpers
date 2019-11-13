@@ -10,8 +10,8 @@ from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, b64enc,
 
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content
-from .email_base import EmailBase
-from .email_helpers import (DUMMY_CONTENT_TYPE, DUMMY_DISPOSITION,
+from .base import EmailBase
+from .helpers import (DUMMY_CONTENT_TYPE, DUMMY_DISPOSITION,
                             PROTOCOL_VERSION, EmailException, EmailHelpers)
 from .parsers import parseMime
 

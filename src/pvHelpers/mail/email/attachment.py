@@ -8,7 +8,7 @@ from pvHelpers.utils import (ASCIIToUnicode, EncodingException, WrapExceptions,
                              encodeContentIfUnicode, toInt)
 
 from .content import Content
-from .email_helpers import EmailException
+from .helpers import EmailException
 
 
 class AttachmentType(object):

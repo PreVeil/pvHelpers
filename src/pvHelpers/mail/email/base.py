@@ -5,7 +5,7 @@ from pvHelpers.utils import NOT_ASSIGNED
 
 from .attachment import Attachment
 from .content import Content
-from .email_helpers import EmailException
+from .helpers import EmailException
 from .server_attributes import ServerAttributes
 
 

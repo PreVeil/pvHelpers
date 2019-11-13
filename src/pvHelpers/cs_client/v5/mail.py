@@ -10,7 +10,7 @@ class MailV5(object):
             "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
-            "limit" : limit,
+            "limit": limit,
             "offset": offset
         })
         resp.raise_for_status()

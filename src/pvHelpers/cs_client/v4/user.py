@@ -21,8 +21,8 @@ class UserV4(object):
             user,  u"/users/groups/user", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
-            u"user_id" : user.user_id,
-            u"seq" : seq
+            u"user_id": user.user_id,
+            u"seq": seq
         })
         resp.raise_for_status()
         return resp.json()
@@ -34,9 +34,9 @@ class UserV4(object):
             user,  u"/users/list", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
-            "show_unclaimed" : show_unclaimed,
-            "offset" : offset,
-            "limit" : limit
+            "show_unclaimed": show_unclaimed,
+            "offset": offset,
+            "limit": limit
         })
         resp.raise_for_status()
         return resp.json()
@@ -47,7 +47,10 @@ class UserV4(object):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/approvers/shard", "GET", None
         )
-        resp = self.get(url, headers, raw_body, params={u"user_id": user.user_id, u"for_user_id": for_user_id})
+        resp = self.get(url, headers, raw_body, params={
+            u"user_id": user.user_id,
+            u"for_user_id": for_user_id
+        })
         resp.raise_for_status()
         return resp.json()
 
@@ -111,6 +114,9 @@ class UserV4(object):
             else:
                 output[user.user_id] = user
 
+        for ug in data["groups"]:
+            output[ug["alias"]] = UserGroup(ug["alias"], ug["users"])
+
         return output
 
     @params(object, LocalUser, unicode)
@@ -119,7 +125,7 @@ class UserV4(object):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/invite", "PUT", {
                 "user_id": user.user_id,
-                "invitee_email" : invitee_id
+                "invitee_email": invitee_id
             }
         )
         resp = self.put(url, headers, raw_body)
@@ -212,19 +218,19 @@ class UserV4(object):
             user, u"/users/collection/grant", "PUT", {
                 "user_id": user.user_id,
                 "collection_id": collection_id,
-                "roles": [ {
+                "roles": [{
                     "role": role.lower(),
                     "version": key_version
-                } ],
-                "groups": [ {
+                }],
+                "groups": [{
                     "group_id": group_id,
                     "key_version": group_key_version,
-                    "role_info": [ {
+                    "role_info": [{
                         "role": role.lower(),
                         "signature": signature,
                         "wrapped_key": wrapped_key,
-                    } ]
-                } ]
+                    }]
+                }]
             }
         )
         resp = self.put(url, headers, raw_body)

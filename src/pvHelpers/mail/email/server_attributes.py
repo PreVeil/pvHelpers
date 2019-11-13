@@ -1,6 +1,6 @@
 import types
 
-from .email_helpers import EmailException
+from .helpers import EmailException
 
 
 class ServerAttributes(object):

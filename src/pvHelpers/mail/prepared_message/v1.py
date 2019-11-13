@@ -5,9 +5,8 @@ from pvHelpers.logger import g_log
 from pvHelpers.mail.email import PROTOCOL_VERSION, EmailV1
 from pvHelpers.utils import b64enc, jdumps, utf8Encode
 
-from .prepared_message_base import PreparedMessageBase
-from .prepared_message_helpers import (PreparedMessageError,
-                                       PreparedMessageHelpers)
+from .base import PreparedMessageBase
+from .helpers import PreparedMessageError, PreparedMessageHelpers
 
 
 class PreparedMessageV1(PreparedMessageHelpers, PreparedMessageBase):
@@ -15,12 +14,13 @@ class PreparedMessageV1(PreparedMessageHelpers, PreparedMessageBase):
     PROTOCOL_VERSION = PROTOCOL_VERSION.V1
 
     def __init__(self, sender, email, recipient):
-        super(PreparedMessageV1, self).__init__(sender, email, recipient)
+        super(PreparedMessageV1, self).__init__(sender, email)
 
-        if not isinstance(email, EmailV1):
-            raise PreparedMessageError(u"PreparedMessageV1.__init__: email must be of type EmailV1")
+        self.recipient = recipient
+        self.sealed_opaque_key = None
+        self.sealed_opaque_key = self.wrapped_key_for(self.opaque_key, self.recipient)
 
-        self._prepareAttachments(self.email.attachments)
+        self._prepareAttachments(self.email.attachments, self.protocol_version)
 
         try:
             body_mime = mime.create.from_string(self.email.body.content)
@@ -50,7 +50,7 @@ class PreparedMessageV1(PreparedMessageHelpers, PreparedMessageBase):
         except mime.MimeError as e:
             raise PreparedMessageError(u"PreparedMessageV1.__init__: flanker exception: {}".format(e))
 
-        self._prepareBody(body)
+        self._prepareBody(body, self.protocol_version)
 
         status, signature = self._sign()
         if not status:

@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.utils import params
 
-from .email_helpers import EmailException
+from .helpers import EmailException
 
 
 class Content(object):

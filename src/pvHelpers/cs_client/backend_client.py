@@ -16,10 +16,10 @@ from .v7 import APIClientV7
 
 class BackendClient(object):
     __api_versions__ = [
-        (4, APIClientV4),
-        (5, APIClientV5),
-        (6, APIClientV6),
-        (7, APIClientV7)
+        (APIClientV5.__api_version__, APIClientV5),
+        (APIClientV4.__api_version__, APIClientV4),
+        (APIClientV6.__api_version__, APIClientV6),
+        (APIClientV7.__api_version__, APIClientV7)
     ]
     __current_version__ = 7
 
@@ -93,20 +93,54 @@ class BackendClient(object):
         self._current_client = None
         self.users_sync = {}
 
+    @property
+    def latest_accept_version(self):
+        v = self.client_versions
+        return u"v{}".format(v[len(v) - 1][0])
+
+    @property
+    def client_versions(self):
+        return sorted(self.__api_versions__, key=lambda (version, klass): version)
+
+    def accept_version(self):
+        return self.latest_accept_version
+
+    def latestPrepareSignRequest(self, *a, **kw):
+        v = self.client_versions
+        return self._clients[v[len(v) - 1][0]]._prepareSignedRequest(*a, **kw)
+
+    def latestPreparePublicRequest(self, *a, **kw):
+        v = self.client_versions
+        return self._clients[v[len(v) - 1][0]]._preparePublicRequest(*a, **kw)
+
     def init(self, backend):
+        this = self
+        class _ClientWrapper(object):
+            def __init__(self, instance, wrapper):
+                self._c_instance = instance
+                self._c_methods = inspect.getmembers(
+                    self._c_instance, predicate=inspect.ismethod)
+
+                # do not wrap `APIClient` inheritted internal methods, for `BACKED_CLIENT.Vx`
+                resource_methods = set(
+                    map(lambda (name, _): name, self._c_methods)).difference(
+                        ["__init__", "put", "get", "delete", "post", "patch", "accept_version"])
+
+                for method_name in resource_methods:
+                    setattr(self, method_name, wrapper(
+                        getattr(self._c_instance, method_name)))
+
+                # set preparer methods to latest for all older client instances.
+                setattr(self._c_instance, "accept_version", lambda: this.latest_accept_version)
+                setattr(self._c_instance, "prepareSignedRequest", this.latestPrepareSignRequest)
+                setattr(self._c_instance, "preparePublicRequest", this.latestPreparePublicRequest)
+                setattr(self, "accept_version", lambda: this.latest_accept_version)
+                setattr(self, "prepareSignedRequest", this.latestPrepareSignRequest)
+                setattr(self, "preparePublicRequest", this.latestPreparePublicRequest)
+
         self._clients = {}
         methods = []
-        for (version, klass) in self.__api_versions__:
-            class _ClientWrapper(object):
-                def __init__(self, instance, wrapper):
-                    self._c_instance = instance
-                    self._c_methods = inspect.getmembers(
-                        self._c_instance, predicate=inspect.ismethod)
-                    # do not wrap `APIClient` inheritted internal methods, for `BACKED_CLIENT.Vx`
-                    for method_name in set(map(lambda (name, _): name, self._c_methods)).difference(["__init__", "put", "get", "delete", "post", "patch"]):
-                        setattr(self, method_name, wrapper(
-                            getattr(self._c_instance, method_name)))
-
+        for (version, klass) in self.client_versions:
             self._clients[version] = klass(backend)
             c = _ClientWrapper(self._clients[version], self._handlersWrapper)
             setattr(self, "V{}".format(version), c)
@@ -126,3 +160,4 @@ class BackendClient(object):
 
 
 BACKEND_CLIENT = BackendClient()
+1

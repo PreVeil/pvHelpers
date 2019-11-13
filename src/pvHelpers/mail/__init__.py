@@ -1,6 +1,6 @@
-from .email.email_base import EmailBase
-from .prepared_message.prepared_message_base import PreparedMessageBase
+from .email import EmailBase
 from .email_factory import EmailFactory
+from .helpers import (decryptServerMessage, flatten_recipient_groups,
+                      getSender, getWrappedKey, verifyServerMessage)
+from .prepared_message import PreparedMessageBase
 from .prepared_message_factory import PreparedMessageFactory
-from .helpers import (verifyServerMessage, decryptServerMessage,
-                      getWrappedKey, getSender, flatten_recipient_groups)

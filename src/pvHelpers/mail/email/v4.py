@@ -1,7 +1,7 @@
 from pvHelpers.logger import g_log
 
-from .email_helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
-from .email_v2 import EmailV2
+from .helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
+from .v2 import EmailV2
 
 
 class EmailV4(EmailV2):

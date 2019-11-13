@@ -1,11 +1,10 @@
 from pvHelpers.logger import g_log
-from pvHelpers.mail.email import PROTOCOL_VERSION, EmailV2
+from pvHelpers.mail.email import PROTOCOL_VERSION
 from pvHelpers.utils import b64enc, jdumps, utf8Encode
 
-from .prepared_message_base import PreparedMessageBase
-from .prepared_message_helpers import (PreparedMessageError,
-                                       PreparedMessageHelpers)
-from .prepared_message_v1 import PreparedMessageV1
+from .base import PreparedMessageBase
+from .helpers import PreparedMessageError, PreparedMessageHelpers
+from .v1 import PreparedMessageV1
 
 
 class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
@@ -13,13 +12,14 @@ class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
     PROTOCOL_VERSION = PROTOCOL_VERSION.V2
 
     def __init__(self, sender, email, recipient):
-        super(PreparedMessageV2, self).__init__(sender, email, recipient)
+        super(PreparedMessageV2, self).__init__(sender, email)
 
-        if not isinstance(email, EmailV2):
-            raise PreparedMessageError(u"PreparedMessageV2.__init__: email must be of type EmailV2")
+        self.recipient = recipient
+        self.sealed_opaque_key = None
 
-        self._prepareAttachments(self.email.attachments)
-        self._prepareBody(self.email.body.content)
+        self.sealed_opaque_key = self.wrapped_key_for(self.opaque_key, self.recipient)
+        self._prepareAttachments(self.email.attachments, self.protocol_version)
+        self._prepareBody(self.email.body.content, self.protocol_version)
 
         status, signature = self._sign()
         if not status:
@@ -32,7 +32,8 @@ class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
 
         if self.recipient.user_id is self.sender.user_id:
             bccs = [bcc["user_id"] for bcc in self.email.bccs]
-        elif self.recipient.user_id in [bcc["user_id"] for bcc in self.email.bccs] or self.recipient.user_id not in [recip["user_id"] for recip in self.email.tos + self.email.ccs]:
+        elif self.recipient.user_id in [bcc["user_id"] for bcc in self.email.bccs] or \
+                self.recipient.user_id not in [recip["user_id"] for recip in self.email.tos + self.email.ccs]:
             bccs = [self.recipient.user_id]
         else:
             bccs = []
@@ -44,7 +45,6 @@ class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
 
         encrypted_metadata = self._encrypt(jdumps(self.private_metadata), is_text=True)
         self.private_metadata = encrypted_metadata["ciphertext"]
-
 
     def _sign(self):
         status, canonical_msg_str = PreparedMessageV1.canonicalEncryptedString(self.uploads)

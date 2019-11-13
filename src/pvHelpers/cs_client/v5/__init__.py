@@ -11,12 +11,12 @@ from .user import UserV5
 
 
 class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, PublicV5, APIClientV4):
-    __api_version__ = u"v5"
+    __api_version__ = 5
 
     def __init__(self, backend):
         super(APIClientV5, self).__init__(backend)
 
-    def prepareSignedRequest(self, signer, resource, method, body, ignore_device_sign=False, export=None):
+    def _prepareSignedRequest(self, signer, resource, method, body, ignore_device_sign=False, export=None):
         if not ignore_device_sign and not signer.hasDeviceKey():
             raise MissingDeviceKey("V5 requires device key")
         url = self.url + resource
@@ -41,7 +41,7 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
             "x-user-key-version": str(user_key_version),
             "x-user-id"    : encoded_user_id,
             "x-user-signature": b64enc(user_signature),
-            "accept-version" : str(self.__api_version__),
+            "accept-version" : str(self.accept_version()),
             "x-device-signature"  : None if ignore_device_sign else b64enc(device_signature),
             "x-device-id": None if ignore_device_sign else signer.device.id,
             "x-device-key-version": None if ignore_device_sign else str(device_key_version),

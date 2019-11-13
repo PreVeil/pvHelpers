@@ -6,7 +6,7 @@ from pvHelpers.utils import encodeContentIfUnicode
 
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
-from .email_helpers import EmailException, EmailHelpers
+from .helpers import EmailException, EmailHelpers
 
 
 # Builder creates a simplified mime message that follows the following hierarchy

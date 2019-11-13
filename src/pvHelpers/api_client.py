@@ -47,7 +47,11 @@ class APIClient(object):
     def session(self):
         return getSession(self.url, self.default_headers)
 
+    def accept_version(self):
+        return u"v{}".format(self.__api_version__)
+
     # try each proxies in order
+    # NOTEXX: tests proxy config
     def _request_with_proxies_fall_over(self, request_handle, method, url,
                                         headers, proxies, direct_fallback=True, **kwargs):
         # no proxies
