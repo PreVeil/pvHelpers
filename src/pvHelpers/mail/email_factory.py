@@ -5,18 +5,18 @@ from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, MergeDicts,
 
 from .email.attachment import Attachment, AttachmentMetadata
 from .email.content import Content
-from .email.email_helpers import PROTOCOL_VERSION, EmailException
+from .email.email_helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
 from .email.email_v1 import EmailV1
 from .email.email_v2 import EmailV2
 from .email.email_v3 import EmailV3
 from .email.email_v4 import EmailV4
+from .email.email_v5 import EmailV5
+from .email.email_v6 import EmailV6
 from .email.server_attributes import ServerAttributes
 
 
-#########################################
-######### Email Entity Factory ##########
-#########################################
 class EmailFactory(object):
+    """ Email entity facotry """
     @staticmethod
     def new(*args, **kwargs):
         v = kwargs.get("protocol_version", None)
@@ -33,6 +33,10 @@ class EmailFactory(object):
             return EmailV3(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V4:
             return EmailV4(*args, **kwargs)
+        elif v is PROTOCOL_VERSION.V5:
+            return EmailV5(*args, **kwargs)
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(*args, **kwargs)
 
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
@@ -42,19 +46,27 @@ class EmailFactory(object):
         if server_id is None: # An email not having server_id means it's a local email
             server_info = NOT_ASSIGNED()
         else:
-            server_info = ServerAttributes(server_id, revision_id, mailbox_server_id, mailbox_name, version, uid, thread_id, server_time, expunged)
+            # NOTEX: fix collection nullable in daemon
+            server_info = ServerAttributes(
+                server_id, collection_id, revision_id, mailbox_server_id,
+                mailbox_name, version, uid, thread_id, server_time, expunged)
 
         flags = jloads(flags)
         metadata = jloads(metadata)
         status, v = toInt(metadata.get("protocol_version"))
-        if status == False:
+        if not status:
             raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")
 
         metadata.pop("protocol_version", None)
 
         metadata.update({
-            "body": Content(block_ids=metadata["body"]["block_ids"], wrapped_key=metadata["body"]["wrapped_key"], key_version=metadata["body"]["key_version"]),
-            "attachments": [Attachment.fromDict(att_dict) for att_dict in metadata.get("attachments")]
+            "body": Content(
+                block_ids=metadata["body"]["block_ids"],
+                wrapped_key=metadata["body"]["wrapped_key"],
+                key_version=metadata["body"]["key_version"]),
+            "attachments": [
+                Attachment.fromDict(att_dict)
+                for att_dict in metadata.get("attachments")]
         })
 
         if v is PROTOCOL_VERSION.V1:
@@ -65,45 +77,120 @@ class EmailFactory(object):
             return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
             return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+        elif v is PROTOCOL_VERSION.V5:
+            return EmailV5(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+        elif v is PROTOCOL_VERSION.V6:
+            return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
     @staticmethod
+    @WrapExceptions(EmailException, [KeyError])
     # TODO: give required props. in params
-    @params(dict, unicode, int, {object, types.NoneType})
-    def fromServerMessage(msg, wrapped_key, key_version, mailbox):
-        email_dict = {
+    @params(unicode, dict, unicode, int, {object, types.NoneType})
+    def fromServerMessage(for_user_id, decrypted_msg, wrapped_key, key_version, mailbox):
+        common_props = {
             "server_attr": ServerAttributes(
-                msg["id"], msg["rev_id"], msg["mailbox_id"], mailbox.name if mailbox else u"Unfetched", msg["version"], msg["uid"],
-                msg["thread_id"], msg["timestamp"], msg["is_deleted"]
+                decrypted_msg["id"], decrypted_msg["collection_id"],
+                decrypted_msg["rev_id"], decrypted_msg["mailbox_id"],
+                mailbox.name if mailbox else u"Unfetched", decrypted_msg["version"],
+                decrypted_msg["uid"], decrypted_msg["thread_id"],
+                decrypted_msg["timestamp"], decrypted_msg["is_deleted"]
             ),
-            "flags": msg["flags"],
-            "body": Content(None, map(lambda b: b["id"], msg["body"]["blocks"]), wrapped_key, key_version),
-            "sender": {"user_id": msg["private_metadata"]["sender"], "display_name": msg["private_metadata"]["sender"]},
-            "tos": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"]["tos"]) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"]["tos"],
-            "ccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"].get("ccs", [])) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"].get("ccs", []),
-            "bccs": map(lambda u: {"user_id": u, "display_name": u}, msg["private_metadata"].get("bccs", [])) if msg["protocol_version"] is PROTOCOL_VERSION.V4 else msg["private_metadata"].get("bccs", []),
-            "subject": msg["private_metadata"]["subject"],
-            "attachments": [Attachment(
-                AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get("content_disposition"), att["metadata"].get("content_id"), att["size"]),
-                Content(None, map(lambda b: b["id"], att["blocks"]), wrapped_key, key_version)
-            ) for att in msg["attachments"]],
-            "message_id": msg["message_id"],
-            "snippet": msg["body"].get("snippet"),
-            "in_reply_to": msg["in_reply_to"],
-            "references": msg["references"],
+            "flags": decrypted_msg["flags"],
+            "sender": {
+                "user_id": decrypted_msg["private_metadata"]["sender"],
+                "display_name": decrypted_msg["private_metadata"]["sender"]
+            },
+            "subject": decrypted_msg["private_metadata"]["subject"],
+            "message_id": decrypted_msg["message_id"],
+            "in_reply_to": decrypted_msg["in_reply_to"],
+            "references": decrypted_msg["references"],
             "reply_tos": [],
-            "protocol_version": msg["protocol_version"],
-            "other_headers": msg["private_metadata"].get("other_headers")
+            "protocol_version": decrypted_msg["protocol_version"],
+            "other_headers": decrypted_msg["private_metadata"].get("other_headers")
         }
-        if msg["protocol_version"] is PROTOCOL_VERSION.V1:
-            return EmailV1(**email_dict)
-        elif msg["protocol_version"] is PROTOCOL_VERSION.V2:
-            return EmailV2(**email_dict)
-        elif msg["protocol_version"] is PROTOCOL_VERSION.V3:
-            return EmailV3(**email_dict)
-        elif msg["protocol_version"] is PROTOCOL_VERSION.V4:
-            return EmailV4(**email_dict)
 
-        raise EmailException("Unsupported protocol version {}".format(msg["protocol_version"]))
+        # protocol < 5
+        protocol_dependent_props = {}
+        if decrypted_msg["protocol_version"] <= PROTOCOL_VERSION.V4:
+            body = Content(
+                None, map(lambda b: b["id"], decrypted_msg["body"]["blocks"]), wrapped_key, key_version, decrypted_msg["body"]["size"])
+            snippet = decrypted_msg["body"].get("snippet")
+            attachments = [Attachment(
+                AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get(
+                    "content_disposition"), att["metadata"].get("content_id"), att["size"]),
+                Content(
+                    None, map(lambda b: b["id"], att["blocks"]), wrapped_key, key_version)
+            ) for att in decrypted_msg["attachments"]]
+
+            if decrypted_msg["protocol_version"] < PROTOCOL_VERSION.V4:
+                tos = decrypted_msg["private_metadata"]["tos"]
+                ccs = decrypted_msg["private_metadata"].get("ccs", [])
+                bccs = decrypted_msg["private_metadata"].get("bccs", [])
+            else:
+                tos = map(lambda u: {"user_id": u, "display_name": u},
+                          decrypted_msg["private_metadata"]["tos"])
+                ccs = map(lambda u: {"user_id": u, "display_name": u},
+                          decrypted_msg["private_metadata"].get("ccs", []))
+                bccs = map(lambda u: {"user_id": u, "display_name": u},
+                           decrypted_msg["private_metadata"].get("bccs", []))
+
+        elif decrypted_msg["protocol_version"] >= PROTOCOL_VERSION.V5:
+            body = Content(
+                None, decrypted_msg["private_metadata"]["body"]["block_ids"], wrapped_key, key_version, decrypted_msg["private_metadata"]["body"]["size"])
+            snippet = decrypted_msg["private_metadata"]["body"]["snippet"]
+            attachments = [Attachment(
+                AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get(
+                    "content_disposition"), att["metadata"].get("content_id"), att["size"]),
+                Content(None, att["block_ids"], wrapped_key, key_version)
+            ) for att in decrypted_msg["private_metadata"]["attachments"]]
+
+            tos = map(lambda r: EmailHelpers.format_recip(r),
+                      decrypted_msg["private_metadata"]["tos"])
+            ccs = map(lambda r: EmailHelpers.format_recip(r),
+                      decrypted_msg["private_metadata"].get("ccs", []))
+
+            # if sender, we can see all bccs
+            # else figure out whether we are bcced.
+            lfor_user_id = for_user_id.lower()
+            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower():
+                bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+                           decrypted_msg["private_metadata"].get("bccs", []))
+            elif lfor_user_id not in [
+                    recip["user_id"].lower()
+                    for recip in decrypted_msg["private_metadata"]["tos"] +
+                    decrypted_msg["private_metadata"]["ccs"] +
+                    decrypted_msg["private_metadata"]["tos_groups"] +
+                    decrypted_msg["private_metadata"]["ccs_groups"]
+            ]:
+                bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
+            else:
+                # neither the sender or bcced, so cannot see the bccs
+                bccs = []
+
+        protocol_dependent_props = {
+            "body": body,
+            "snippet": snippet,
+            "attachments": attachments,
+            "tos": tos,
+            "ccs": ccs,
+            "bccs": bccs,
+        }
+
+        email_dict = MergeDicts(common_props, protocol_dependent_props)
+        if decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V1:
+            return EmailV1(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V2:
+            return EmailV2(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V3:
+            return EmailV3(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V4:
+            return EmailV4(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V5:
+            return EmailV5(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V6:
+            return EmailV6(**email_dict)
+
+        raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))

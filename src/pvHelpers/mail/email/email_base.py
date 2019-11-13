@@ -9,14 +9,14 @@ from .email_helpers import EmailException
 from .server_attributes import ServerAttributes
 
 
-#########################################
-########### Factory Base Class ##########
-#########################################
 class EmailBase(object):
+    """factory base class"""
+
     __initialized = False
 
-    def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs, sender, reply_tos, \
-                 subject, body,  attachments, references, in_reply_to, message_id, snippet):
+    def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,
+                 sender, reply_tos, subject, body,  attachments, references,
+                 in_reply_to, message_id, snippet):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
         self.server_attr = server_attr
@@ -91,7 +91,7 @@ class EmailBase(object):
         self.attachments = attachments
 
         if not isinstance(in_reply_to, (unicode, types.NoneType)):
-             raise EmailException(u"EmailBase.__init__: in_reply_to must be of type unicode")
+            raise EmailException(u"EmailBase.__init__: in_reply_to must be of type unicode")
         self.in_reply_to = in_reply_to
 
         if not isinstance(references, list):

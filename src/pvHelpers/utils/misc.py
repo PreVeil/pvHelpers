@@ -463,7 +463,7 @@ def MergeDicts(*args):
 
 
 def randUnicode(length=20):
-    GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz"
     return u"".join(random.choice(GLYPHS) for _ in range(length))
 
 

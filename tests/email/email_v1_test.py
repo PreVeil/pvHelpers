@@ -18,22 +18,24 @@ class User():
         self.display_name = randUnicode()
 
 
-def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments, in_reply_to, references, reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
-        if message_id is None:
-            message_id = u"<{}>".format(EmailHelpers.newMessageId())
-        sender = {"user_id": sender.user_id, "display_name": sender.display_name}
-        tos = [{"user_id": to.user_id, "display_name": to.display_name} for to in tos]
-        ccs = [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs]
-        bccs = [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs]
-        time = None
-        if not isinstance(server_attr, NOT_ASSIGNED):
-            time = server_attr.server_time
-        raw_mime = createMime(
-            text, html, [
-                Attachment.fromFileStorage(_file, AttachmentMetadata(_file.filename, _file.content_type))
-                for _file in attachments
-            ], message_id, time, subject, tos, ccs, bccs, reply_tos, sender, in_reply_to, references)
-        return EmailV1.fromMime(raw_mime.to_string(), flags, sender)
+def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
+                    in_reply_to, references, reply_tos=[], flags=[],
+                    server_attr=NOT_ASSIGNED(), message_id=None):
+    if message_id is None:
+        message_id = u"<{}>".format(EmailHelpers.newMessageId())
+    sender = {"user_id": sender.user_id, "display_name": sender.display_name}
+    tos = [{"user_id": to.user_id, "display_name": to.display_name} for to in tos]
+    ccs = [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs]
+    bccs = [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs]
+    time = None
+    if not isinstance(server_attr, NOT_ASSIGNED):
+        time = server_attr.server_time
+    raw_mime = createMime(
+        text, html, [
+            Attachment.fromFileStorage(_file, AttachmentMetadata(_file.filename, _file.content_type))
+            for _file in attachments
+        ], message_id, time, subject, tos, ccs, bccs, reply_tos, sender, in_reply_to, references)
+    return EmailV1.fromMime(raw_mime.to_string(), flags, sender)
 
 def test_from_mime():
     # create email from separated mime and test if it get reconstructed ok
@@ -59,9 +61,12 @@ def test_from_mime():
 
     # check if the attachments have been all separated properly
     body_mime = mime.from_string(email.body.content)
-    assert len(attachments) == len(filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE , body_mime.parts))
+    assert len(attachments) == len(filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
     # check att hashes are properly inserted as filenames
-    assert map(lambda a: HexEncode(Sha256Sum(a.to_string())), attachments) == map(lambda p: p.content_disposition[1]["filename"], filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE , body_mime.parts))
+    assert map(lambda a: HexEncode(Sha256Sum(a.to_string())), attachments) == \
+           map(
+               lambda p: p.content_disposition[1]["filename"],
+               filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
 
 
 def test_attachment_reconstruction():
@@ -109,9 +114,9 @@ def test_to_mime():
     email = create_email_v1(
         from_account, [to_account], [], [], u"S S", u"text", u"html", attachments, None, [], [], [])
 
-    raw_mime  = email.toMime()
+    raw_mime = email.toMime()
 
-    assert raw_mime.content_type.is_multipart() == True
+    assert raw_mime.content_type.is_multipart()
     parts = []
     for part in raw_mime.walk(with_self=True):
         parts.append(part)
@@ -124,7 +129,7 @@ def test_to_mime():
     assert parts[3].body == "html"
     assert parts[4].content_type == u"image/jpeg"
 
-    #with multiple atts
+    # with multiple atts
     attachments = [
         FileStorage(
             stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="application/zip"),

@@ -18,27 +18,29 @@ class User():
         self.user_id = randUnicode()
         self.display_name = randUnicode()
 
-def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments, in_reply_to, references, reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
-        if message_id is None:
-            message_id = u"<{}>".format(EmailHelpers.newMessageId())
-        body = EmailHelpers.serializeBody({"text": text, "html": html})
-        return EmailFactory.new(**{
-            "server_attr": server_attr,
-            "flags": flags,
-            "subject": subject,
-            "sender": {"user_id": sender.user_id, "display_name": sender.display_name},
-            "tos": [{"user_id": to.user_id, "display_name": to.display_name} for to in tos],
-            "ccs": [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs],
-            "bccs": [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs],
-            "message_id": message_id,
-            "body": Content(body),
-            "attachments": [Attachment.fromFileStorage(
-                _file, AttachmentMetadata(_file.filename, _file.content_type)) for _file in attachments],
-            "in_reply_to": in_reply_to,
-            "reply_tos": [],
-            "references": references,
-            "protocol_version": PROTOCOL_VERSION.V4
-        })
+def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments,
+                    in_reply_to, references, reply_tos=[], flags=[],
+                    server_attr=NOT_ASSIGNED(), message_id=None):
+    if message_id is None:
+        message_id = u"<{}>".format(EmailHelpers.newMessageId())
+    body = EmailHelpers.serializeBody({"text": text, "html": html})
+    return EmailFactory.new(**{
+        "server_attr": server_attr,
+        "flags": flags,
+        "subject": subject,
+        "sender": {"user_id": sender.user_id, "display_name": sender.display_name},
+        "tos": [{"user_id": to.user_id, "display_name": to.display_name} for to in tos],
+        "ccs": [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs],
+        "bccs": [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs],
+        "message_id": message_id,
+        "body": Content(body),
+        "attachments": [Attachment.fromFileStorage(
+            _file, AttachmentMetadata(_file.filename, _file.content_type)) for _file in attachments],
+        "in_reply_to": in_reply_to,
+        "reply_tos": [],
+        "references": references,
+        "protocol_version": PROTOCOL_VERSION.V4
+    })
 
 def test_to_mime():
     from_account, to_account = User(), User()
@@ -47,9 +49,9 @@ def test_to_mime():
     attachments = []
     email = create_email_v4(
         from_account, [to_account], [], [], u"S S", u"text", u"html", attachments, None, [], [], [])
-    raw_mime  = email.toMime()
+    raw_mime = email.toMime()
 
-    assert raw_mime.content_type.is_multipart() == True
+    assert raw_mime.content_type.is_multipart()
     parts = []
     for part in raw_mime.walk(with_self=True):
         parts.append(part)
@@ -60,7 +62,7 @@ def test_to_mime():
     assert parts[2].content_type == "text/html"
     assert parts[2].body == "html"
 
-    #with multiple atts
+    # with multiple atts
     attachments = [
         FileStorage(stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="image/png"),
         FileStorage(stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="video/mp4"),

@@ -15,11 +15,13 @@ class EmailV2(EmailHelpers, EmailBase):
     """Production version: Protocol version 2 is json based email entity"""
     protocol_version = PROTOCOL_VERSION.V2
 
-    def __init__(self, server_attr, flags, tos, ccs, bccs, sender, reply_tos, subject, \
-                 body, attachments, references, in_reply_to, message_id, snippet=None, other_headers=None, **kwargs):
-        super(EmailV2, self).__init__(server_attr, self.__class__.protocol_version, flags, \
-                                      tos, ccs, bccs, sender, reply_tos, subject, \
-                                      body,  attachments, references, in_reply_to, message_id, snippet)
+    def __init__(self, server_attr, flags, tos, ccs, bccs, sender,
+                 reply_tos, subject, body, attachments, references,
+                 in_reply_to, message_id, snippet=None, other_headers=None, **kwargs):
+        super(EmailV2, self).__init__(
+            server_attr, self.__class__.protocol_version, flags,
+            tos, ccs, bccs, sender, reply_tos, subject, body,
+            attachments, references, in_reply_to, message_id, snippet)
         if body.content != None:
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
@@ -135,18 +137,18 @@ class EmailV2(EmailHelpers, EmailBase):
             "sender": self.sender,
             "tos": self.tos,
             "ccs": self.ccs,
-            "bccs" : self.bccs,
+            "bccs": self.bccs,
             "in_reply_to" : self.in_reply_to,
             "reply_tos": self.reply_tos,
-            "references" : self.references,
-            "attachments" : self.attachments,
+            "references": self.references,
+            "attachments": self.attachments,
             "body": self.body,
             "message_id": self.message_id,
             "server_attr": self.server_attr,
             "other_headers": self.other_headers
         }
 
-    #TODO: get tos ccs and ...
+    # TODO: get tos ccs and ...
     @classmethod
     def fromMime(cls, mime_string, flags, sender):
         if not isinstance(mime_string, (str, bytes)):

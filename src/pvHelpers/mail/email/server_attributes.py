@@ -6,10 +6,17 @@ from .email_helpers import EmailException
 class ServerAttributes(object):
     __initialized = False
 
-    def __init__(self, server_id, revision_id=None, mailbox_server_id=None, mailbox_name=None, version=None, uid=None, thread_id=None, server_time=None, expunged=None):
+    def __init__(self, server_id, collection_id, revision_id=None,
+                 mailbox_server_id=None, mailbox_name=None, version=None,
+                 uid=None, thread_id=None, server_time=None, expunged=None):
         if not isinstance(server_id, unicode):
             raise EmailException(u"ServerAttributes.__init__: server_id must be of type unicode")
         self.server_id = server_id
+
+        if not isinstance(collection_id, (unicode, types.NoneType)):
+            raise EmailException(
+                u"ServerAttributes.__init__: collection_id must be of type unicode")
+        self.collection_id = collection_id
 
         if not isinstance(revision_id, (int, types.NoneType)):
             raise EmailException(u"ServerAttributes.__init__: revision_id must be of type int")
@@ -63,5 +70,6 @@ class ServerAttributes(object):
             "uid": self.uid,
             "thread_id": self.thread_id,
             "server_time": self.server_time,
-            "expunged": self.expunged
+            "expunged": self.expunged,
+            "collection_id": self.collection_id
         }
