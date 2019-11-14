@@ -1,15 +1,16 @@
-from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION, CryptoException,
                               SIGN_KEY_PROTOCOL_VERSION)
 from pvHelpers.crypto.box import AsymmBox
 from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
 from pvHelpers.utils import b64dec, b64enc, jdumps, jloads, params
 
 
-class ENCRYPTED_SHARD_VERSIONS(object):
+class ENCRYPTED_SHARD_VERSIONS(object):  # noqa: N801
     V1 = 1
     V2 = 2
 
     Latest = 1
+
 
 class EncryptedShardV1(object):
     protocol_version = 1
@@ -28,13 +29,13 @@ class EncryptedShardV1(object):
         return cls(sharee_id, sharee_key.key_version, b64enc(box.encrypt(raw_shard)), required)
 
     @params(object, UserKeyBase, PublicUserKeyBase)
-    def decryptShard(self, sharee_key, sharer_key):
+    def decrypt_shard(self, sharee_key, sharer_key):
         if sharee_key.key_version != self.sharee_key_version:
             raise ValueError(u"provided key has wrong key_version {}".format(sharee_key.key_version))
         box = AsymmBox(sharee_key.encryption_key, sharer_key.public_key)
         return box.decrypt(b64dec(self.secret))
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "user_id": self.sharee_user_id,
             "key_version": self.sharee_key_version,
@@ -56,7 +57,7 @@ class EncryptedShardV2(EncryptedShardV1):
         }), required)
 
     @params(object, UserKeyBase, PublicUserKeyBase)
-    def decryptShard(self, sharee_key, sharer_key):
+    def decrypt_shard(self, sharee_key, sharer_key):
         if sharee_key.key_version != self.sharee_key_version:
             raise ValueError(u"provided key has wrong key_version {}".format(sharee_key.key_version))
 
@@ -70,7 +71,7 @@ class EncryptedShardV2(EncryptedShardV1):
 
 def new(sharer_key, sharee_id, sharee_public_user_key, raw_shard, required):
     if sharer_key.signing_key.protocol_version > SIGN_KEY_PROTOCOL_VERSION.V1 or \
-        sharee_public_user_key.public_key.protocol_version > ASYMM_KEY_PROTOCOL_VERSION.V2:
+       sharee_public_user_key.public_key.protocol_version > ASYMM_KEY_PROTOCOL_VERSION.V2:
         return EncryptedShardV2.new(
             sharer_key, sharee_id, sharee_public_user_key, raw_shard, required)
     else:
@@ -78,7 +79,7 @@ def new(sharer_key, sharee_id, sharee_public_user_key, raw_shard, required):
             sharer_key, sharee_id, sharee_public_user_key, raw_shard, required)
 
 
-def fromDict(shard_info):
+def from_dict(shard_info):
     protocol_version = shard_info.get("protocol_version", 1)
     if protocol_version == ENCRYPTED_SHARD_VERSIONS.V1:
         return EncryptedShardV1(

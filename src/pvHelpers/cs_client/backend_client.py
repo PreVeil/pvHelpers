@@ -4,7 +4,7 @@ import inspect
 import requests
 
 from pvHelpers.logger import g_log
-from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.user import LocalUser
 
 from .utils import (ExpiredDeviceKey, ExpiredUserKey, RequestError,
                     UnauthorizedReqLimitException)
@@ -39,7 +39,7 @@ class BackendClient(object):
 
     def _handlersWrapper(self, fun):
         def __wrapper(*args, **kwargs):
-            if args and isinstance(args[0], (UserDBNode, LocalUser)):
+            if args and isinstance(args[0], LocalUser):
                 u = args[0]
                 if not self._isUserSynced(u.user_id):
                     # user has too many 401 unauthorized response

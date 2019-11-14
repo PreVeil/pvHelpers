@@ -134,7 +134,7 @@ class ProxyConfigItem(object):
             self.proxies[type_] = proxy_obj
 
     # need this to work with the existing temp object interface
-    def toDB(self):
+    def to_db(self):
         return self.toDict()
 
     def toDict(self):

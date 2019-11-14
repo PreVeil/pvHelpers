@@ -112,7 +112,7 @@ class UserKeyV0(UserKeyBase):
         return b64
 
 
-    def toDB(self):
+    def to_db(self):
         return jdumps({
             "private_key": self.encryption_key.serialize(),
             "signing_key": self.signing_key.serialize(),

@@ -61,8 +61,8 @@ class PreparedMessageV5(PreparedMessageHelpers, PreparedMessageBase):
                 key_version = None
                 wrapped_key = None
             else:
-                key_version = recip.public_user_key.key_version if recip.isClaimed() else None
-                wrapped_key = self.wrapped_key_for(self.opaque_key, recip) if recip.isClaimed() else None
+                key_version = recip.public_user_key.key_version if recip.is_claimed() else None
+                wrapped_key = self.wrapped_key_for(self.opaque_key, recip) if recip.is_claimed() else None
             entry = {"user_id": user_id, "key_version": key_version,
                      "wrapped_key": wrapped_key}
             out.append(entry)

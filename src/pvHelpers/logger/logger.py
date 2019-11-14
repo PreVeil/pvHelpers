@@ -10,7 +10,7 @@ class LogWrapper(object):
     def __init__(self):
         self.logobj = None
 
-    def updateLog(self, logobj):
+    def update_log(self, logobj):
         self.logobj = logobj
 
     def debug(self, string):
@@ -111,11 +111,7 @@ class LogWrapper(object):
     # the PreVeil directories exist, we can start logging to disk instead of
     # stdout.
     # <mode> only determines the application directory to use, `PreVeilData` or `PreVeilBleedData`
-    def startFileSystemWrites(self,
-                              name,
-                              log_dir,
-                              twisted_observer_fn=None,
-                              extra_logger=None):
+    def start_fs_writes(self, name, log_dir, twisted_observer_fn=None, extra_logger=None):
         if not isinstance(twisted_observer_fn, types.NoneType):
             if not (callable(twisted_observer_fn) and
                     twisted_observer_fn.__name__ == "PythonLoggingObserver"):

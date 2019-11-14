@@ -1,3 +1,5 @@
+import datetime
+
 from pvHelpers.user import LocalDevice
 from pvHelpers.utils import jdumps, params
 
@@ -5,7 +7,7 @@ from pvHelpers.utils import jdumps, params
 class DeviceRequest(object):
     @classmethod
     @params(object, unicode, LocalDevice)
-    def newForRecovery(cls, user_id, device):
+    def new_for_recovery(cls, user_id, device):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=7)
         return cls(device, jdumps({
@@ -13,30 +15,30 @@ class DeviceRequest(object):
             "type": "add_device",
             "timestamp": timestamp.isoformat(),
             "expiration": expiration.isoformat(),
-            "data": device.toDict()
+            "data": device.to_dict()
         }), [])
 
     @classmethod
     @params(object, unicode, LocalDevice)
-    def newForTransfer(cls, user_id, device):
-        return cls(device, jdumps(device.toDict()), [])
+    def new_for_transfer(cls, user_id, device):
+        return cls(device, jdumps(device.to_dict()), [])
 
     def __init__(self, device, serialized_req, signatures):
         self.device = device
         self.serialized_req = serialized_req
         self.signatures = signatures
 
-    def toDB(self):
+    def to_db(self):
         return {
-            "device": self.device.toDB(),
+            "device": self.device.to_db(),
             "serialized_req": self.serialized_req,
             "signatures": self.signatures
         }
 
     @classmethod
-    def fromDB(cls, request_dict):
+    def from_db(cls, request_dict):
         return cls(
-            LocalDevice.fromDB(request_dict["device"]),
+            LocalDevice.from_db(request_dict["device"]),
             request_dict["serialized_req"],
             request_dict["signatures"]
         )

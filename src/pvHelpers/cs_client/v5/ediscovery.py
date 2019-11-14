@@ -1,9 +1,9 @@
-from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.user import LocalUser
 from pvHelpers.utils import params
 
 
 class EDiscoveryV5(object):
-    @params(object, {LocalUser, UserDBNode}, {int, long}, unicode, unicode, unicode)
+    @params(object, LocalUser, {int, long}, unicode, unicode, unicode)
     def getMailHistoryForExport(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(for_user_cid),
@@ -14,7 +14,6 @@ class EDiscoveryV5(object):
         })
         resp.raise_for_status()
         return resp.json()
-
 
     def getExportMessage(self, user, export_id, collection_id, member_id, id, version=None):
         url, raw_body, headers = self.prepareSignedRequest(

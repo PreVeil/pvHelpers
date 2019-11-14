@@ -84,7 +84,7 @@ class DeviceV5(object):
             user, "/users/devices/keys",
             "POST", {
                 "user_id": user.user_id,
-                "device": device.toDict()
+                "device": device.to_dict()
             }, ignore_device_sign=True
         )
         resp = self.post(url, headers, raw_body)

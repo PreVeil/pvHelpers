@@ -18,7 +18,7 @@ class LocalDevice(Device):
     def public_key(self):
         return self.key.public_user_key
 
-    def toDB(self):
+    def to_db(self):
         return {
             "device_id": self.id,
             "device_name": self.name,
@@ -28,14 +28,14 @@ class LocalDevice(Device):
         }
 
     @classmethod
-    def newDevice(cls, key_version=1):
+    def new(cls, key_version=1):
         return cls(
             unicode(uuid.uuid4()), None,
             PVKeyFactory.newUserKey(key_version), {}, DeviceStatus.LOCAL
         )
 
     @classmethod
-    def fromDB(cls, device_data):
+    def from_db(cls, device_data):
         return cls(
             device_data["device_id"],
             device_data["device_name"],

@@ -1,10 +1,9 @@
 import calendar
 import time
-import types
 
 from pvHelpers.mail import PreparedMessageBase
-from pvHelpers.user import LocalUser, UserDBNode
-from pvHelpers.utils import b64enc, params
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
 
 from ..utils import ServerResponseError
 
@@ -37,7 +36,7 @@ class MailV4(object):
             raise ServerResponseError(e)
         return data
 
-    @params(object, {LocalUser, UserDBNode}, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
+    @params(object, LocalUser, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
     def update_flags(self, user, mailbox_id, updates):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
@@ -51,7 +50,7 @@ class MailV4(object):
         except (KeyError. ValueError) as e:
             raise ServerResponseError(e)
 
-    @params(object, {LocalUser, UserDBNode}, unicode, unicode, [{int, long}])
+    @params(object, LocalUser, unicode, unicode, [{int, long}])
     def dupeMessages(self, user, src_mailbox_id, dest_mailbox_id, uids):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages/copy".format(user.mail_cid, dest_mailbox_id),
@@ -70,7 +69,7 @@ class MailV4(object):
 
         return data
 
-    @params(object, {LocalUser, UserDBNode}, {int, long})
+    @params(object, LocalUser, {int, long})
     def getMailHistory(self, user, last_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),
@@ -82,7 +81,7 @@ class MailV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, {LocalUser, UserDBNode}, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode)
     def expungeEmail(self, user, mailbox_id, email_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/mail/{}/mailboxes/{}/messages/{}".format(user.mail_cid, mailbox_id, email_id),
@@ -92,7 +91,7 @@ class MailV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, {LocalUser, UserDBNode}, unicode)
+    @params(object, LocalUser, unicode)
     def getMailboxUnseenCount(self, user, mailbox_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes/{}/unseen_count".format(user.mail_cid, mailbox_id),

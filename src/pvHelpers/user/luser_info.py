@@ -1,11 +1,12 @@
 import abc
 import sys
 
-from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, jdumps, jloads,
-                             toInt)
+from pvHelpers.utils import (EncodingException, jdumps, jloads,
+                             NOT_ASSIGNED, toInt)
 
 if sys.platform in ["win32"]:
     from pvHelpers.win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
+
 
 class LUserInfo(object):
     __metaclass__ = abc.ABCMeta
@@ -79,11 +80,11 @@ class LUserInfo(object):
     #     raise NotImplementedError()
 
     @abc.abstractmethod
-    def isAdmin(self):
+    def is_admin(self):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def isPreVeil(self):
+    def is_preveil(self):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -93,8 +94,10 @@ class LUserInfo(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
 class LUserInfoWin(LUserInfo):
     platform = "win32"
+
     def __init__(self, sid, psids):
         self.sid = sid
         self.psids = psids
@@ -121,16 +124,17 @@ class LUserInfoWin(LUserInfo):
             }
         })
 
-    def isAdmin(self):
+    def is_admin(self):
         return ADMINISTRATORS_SID in self.psids
 
-    def isPreVeil(self):
+    def is_preveil(self):
         # currently our services run as LocalSystem
         # TODO: create preveil group in windows
         return LOCAL_SYSTEM_SID == self.sid
 
     def __eq__(self, other):
         return self.sid == other.sid
+
 
 class LUserInfoUnix(LUserInfo):
     platform = "darwin"
@@ -142,11 +146,10 @@ class LUserInfoUnix(LUserInfo):
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
         status, uid = toInt(suid)
-        if status == False:
+        if status is False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 
         return cls(uid)
-
 
     def __init__(self, uid):
         self.uid = uid
@@ -160,19 +163,18 @@ class LUserInfoUnix(LUserInfo):
             }
         })
 
-    def isAdmin(self):
+    def is_admin(self):
         # root considered Admin
         # TODO: chcek if user's group info if is part of `root` group
         return self.uid == 0
 
-    def isPreVeil(self):
+    def is_preveil(self):
         import pwd
-        PREVEIL_UID = pwd.getpwnam("preveil").pw_uid
-
-        return PREVEIL_UID == self.uid
+        return pwd.getpwnam("preveil").pw_uid == self.uid
 
     def __eq__(self, other):
         return self.uid == other.uid
+
 
 class LUserInfoLinux(LUserInfo):
     platform = "linux2"
@@ -184,7 +186,7 @@ class LUserInfoLinux(LUserInfo):
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
         status, uid = toInt(suid)
-        if status == False:
+        if status is False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 
         return cls(uid)
@@ -201,16 +203,15 @@ class LUserInfoLinux(LUserInfo):
             }
         })
 
-    def isAdmin(self):
+    def is_admin(self):
         # root considered Admin
         # TODO: chcek if user's group info if is part of `root` group
         return self.uid == 0
 
-    def isPreVeil(self):
+    def is_preveil(self):
         import pwd
-        PREVEIL_UID = pwd.getpwnam("preveil").pw_uid
 
-        return PREVEIL_UID == self.uid
+        return pwd.getpwnam("preveil").pw_uid == self.uid
 
     def __eq__(self, other):
         return self.uid == other.uid

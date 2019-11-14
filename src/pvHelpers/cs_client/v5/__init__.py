@@ -17,7 +17,7 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
         super(APIClientV5, self).__init__(backend)
 
     def _prepareSignedRequest(self, signer, resource, method, body, ignore_device_sign=False, export=None):
-        if not ignore_device_sign and not signer.hasDeviceKey():
+        if not ignore_device_sign and not signer.has_device_key():
             raise MissingDeviceKey("V5 requires device key")
         url = self.url + resource
         if body is None:
@@ -27,10 +27,10 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
 
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
         if not ignore_device_sign:
-            device_key_version, device_signature = signer.signWithDeviceKey(utf8Encode(canonical_request))
-            user_key_version, user_signature = signer.signWithUserKey(device_signature)
+            device_key_version, device_signature = signer.sign_with_device_key(utf8Encode(canonical_request))
+            user_key_version, user_signature = signer.sign_with_user_key(device_signature)
         else:
-            user_key_version, user_signature = signer.signWithUserKey(utf8Encode(canonical_request))
+            user_key_version, user_signature = signer.sign_with_user_key(utf8Encode(canonical_request))
         encoded_user_id = utf8Encode(signer.user_id)
         export_id, member_id = None, None
         if export:

@@ -1,14 +1,14 @@
 import types
 
-from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.crypto.utils import HexEncode, Sha256Sum
 from pvHelpers.mail import PreparedMessageBase
-from pvHelpers.user import LocalUser, UserDBNode
-from pvHelpers.utils import jdumps, params, b64dec
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import b64dec, jdumps, params
 
 from ..utils import ServerResponseError
 
 STORAGE_REQUEST_TIMEOUT = 120
+
 
 class StorageV4(object):
     # NOTEXX: needs fixing on consumers
@@ -24,7 +24,7 @@ class StorageV4(object):
                             timeout=STORAGE_REQUEST_TIMEOUT)
             resp.raise_for_status()
 
-    @params(object, {LocalUser, UserDBNode}, [unicode], {types.NoneType, unicode})
+    @params(object, LocalUser, [unicode], {types.NoneType, unicode})
     def downloadBlocks(self, user, block_ids, collection_id=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/storage/{}/blocks".format(

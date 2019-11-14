@@ -56,5 +56,5 @@ class UserKeyV1(UserKeyV0):
         return b64
 
 
-    def toDB(self):
+    def to_db(self):
         return self.serialize()

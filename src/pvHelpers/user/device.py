@@ -1,7 +1,5 @@
-import datetime
 import sys
 import types
-import uuid
 
 from pvHelpers.crypto import PVKeyFactory
 from pvHelpers.crypto.user_key import PublicUserKeyBase
@@ -11,11 +9,13 @@ CURRENT_PLATFORM = u"windows" if sys.platform == "win32" else \
                 u"macos" if sys.platform == "darwin" else \
                 u"linux" if sys.platform == "linux2" else sys.platform
 
+
 class DeviceStatus(object):
     LOCAL = u"local"
     ACTIVE = u"active"
     EXPIRED = u"expired"
     LOCKED = u"locked"
+
 
 class Device(object):
     @params(object, unicode, {types.NoneType, unicode}, PublicUserKeyBase, dict, unicode, unicode)
@@ -31,7 +31,7 @@ class Device(object):
     def public_key(self):
         return self._public_key
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "device_id": self.id,
             "device_name": self.name if self.name else None,
@@ -41,7 +41,7 @@ class Device(object):
         }
 
     @classmethod
-    def fromDict(cls, device_data):
+    def from_dict(cls, device_data):
         return cls(
             device_data["device_id"],
             device_data["device_name"],

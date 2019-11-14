@@ -7,7 +7,7 @@ class UserGroup(object):
         self.address = address
         self.members = members
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "alias": self.address,
             "users": self.members

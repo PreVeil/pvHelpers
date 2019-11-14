@@ -1,8 +1,9 @@
-from pvHelpers.user import LocalUser, UserDBNode
-from pvHelpers.utils import b64enc, params, toInt
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
+
 
 class OrgV4(object):
-    @params(object, {UserDBNode, LocalUser}, unicode)
+    @params(object, LocalUser, unicode)
     def getOrgInfo(self, user, org_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}".format(org_id), "GET", None
@@ -33,9 +34,9 @@ class OrgV4(object):
     def createOrgAG(self, user, org_id, name, optionals_required, approvers):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/groups".format(org_id), "POST", {
-                u"name" : name,
-                u"optionals_required" : optionals_required,
-                u"approvers" : approvers
+                u"name": name,
+                u"optionals_required": optionals_required,
+                u"approvers": approvers
             }
         )
         resp = self.post(url, headers, raw_body)

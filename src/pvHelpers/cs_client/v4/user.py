@@ -1,18 +1,18 @@
 import types
 
-import requests
-
 from pvHelpers.crypto import PVKeyFactory
-from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
+from pvHelpers.crypto.user_key import PublicUserKeyBase
 from pvHelpers.crypto.utils import HexEncode, Sha256Sum
 from pvHelpers.logger import g_log
-from pvHelpers.user import LocalUser, OrganizationInfo, User, UserDBNode
-from pvHelpers.utils import (CaseInsensitiveDict, b64enc, jdumps, jloads,
+from pvHelpers.user import LocalUser, OrganizationInfo, User
+from pvHelpers.utils import (b64enc, CaseInsensitiveDict, jloads,
                              params, utf8Encode)
+import requests
 
 from ..utils import ServerResponseError
 
 EXISTS = "exists"
+
 
 class UserV4(object):
     @params(object, LocalUser, int)
@@ -65,14 +65,14 @@ class UserV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, {UserDBNode, LocalUser}, unicode, {int, long})
+    @params(object, LocalUser, unicode, {int, long})
     def fetchUser(self, user, user_id, key_version=-1):
         user_data = self.fetchUsers(user, [(user_id, key_version)])
         if len(user_data) != 1 or user_id not in user_data:
             return None
         return user_data[user_id]
 
-    @params(object, {UserDBNode, LocalUser}, [(unicode, int)])
+    @params(object, LocalUser, [(unicode, int)])
     def fetchUsers(self, user, user_ids):
         user_ids = list(set(user_ids))
         query_data = []

@@ -88,7 +88,7 @@ class PreparedMessageV6(PreparedMessageHelpers, PreparedMessageBase):
             # add individual recip
             if id_ not in insert_dict:
                 key_version, wrapped_key = None, None
-                if recip and recip.isClaimed():
+                if recip and recip.is_claimed():
                     key_version = recip.public_user_key.key_version
                     wrapped_key = self.wrapped_key_for(self.opaque_key, recip)
 
@@ -150,7 +150,7 @@ class PreparedMessageV6(PreparedMessageHelpers, PreparedMessageBase):
                     )
                     continue
 
-                if recip.isClaimed():
+                if recip.is_claimed():
                     key_version = recip.public_user_key.key_version
 
             individual_recips.append({"user_id": user_id, "key_version": key_version})

@@ -123,7 +123,7 @@ class Attachment(object):
         )
         return Attachment(metadata, Content(**data.get("content")))
 
-    # should use Email.fromDict() unless certain about types
+    # should use Email.from_dict() unless certain about types
     @params(object, AttachmentMetadata, Content)
     def __init__(self, metadata, content):
         self.content = content

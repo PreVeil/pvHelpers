@@ -51,7 +51,7 @@ class EmailFactory(object):
         metadata = jloads(metadata)
         status, v = toInt(metadata.get("protocol_version"))
         if not status:
-            raise EmailException(u"EmailFactory.fromDB: protocol_version must coerce to int")
+            raise EmailException(u"protocol_version must coerce to int")
 
         metadata.pop("protocol_version", None)
 
@@ -61,7 +61,7 @@ class EmailFactory(object):
                 wrapped_key=metadata["body"]["wrapped_key"],
                 key_version=metadata["body"]["key_version"]),
             "attachments": [
-                Attachment.fromDict(att_dict)
+                Attachment.from_dict(att_dict)
                 for att_dict in metadata.get("attachments")]
         })
 

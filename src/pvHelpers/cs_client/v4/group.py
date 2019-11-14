@@ -1,5 +1,5 @@
 from pvHelpers.crypto import PVKeyFactory
-from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.user import LocalUser
 from pvHelpers.utils import b64enc, params
 
 from ..utils import ServerResponseError

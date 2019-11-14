@@ -43,7 +43,7 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
 
         encoded_user_id = utf8Encode(signer.user_id)
-        user_key_version, user_signature = signer.signWithUserKey(utf8Encode(canonical_request))
+        user_key_version, user_signature = signer.sign_with_user_key(utf8Encode(canonical_request))
         headers = {
             "content-type": "application/json",
             "x-user-id": encoded_user_id,

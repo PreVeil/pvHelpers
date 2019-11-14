@@ -1,6 +1,6 @@
 import types
 
-from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.user import LocalUser
 from pvHelpers.utils import b64enc, params, utf8Encode
 
 EXISTS = "exists"
@@ -25,7 +25,7 @@ class UserEventsV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, {UserDBNode, LocalUser}, int)
+    @params(object, LocalUser, int)
     def getUserEvents(self, user, last_rev_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/events", "GET", None

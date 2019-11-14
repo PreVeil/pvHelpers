@@ -1,10 +1,4 @@
-import types
-
-import requests
-
 from pvHelpers.utils import params
-
-from .luser_info import LUserInfo
 
 
 class User(object):
@@ -23,19 +17,20 @@ class User(object):
 
         return sorted(self.public_user_keys, key=lambda k: k.key_version, reverse=True)[0]
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            "user_id" : self.user_id,
+            "user_id": self.user_id,
             "account_version": self.account_version,
-            "display_name" : self.display_name,
-            "mail_cid" : self.mail_cid,
-            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
+            "display_name": self.display_name,
+            "mail_cid": self.mail_cid,
+            "org_info": self.org_info if self.org_info is None else self.org_info.to_dict()
         }
-    def isClaimed(self):
+
+    def is_claimed(self):
         return len(self.public_user_keys) > 0
 
     @params(object, {int, long})
-    def getPublicUserKeyWithVersion(self, version=-1):
+    def get_public_user_key_with_version(self, version=-1):
         if version == -1:
             return self.public_user_key
         return next(k for k in self.public_user_keys if k.key_version == version)
@@ -50,13 +45,13 @@ class OrganizationInfo(object):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.toDict() == other.toDict()
+            return self.to_dict() == other.to_dict()
         return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "org_id": self.org_id,
             "org_name": self.org_name,

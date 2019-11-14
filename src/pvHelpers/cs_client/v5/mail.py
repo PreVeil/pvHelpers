@@ -1,4 +1,4 @@
-from pvHelpers.user import LocalUser, UserDBNode
+from pvHelpers.user import LocalUser
 from pvHelpers.utils import params
 
 

@@ -6,7 +6,7 @@ from .user_request import ExportRequest
 class ExportRequestLocalState(object):
     INIT = u"init"
     STARTED = u"started"
-    CANCELLED  = u"cancelled"
+    CANCELLED = u"cancelled"
     DELETED = u"deleted"
     COMPLETED = u"completed"
 
@@ -16,26 +16,32 @@ class ExportRequestLocalState(object):
         return cls(request, approvers, ExportRequestLocalState.INIT, None, group_info)
 
     # approvers_info -> Map approver_id => {"approver_shards": ..., "approver_signature": unicode}
-    # approver_shards -> Map member_id => [{"sharder_key_version": {int, long}, "key_version": {int, long}, "shard": unicode, "wrapped_key_version": unicode, "user_id": unicode}]
+    # approver_shards ->
+    # Map member_id => [{
+    #   "sharder_key_version": {int, long},
+    #   "key_version": {int, long}, "shard": unicode,
+    #   "wrapped_key_version": unicode, "user_id": unicode
+    # }]
     # @params(object, ExportRequest, approvers_info, unicode)
     def __init__(self, request, approvers_info, status, dropdir, group_info):
         self.request = request
-        self.approvers_info = CaseInsensitiveDict(
-            {id_: MergeDicts(info, {"approver_shards": CaseInsensitiveDict(info["approver_shards"])}) for id_, info in approvers_info.iteritems()}
-        )
+        self.approvers_info = CaseInsensitiveDict({
+            id_: MergeDicts(info, {"approver_shards": CaseInsensitiveDict(info["approver_shards"])})
+            for id_, info in approvers_info.iteritems()
+        })
         self.status = status
         self.dropdir = dropdir
         self.group_info = group_info
 
-    def addOrUpdateApproverInfo(self, approver_id, approver_info):
+    def add_or_update_approver_info(self, approver_id, approver_info):
         self.approvers_info[approver_id] = MergeDicts(approver_info, {
             "approver_shards": CaseInsensitiveDict(approver_info["approver_shards"])
         })
 
     # NOTE: do not include decrypted shards!
-    def toDict(self):
+    def to_dict(self):
         return {
-            "request": self.request.toDict(),
+            "request": self.request.to_dict(),
             "approvers_info": CaseInsensitiveDict({
                 id_: MergeDicts(info, {
                     "approver_shards": CaseInsensitiveDict({
@@ -49,9 +55,9 @@ class ExportRequestLocalState(object):
             "group_info": self.group_info
         }
 
-    def toDB(self):
+    def to_db(self):
         return {
-            "request": self.request.toDict(),
+            "request": self.request.to_dict(),
             "approvers_info": self.approvers_info,
             "status": self.status,
             "dropdir": self.dropdir,
@@ -59,7 +65,7 @@ class ExportRequestLocalState(object):
         }
 
     @classmethod
-    def fromDB(cls, key_dict):
+    def from_db(cls, key_dict):
         req = key_dict["request"]
         return cls(
             ExportRequest(req["request_payload"], req["signature"], req["request_id"]),

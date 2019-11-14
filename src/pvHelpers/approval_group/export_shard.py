@@ -1,11 +1,11 @@
-from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
+from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION, CryptoException,
                               SIGN_KEY_PROTOCOL_VERSION)
 from pvHelpers.crypto.box import AsymmBox
 from pvHelpers.crypto.user_key import PublicUserKeyBase, UserKeyBase
 from pvHelpers.utils import b64dec, b64enc, jdumps, jloads, params
 
 
-class EXPORT_ENCRYPTED_SHARD_VERSIONS(object):
+class EXPORT_ENCRYPTED_SHARD_VERSIONS(object):  # noqa: N801
     V1 = 1
     V2 = 2
 
@@ -16,7 +16,8 @@ class ExportEncryptedShardV1(object):
     protocol_version = 1
 
     @params(object, unicode, {int, long}, {int, long}, {int, long}, unicode, bool)
-    def __init__(self, sharee_user_id, sharee_key_version, sharer_key_version, wrapped_key_version, secret, required=False):
+    def __init__(self, sharee_user_id, sharee_key_version, sharer_key_version,
+                 wrapped_key_version, secret, required=False):
         self.sharee_user_id = sharee_user_id
         self.sharee_key_version = sharee_key_version
         self.sharer_key_version = sharer_key_version
@@ -33,7 +34,7 @@ class ExportEncryptedShardV1(object):
             sharded_key_version, b64enc(box.encrypt(raw_shard)), required)
 
     @params(object, UserKeyBase, PublicUserKeyBase)
-    def decryptShard(self, sharee_key, sharer_key):
+    def decrypt_shard(self, sharee_key, sharer_key):
         if sharee_key.key_version != self.sharee_key_version:
             raise ValueError(u"provided key has wrong key_version {}".format(sharee_key.key_version))
         if sharer_key.key_version != self.sharer_key_version:
@@ -41,7 +42,7 @@ class ExportEncryptedShardV1(object):
         box = AsymmBox(sharee_key.encryption_key, sharer_key.public_key)
         return box.decrypt(b64dec(self.secret))
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "user_id": self.sharee_user_id,
             "key_version": self.sharee_key_version,
@@ -62,12 +63,12 @@ class ExportEncryptedShardV2(ExportEncryptedShardV1):
         return cls(
             sharee_id, sharee_key.key_version, sharer_key.key_version,
             sharded_key_version, jdumps({
-            "shard": b64enc(sharee_key.public_key.seal(raw_shard)),
-            "signature": b64enc(sharer_key.signing_key.sign(raw_shard))
-        }), required)
+                "shard": b64enc(sharee_key.public_key.seal(raw_shard)),
+                "signature": b64enc(sharer_key.signing_key.sign(raw_shard))
+            }), required)
 
     @params(object, UserKeyBase, PublicUserKeyBase)
-    def decryptShard(self, sharee_key, sharer_key):
+    def decrypt_shard(self, sharee_key, sharer_key):
         if sharee_key.key_version != self.sharee_key_version:
             raise ValueError(u"provided key has wrong key_version {}".format(sharee_key.key_version))
         if sharer_key.key_version != self.sharer_key_version:
@@ -84,7 +85,7 @@ class ExportEncryptedShardV2(ExportEncryptedShardV1):
 # NOTE: making sure that V2 scheme is used when any of the sides have fips enabled keys
 def new(sharer_key, sharee_id, sharee_public_user_key, sharded_key_version, raw_shard, required):
     if sharer_key.signing_key.protocol_version > SIGN_KEY_PROTOCOL_VERSION.V1 or \
-        sharee_public_user_key.public_key.protocol_version > ASYMM_KEY_PROTOCOL_VERSION.V2:
+       sharee_public_user_key.public_key.protocol_version > ASYMM_KEY_PROTOCOL_VERSION.V2:
         return ExportEncryptedShardV2.new(
             sharer_key, sharee_id, sharee_public_user_key, sharded_key_version, raw_shard, required)
     else:
@@ -92,7 +93,7 @@ def new(sharer_key, sharee_id, sharee_public_user_key, sharded_key_version, raw_
             sharer_key, sharee_id, sharee_public_user_key, sharded_key_version, raw_shard, required)
 
 
-def fromDict(shard_info):
+def from_dict(shard_info):
     protocol_version = shard_info.get("protocol_version", 1)
     if protocol_version == EXPORT_ENCRYPTED_SHARD_VERSIONS.V1:
         return ExportEncryptedShardV1(

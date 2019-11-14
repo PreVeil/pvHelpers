@@ -1,14 +1,11 @@
-import calendar
-import time
-
-from pvHelpers.user import LocalUser, UserDBNode
-from pvHelpers.utils import b64enc, params, toInt
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params, toInt
 
 from ..utils import ServerResponseError
 
 
 class MailboxV4(object):
-    @params(object, {UserDBNode, LocalUser}, unicode)
+    @params(object, LocalUser, unicode)
     def createMailbox(self, user, name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes".format(user.mail_cid),
@@ -22,7 +19,7 @@ class MailboxV4(object):
         except (KeyError, ValueError) as e:
             raise ServerResponseError(e)
 
-    @params(object, {UserDBNode, LocalUser}, unicode, unicode)
+    @params(object, LocalUser, unicode, unicode)
     def renameMailbox(self, user, server_id, new_name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
@@ -36,7 +33,7 @@ class MailboxV4(object):
         except (KeyError, ValueError) as e:
             raise ServerResponseError(e)
 
-    @params(object, {UserDBNode, LocalUser}, unicode)
+    @params(object, LocalUser, unicode)
     def deleteMailbox(self, user, server_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
@@ -50,7 +47,7 @@ class MailboxV4(object):
         except (KeyError, ValueError) as e:
             raise ServerResponseError(e)
 
-    @params(object, {UserDBNode, LocalUser}, unicode)
+    @params(object, LocalUser, unicode)
     def getMailboxNextUID(self, user, mailbox_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes/{}/uid".format(user.mail_cid, mailbox_id),
@@ -67,7 +64,7 @@ class MailboxV4(object):
             raise ServerResponseError("int coercion failed")
         return next_uid
 
-    @params(object, {UserDBNode, LocalUser}, int)
+    @params(object, LocalUser, int)
     def getUserMailboxes(self, user, since_rev_id=0):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),

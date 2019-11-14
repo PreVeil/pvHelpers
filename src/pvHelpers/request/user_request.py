@@ -7,6 +7,7 @@ from pvHelpers.utils import b64enc, jdumps, jloads, params, utf8Encode
 
 REQUEST_EXPIRATION_DAYS = 7
 
+
 class UserRequest(object):
     __protocol_version__ = 1
     @params(object, unicode, unicode, unicode)
@@ -27,7 +28,11 @@ class MemberAPGChangeRequest(UserRequest):
     __type__ = u"set_member_approval_group"
 
     @classmethod
-    @params(object, LocalUser, {"current_group_id": {types.NoneType, unicode}, "current_group_version": {types.NoneType, unicode}, "events": [{"user_id": unicode, "signature": unicode, "payload": unicode}], "requester_key_version": {int, long}})
+    @params(object, LocalUser, {
+        "current_group_id": {types.NoneType, unicode},
+        "current_group_version": {types.NoneType, unicode},
+        "events": [{"user_id": unicode, "signature": unicode, "payload": unicode}],
+        "requester_key_version": {int, long}})
     def new(cls, user, apg_set_events):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
@@ -52,7 +57,11 @@ class MemberRekeyAndAPGChangeRequest(UserRequest):
     __type__ = u"member_rekey_and_set_approval_group"
 
     @classmethod
-    @params(object, LocalUser, {"current_group_id": {types.NoneType, unicode}, "current_group_version": {types.NoneType, unicode}, "events": [{"user_id": unicode, "signature": unicode, "payload": unicode}], "requester_key_version": {int, long}})
+    @params(object, LocalUser, {
+        "current_group_id": {types.NoneType, unicode},
+        "current_group_version": {types.NoneType, unicode},
+        "events": [{"user_id": unicode, "signature": unicode, "payload": unicode}],
+        "requester_key_version": {int, long}})
     def new(cls, user, apg_set_events):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
@@ -77,7 +86,9 @@ class APGChangeRequest(UserRequest):
     __type__ = u"change_approval_group"
 
     @classmethod
-    @params(object, LocalUser, {"group": [{"user_id": unicode, "required": bool, "secret": unicode, "protocol_version": int}], "optionals_required": int})
+    @params(object, LocalUser, {
+        "group": [{"user_id": unicode, "required": bool, "secret": unicode, "protocol_version": int}],
+        "optionals_required": int})
     def new(cls, user, new_apg):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
@@ -102,7 +113,10 @@ class RekeyAndAPGChangeRequest(UserRequest):
     __type__ = u"rekey_and_change_approval_group"
 
     @classmethod
-    @params(object, LocalUser, {"public_key": unicode, "wrapped_last_key": unicode, "group": [{"user_id": unicode, "required": bool, "secret": unicode}], "optionals_required": {types.NoneType, int}})
+    @params(object, LocalUser, {
+        "public_key": unicode, "wrapped_last_key": unicode,
+        "group": [{"user_id": unicode, "required": bool, "secret": unicode}],
+        "optionals_required": {types.NoneType, int}})
     def new(cls, user, new_key_apg):
         # HACK: cuz of the `params` not being capable to handle `{None, [...]}`
         if new_key_apg["optionals_required"] is None:
@@ -175,7 +189,7 @@ class ExportRequest(UserRequest):
     def __init__(self, serialized_req, signature, request_id):
         super(ExportRequest, self).__init__(serialized_req, signature, request_id)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "request_payload": self.serialized_req,
             "signature": self.signature,
@@ -237,7 +251,8 @@ class SubsumeAccountRequest(UserRequest):
     __type__ = u"subsume_account"
 
     @classmethod
-    @params(object, LocalUser, {"subsume_user_id": unicode, "department": {unicode, types.NoneType}, "entity_id": unicode})
+    @params(object, LocalUser,
+            {"subsume_user_id": unicode, "department": {unicode, types.NoneType}, "entity_id": unicode})
     def new(cls, user, subsume_info):
         timestamp = datetime.datetime.utcnow()
         expiration = timestamp + datetime.timedelta(days=REQUEST_EXPIRATION_DAYS)
