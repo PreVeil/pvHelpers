@@ -1,14 +1,13 @@
 import email.utils
 
 from flanker import addresslib, mime
-
 from pvHelpers.logger import g_log
-from pvHelpers.utils import NOT_ASSIGNED, EncodingException, b64enc
+from pvHelpers.utils import b64enc, EncodingException, NOT_ASSIGNED, params
 
-from .content import Content
 from .base import EmailBase
-from .helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
-from .parsers import createMime, parseMime
+from .content import Content
+from .helpers import EmailException, EmailHelpers, PROTOCOL_VERSION
+from .parsers import create_mime, parse_mime
 
 
 class EmailV2(EmailHelpers, EmailBase):
@@ -22,22 +21,22 @@ class EmailV2(EmailHelpers, EmailBase):
             server_attr, self.__class__.protocol_version, flags,
             tos, ccs, bccs, sender, reply_tos, subject, body,
             attachments, references, in_reply_to, message_id, snippet)
-        if body.content != None:
-            body = EmailHelpers.deserializeBody(body.content)
+        if body.content is not None:
+            body = EmailHelpers.deserialize_body(body.content)
             if not isinstance(body, dict):
-                raise EmailException(u"EmailV2.__init__: body must be of a serialized dict")
+                raise EmailException(u"body must be of a serialized dict")
             if not isinstance(body.get("text"), unicode) or not isinstance(body.get("html"), unicode):
-                raise EmailException(u"EmailV2.__init__: body['text']/body['html'] must exist and be of type unicode")
+                raise EmailException(u"body['text']/body['html'] must exist and be of type unicode")
 
         self.other_headers = {} if other_headers is None else other_headers
         if not isinstance(self.other_headers, dict):
-            raise EmailException(u"EmailV2.__init__: other_headers must be of type dict")
+            raise EmailException(u"other_headers must be of type dict")
 
         self.__initialized = True
 
     def snippet(self):
         if self._snippet is None:
-            body = EmailHelpers.deserializeBody(self.body.content)
+            body = EmailHelpers.deserialize_body(self.body.content)
             body_string = body.get("text")
             snippet = body_string[:1024]
             if len(body_string) > len(snippet):
@@ -46,24 +45,27 @@ class EmailV2(EmailHelpers, EmailBase):
 
         return self._snippet
 
-    def toMime(self):
-        if not self.body.isLoaded() or (len(self.attachments) > 0 and any([not attachment.isLoaded() for attachment in self.attachments])):
-            raise EmailException(u"EmailV2.toMime: All content must be loaded!")
+    def to_mime(self):
+        if not self.body.is_loaded() or \
+           (len(self.attachments) > 0 and any([not attachment.is_loaded() for attachment in self.attachments])):
+            raise EmailException(u"All content must be loaded!")
 
-        body = EmailHelpers.deserializeBody(self.body.content)
+        body = EmailHelpers.deserialize_body(self.body.content)
         time = None
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
 
-        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
+        raw_mime = create_mime(
+            body["text"], body["html"], self.attachments, self.message_id, time, self.subject,
+            self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
 
         for key, value in self.other_headers.iteritems():
             raw_mime.headers[key] = value
 
         return mime.from_string(raw_mime.to_string())
 
-    # toBrowser is only to conform with browser expectations and can be removed
-    def toBrowser(self, with_body=False):
+    # is only to conform with browser expectations and can be removed
+    def to_browser(self, with_body=False):
         o = {}
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             o["unique_id"] = self.server_attr.server_id
@@ -88,10 +90,10 @@ class EmailV2(EmailHelpers, EmailBase):
         o["message_id"] = self.message_id
 
         if with_body:
-            if not self.body.isLoaded():
+            if not self.body.is_loaded():
                 body = {"text": u"", "html": u""}
             else:
-                body = EmailHelpers.deserializeBody(self.body.content)
+                body = EmailHelpers.deserialize_body(self.body.content)
 
             browser_atts = []
             for att in self.attachments:
@@ -129,7 +131,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
         return o
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "flags": self.flags,
             "snippet": self.snippet(),
@@ -138,7 +140,7 @@ class EmailV2(EmailHelpers, EmailBase):
             "tos": self.tos,
             "ccs": self.ccs,
             "bccs": self.bccs,
-            "in_reply_to" : self.in_reply_to,
+            "in_reply_to": self.in_reply_to,
             "reply_tos": self.reply_tos,
             "references": self.references,
             "attachments": self.attachments,
@@ -150,21 +152,13 @@ class EmailV2(EmailHelpers, EmailBase):
 
     # TODO: get tos ccs and ...
     @classmethod
-    def fromMime(cls, mime_string, flags, sender):
-        if not isinstance(mime_string, (str, bytes)):
-            raise EmailException(u"EmailV1.fromMime: mime_string must be of type str/bytes")
-
-        if not isinstance(sender, dict):
-            raise EmailException(u"EmailV1.fromMime: sender must be of type dict")
-        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
-            raise EmailException(u"EmailV1.fromMime: sender['user_id']/sender['display_name'] must exist and be of type unicode")
-
+    @params(object, bytes, [unicode], {"user_id": unicode, "display_name": unicode})
+    def from_mime(cls, mime_string, flags, sender):
         named_sender = sender
-
         try:
             raw_mime = mime.create.from_string(mime_string)
         except mime.MimeError as e:
-            raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
+            raise EmailException(e)
 
         message_id = raw_mime.headers.get("Message-Id")
 
@@ -191,10 +185,11 @@ class EmailV2(EmailHelpers, EmailBase):
                 # str(value)?
                 other_headers[key] = value
 
-        text, html, attachments = parseMime(raw_mime)
+        text, html, attachments = parse_mime(raw_mime)
 
-        body = EmailHelpers.serializeBody({"text": text, "html":html})
+        body = EmailHelpers.serialize_body({"text": text, "html": html})
         body = Content(body)
 
-        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)
+        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs,
+                   named_sender, named_reply_tos, subject, body, attachments,
+                   references, in_reply_to, message_id, other_headers=other_headers)

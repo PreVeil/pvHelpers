@@ -3,10 +3,10 @@ import time
 
 from pvHelpers.crypto import Sha256Sum
 from pvHelpers.logger import g_log
-from pvHelpers.utils import utf8Encode, utf8Decode, jloads, b64dec, \
-    MergeDicts, CaseInsensitiveSet, WrapExceptions
+from pvHelpers.utils import (b64dec, CaseInsensitiveSet, jloads,
+                             MergeDicts, utf8Decode, utf8Encode, WrapExceptions)
 
-from .email import PROTOCOL_VERSION, EmailException
+from .email import EmailException, PROTOCOL_VERSION
 
 
 # https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
@@ -18,7 +18,7 @@ def flatten_recipient_groups(recip_groups):
 
 
 @WrapExceptions(EmailException, [KeyError])
-def verifyServerMessage(message, verify_key):
+def verify_server_message(message, verify_key):
     if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         utf8_decode_pvm = utf8Decode(message["raw_private_metadata"])
         signature = b64dec(message["signature"])
@@ -41,7 +41,7 @@ def verifyServerMessage(message, verify_key):
 
 
 @WrapExceptions(EmailException, [KeyError])
-def getSender(message):
+def get_sender(message):
     if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         return (message["private_metadata"]["sender"], int(message["sender_key_version"]))
     elif message["protocol_version"] == PROTOCOL_VERSION.V4:
@@ -52,7 +52,7 @@ def getSender(message):
 
 
 @WrapExceptions(EmailException, [KeyError])
-def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
+def decrypt_server_message(message, user_encryption_key, mail_decrypt_key):
     """
         message: Server's message object
         user_encryption_key: user's private key or api to decrypt using user's pv key
@@ -122,15 +122,19 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             mail_decrypt_key.decrypt(b64dec(message["private_metadata"]))))
 
         return MergeDicts(message, {
-            "body": MergeDicts(message["body"], {"snippet": utf8Decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
+            "body": MergeDicts(
+                message["body"],
+                {"snippet": utf8Decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
             "private_metadata": decrypted_private_metadata,
             "timestamp": calendar.timegm(time.strptime(message["timestamp"], "%Y-%m-%dT%H:%M:%S")),
-            "attachments": map(lambda att: MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}), message["attachments"])
+            "attachments": map(
+                lambda att: MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}),
+                message["attachments"])
         })
 
 
 @WrapExceptions(EmailException, [KeyError])
-def getWrappedKey(server_message):
+def get_wrapped_key(server_message):
     if server_message["protocol_version"] >= PROTOCOL_VERSION.V5:
         return server_message["recipient_key_version"], server_message["wrapped_key"]
 
@@ -140,5 +144,4 @@ def getWrappedKey(server_message):
         for block in att["blocks"]:
             return block["key_version"], block["wrapped_key"]
 
-    raise EmailException(
-        "No wrapped key provided in server message {}".format(server_message))
+    raise EmailException("No wrapped key provided in server message {}".format(server_message))

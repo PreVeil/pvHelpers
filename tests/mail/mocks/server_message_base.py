@@ -26,7 +26,7 @@ class MockServerMessageBase(object):
         self.flags = []
         self.timestamp = '2019-08-16T16:14:48'
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "private_metadata": self.private_metadata,
             "protocol_version": self.protocol_version,

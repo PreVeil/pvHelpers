@@ -3,70 +3,69 @@ import copy
 import os
 import random
 
-import simplejson
-from werkzeug.datastructures import FileStorage
-
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata,
                                   AttachmentType, Content, EmailException,
                                   EmailV1)
-from pvHelpers.utils import getdir, jdumps, randStr, randStream, randUnicode
+from pvHelpers.utils import getdir, randStr, randStream, randUnicode
+import simplejson
+from werkzeug.datastructures import FileStorage
 
 mime_tests = {
-  "mime_to_preveil_entity" : {
+  "mime_to_preveil_entity": {
     "description": "These test cases are to verify our parser turning MIME raw source to Preveil Entity.",
-    "test_cases" : [
+    "test_cases": [
       {
-        "description" : "Image attachments from MacMail",
-        "mime" : "1.eml",
-        "expected_json" : "1.json"
+        "description": "Image attachments from MacMail",
+        "mime": "1.eml",
+        "expected_json": "1.json"
       },
       {
-        "description" : "CSV attachment from MacMail",
-        "mime" : "2.eml",
-        "expected_json" : "2.json"
+        "description": "CSV attachment from MacMail",
+        "mime": "2.eml",
+        "expected_json": "2.json"
       },
       {
-        "description" : "HTML, TXT attachments from MacMail",
-        "mime" : "3.eml",
-        "expected_json" : "3.json"
+        "description": "HTML, TXT attachments from MacMail",
+        "mime": "3.eml",
+        "expected_json": "3.json"
       }
     ]
   },
-  "preveil_entity_to_mime" : {
-    "description": "These test cases are to verify our parser turning Preveil Entity to a correct/standard MIME raw source.",
-    "test_cases": [
-      {
-        "description" : "",
-        "json" : "",
-        "expected_mime" : ""
-      }
-    ]
+  "preveil_entity_to_mime": {
+    "description": "These test cases are to verify our parser turning " +
+                   "Preveil Entity to a correct/standard MIME raw source.",
+    "test_cases": [{
+      "description": "",
+      "json": "",
+      "expected_mime": ""
+    }]
   }
 }
 
 
 def test_attachment_metadata():
     filename = randUnicode()
-    content_type =  randUnicode()
-    content_disposition =  randUnicode()
-    content_id =  randUnicode()
+    content_type = randUnicode()
+    content_disposition = randUnicode()
+    content_id = randUnicode()
     size = random.randint(0, 1000000000)
     metadata = AttachmentMetadata(filename, content_type, content_disposition, content_id, size)
-    assert metadata.toDict() == {
+    assert metadata.to_dict() == {
         "filename": filename,
-        "content_type" : content_type,
+        "content_type": content_type,
         "content_id": content_id,
         "content_disposition": content_disposition,
         "size": size
     }
     metadata = AttachmentMetadata(filename, None, None, None, None)
-    assert metadata.toDict() == {
+    assert metadata.to_dict() == {
         "filename": filename,
-        "content_type" : u"application/octet-stream",
+        "content_type": u"application/octet-stream",
         "content_id": None,
         "content_disposition": AttachmentType.ATTACHMENT,
         "size": None
     }
+
 
 def test_attachment_from_file_storage():
     blob = randStream()
@@ -75,7 +74,7 @@ def test_attachment_from_file_storage():
     metadata = AttachmentMetadata(filename, content_type)
     _file = FileStorage(stream=blob, filename=filename, content_type=content_type)
     input_file = copy.deepcopy(_file)
-    attachment = Attachment.fromFileStorage(input_file, metadata)
+    attachment = Attachment.from_file_storage(input_file, metadata)
     assert attachment.content.content == _file.read()
     assert attachment.metadata.filename == filename
     assert attachment.metadata.content_type == content_type
@@ -88,11 +87,12 @@ def test_attachment_from_file_storage():
     metadata = AttachmentMetadata(filename, content_type)
     _file = FileStorage(stream=blob, filename=filename, content_type=content_type)
     input_file = copy.deepcopy(_file)
-    attachment = Attachment.fromFileStorage(input_file, metadata)
+    attachment = Attachment.from_file_storage(input_file, metadata)
     assert attachment.content.content == _file.read()
     assert attachment.metadata.filename == filename
     assert attachment.metadata.content_type == "application/octet-stream"
     assert attachment.metadata.content_disposition == AttachmentType.ATTACHMENT
+
 
 def test_attachment_to_mime():
     filename = randUnicode()
@@ -103,12 +103,11 @@ def test_attachment_to_mime():
     blob = randStr(size=1024)
 
     attachement = Attachment(metadata, Content(blob))
-    att_mime = attachement.toMime()
+    att_mime = attachement.to_mime()
     assert att_mime.headers.get("Content-Id") == content_id
     assert att_mime.headers.get("Content-Disposition") == (content_disposition, {"filename": filename})
     assert att_mime.headers.get("Content-Type") == content_type
     assert att_mime.body == blob
-
 
 
 def test_attachment_from_mime():
@@ -124,12 +123,12 @@ def test_attachment_from_mime():
         with open(os.path.join(getdir(__file__), "test_cases", test_case["mime"]), "r") as f:
             raw_msg = f.read()
         try:
-            email = EmailV1.fromMime(raw_msg, [], {"user_id": u"xxx@gmail.com", "display_name": u"XX FF"})
+            email = EmailV1.from_mime(raw_msg, [], {"user_id": u"xxx@gmail.com", "display_name": u"XX FF"})
         except EmailException as e:
             print e
             raise
 
-        res = email.toBrowser(with_body=True)
+        res = email.to_browser(with_body=True)
         with open(os.path.join(getdir(__file__), "test_cases", test_case["expected_json"])) as f:
             obj = simplejson.load(f)
 
@@ -137,5 +136,9 @@ def test_attachment_from_mime():
         parsed_atts = res.get("attachments", [])
         assert len(expected_atts) == len(parsed_atts)
         for att in expected_atts:
-            found = filter(lambda item: simplejson.dumps(item, sort_keys=True, indent=2) == simplejson.dumps(att, sort_keys=True, indent=2), parsed_atts)
+            found = filter(
+              lambda item: simplejson.dumps(item, sort_keys=True, indent=2) ==
+              simplejson.dumps(att, sort_keys=True, indent=2),
+              parsed_atts
+            )
             assert len(found) == 1

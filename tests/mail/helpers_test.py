@@ -1,17 +1,17 @@
 # vim: set fileencoding=utf-8 :
 import random
 
-import pytest
+from mocks import (MockPrivateMetadataV5, MockPrivateMetadataV6,
+                   MockServerMessageV5, MockServerMessageV6, recipient)
 from pvHelpers.crypto import PVKeyFactory
-from pvHelpers.mail import (EmailFactory, decryptServerMessage, verifyServerMessage,
-                            getSender, getWrappedKey, flatten_recipient_groups)
+from pvHelpers.mail import (decrypt_server_message, EmailFactory,
+                            flatten_recipient_groups, get_sender,
+                            get_wrapped_key, verify_server_message)
 from pvHelpers.mail.email import EmailException, PROTOCOL_VERSION
-from pvHelpers.utils import b64enc, CaseInsensitiveSet, jdumps, randUnicode, utf8Encode
 from pvHelpers.user import User
-
-from mocks import (MockServerMessageV5, MockPrivateMetadataV5,
-                    recipient, MockPrivateMetadataV6,
-                    MockServerMessageV6)
+from pvHelpers.utils import (b64enc, CaseInsensitiveSet, jdumps, randUnicode,
+                             utf8Encode)
+import pytest
 
 
 def _verify_recipients(email, pvm):
@@ -54,7 +54,7 @@ def _verify_recipients(email, pvm):
         raise ValueError("unsupported protocol version {}".format(pvm.protocol_version))
 
 
-def _verifyEmail(email, pvm, msg):
+def _verify_email(email, pvm, msg):
     assert email.sender["user_id"] == pvm.sender
     assert email.subject == pvm.subject
     _verify_recipients(email, pvm)
@@ -73,7 +73,7 @@ def _verifyEmail(email, pvm, msg):
     # TODO: verify timestamp convertion
 
 
-def test_server_message_parser_V6():
+def test_server_message_parser_v6():
     sender_key_version = random.randint(0, 100)
     recipient_key_version = random.randint(0, 100)
     sender_user_key = PVKeyFactory.newUserKey(key_version=sender_key_version)
@@ -81,7 +81,7 @@ def test_server_message_parser_V6():
         randUnicode(6), random.randint(0, 99999), randUnicode(6),
         randUnicode(5), [sender_user_key.public_user_key], None)
     pvm = MockPrivateMetadataV6(sender=sender.user_id, user_key=sender_user_key)
-    signature, encrypted_pvm = pvm.signAndEncrypt()
+    signature, encrypted_pvm = pvm.sign_and_encrypt()
 
     wrapped_key = b64enc(
         pvm.user_key.public_user_key.public_key.seal(pvm.symm_key.serialize()))
@@ -96,55 +96,51 @@ def test_server_message_parser_V6():
                               recipient_key_version, wrapped_key,
                               wrapped_recipients)
 
-    decrypted_msg = decryptServerMessage(msg.toDict(),
-                                         pvm.user_key.encryption_key,
-                                         pvm.symm_key)
-    assert verifyServerMessage(decrypted_msg,
-                               sender.public_user_key.verify_key)
+    decrypted_msg = decrypt_server_message(
+        msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
+    assert verify_server_message(
+        decrypted_msg, sender.public_user_key.verify_key)
     decrypted_msg["collection_id"] = sender.mail_cid
 
-    email = EmailFactory.fromServerMessage(sender.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
+    email = EmailFactory.from_server_message(sender.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
     assert email.server_attr.collection_id == sender.mail_cid
-    _verifyEmail(email, pvm, msg)
+    _verify_email(email, pvm, msg)
 
     # sender can see all bccs
     bccs = [recipient() for _ in range(3)]
     msg.wrapped_bccs = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
             utf8Encode(jdumps(bccs))))
-    decrypted_msg = decryptServerMessage(
-        msg.toDict(), pvm.user_key.encryption_key, pvm.symm_key)
-    assert verifyServerMessage(decrypted_msg,
-                               sender.public_user_key.verify_key)
+    decrypted_msg = decrypt_server_message(
+        msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
+    assert verify_server_message(
+        decrypted_msg, sender.public_user_key.verify_key)
     decrypted_msg["collection_id"] = sender.mail_cid
 
-    email = EmailFactory.fromServerMessage(sender.user_id, decrypted_msg,
-                                           wrapped_key, recipient_key_version,
-                                           None)
-    _verifyEmail(email, pvm, msg)
-    assert CaseInsensitiveSet(map(lambda u: u["user_id"],
-                                    email.bccs)) == CaseInsensitiveSet(
-                                        map(lambda u: u["user_id"], bccs))
+    email = EmailFactory.from_server_message(
+        sender.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
+    _verify_email(email, pvm, msg)
+    assert CaseInsensitiveSet(map(lambda u: u["user_id"], email.bccs)) == \
+        CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
 
     # bcc is a sub group of one of the tos_groups
     bccs = pvm.tos_groups[random.randint(0, len(pvm.tos_groups) - 1)]["users"]
     msg.wrapped_bccs = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
             utf8Encode(jdumps(bccs))))
-    decrypted_msg = decryptServerMessage(
-        msg.toDict(), pvm.user_key.encryption_key, pvm.symm_key)
-    assert verifyServerMessage(decrypted_msg,
-                               sender.public_user_key.verify_key)
+    decrypted_msg = decrypt_server_message(
+        msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
+    assert verify_server_message(
+        decrypted_msg, sender.public_user_key.verify_key)
     decrypted_msg["collection_id"] = sender.mail_cid
-    email = EmailFactory.fromServerMessage(sender.user_id, decrypted_msg,
-                                           wrapped_key, recipient_key_version,
-                                           None)
-    _verifyEmail(email, pvm, msg)
+    email = EmailFactory.from_server_message(
+        sender.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
+    _verify_email(email, pvm, msg)
     assert CaseInsensitiveSet(map(lambda u: u["user_id"], email.bccs)) == \
-           CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
+        CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
 
 
-def test_server_message_parser_V5():
+def test_server_message_parser_v5():
     sender_key_version = random.randint(0, 100)
     recipient_key_version = random.randint(0, 100)
     sender_user_key = PVKeyFactory.newUserKey(key_version=sender_key_version)
@@ -153,7 +149,7 @@ def test_server_message_parser_V5():
         randUnicode(5), [sender_user_key.public_user_key], None)
     pvm = MockPrivateMetadataV5(
         sender=sender.user_id, user_key=sender_user_key)
-    signature, encrypted_pvm = pvm.signAndEncrypt()
+    signature, encrypted_pvm = pvm.sign_and_encrypt()
 
     wrapped_key = b64enc(
         pvm.user_key.public_user_key.public_key.seal(pvm.symm_key.serialize()))
@@ -171,23 +167,22 @@ def test_server_message_parser_V5():
         [PVKeyFactory.newUserKey(key_version=0).public_user_key], None)
     with pytest.raises(EmailException):
         # bad wrapped recipients
-        decrypted_msg = decryptServerMessage(msg.toDict(), pvm.user_key.encryption_key, pvm.symm_key)
+        decrypted_msg = decrypt_server_message(msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
 
     msg.wrapped_recipients = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
             utf8Encode(jdumps(pvm.tos + pvm.ccs))))
-    decrypted_msg = decryptServerMessage(msg.toDict(),
-                                         pvm.user_key.encryption_key,
-                                         pvm.symm_key)
-    assert verifyServerMessage(decrypted_msg,
-                               sender.public_user_key.verify_key)
+    decrypted_msg = decrypt_server_message(
+        msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
+    assert verify_server_message(
+        decrypted_msg, sender.public_user_key.verify_key)
     decrypted_msg["collection_id"] = sender.mail_cid
 
-    email = EmailFactory.fromServerMessage(
+    email = EmailFactory.from_server_message(
         u.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
 
     assert email.server_attr.collection_id == sender.mail_cid
-    _verifyEmail(email, pvm, msg)
+    _verify_email(email, pvm, msg)
     # bccs can figure out themselves as being bcced
     assert email.bccs == [{"user_id": u.user_id, "display_name": u.user_id}]
 
@@ -195,35 +190,35 @@ def test_server_message_parser_V5():
     to = User(
         pvm.tos[0]["user_id"], random.randint(0, 99999), randUnicode(6), randUnicode(5),
         [PVKeyFactory.newUserKey(key_version=0).public_user_key], None)
-    email = EmailFactory.fromServerMessage(
+    email = EmailFactory.from_server_message(
         to.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
 
-    _verifyEmail(email, pvm, msg)
+    _verify_email(email, pvm, msg)
     assert email.bccs == []
 
     # sender can see all bccs
     bccs = [recipient() for _ in range(3)]
     msg.wrapped_bccs = b64enc(
         pvm.user_key.public_user_key.public_key.seal(utf8Encode(jdumps(bccs))))
-    decrypted_msg = decryptServerMessage(
-        msg.toDict(), pvm.user_key.encryption_key, pvm.symm_key)
-    assert verifyServerMessage(
+    decrypted_msg = decrypt_server_message(
+        msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
+    assert verify_server_message(
         decrypted_msg, sender.public_user_key.verify_key)
     decrypted_msg["collection_id"] = sender.mail_cid
 
-    email = EmailFactory.fromServerMessage(
+    email = EmailFactory.from_server_message(
         sender.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
 
-    _verifyEmail(email, pvm, msg)
+    _verify_email(email, pvm, msg)
     assert CaseInsensitiveSet(map(lambda u: u["user_id"], email.bccs)) == \
-           CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
+        CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
 
     # wrong verify key
     bad_user_key = PVKeyFactory.newUserKey(key_version=1)
-    assert not verifyServerMessage(
+    assert not verify_server_message(
         decrypted_msg, bad_user_key.public_user_key.verify_key)
 
-    for f in [getSender, getWrappedKey]:
+    for f in [get_sender, get_wrapped_key]:
         with pytest.raises(EmailException):
             # corrupted message
             decrypted_msg = {}

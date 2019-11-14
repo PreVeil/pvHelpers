@@ -36,8 +36,8 @@ class MockPrivateMetadataV6(MockPrivateMetadataV5):
         self.tos_groups = tos_groups
         self.ccs_groups = ccs_groups
 
-    def toDict(self):
-        shares = super(MockPrivateMetadataV6, self).toDict()
+    def to_dict(self):
+        shares = super(MockPrivateMetadataV6, self).to_dict()
         return MergeDicts({
             "ccs_groups": self.ccs_groups,
             "tos_groups": self.tos_groups

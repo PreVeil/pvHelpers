@@ -1,5 +1,5 @@
-from .v4 import EmailV4
 from .helpers import PROTOCOL_VERSION
+from .v4 import EmailV4
 
 
 class EmailV6(EmailV4):

@@ -13,12 +13,12 @@ class PreparedMessageV4(PreparedMessageV2):
         super(PreparedMessageV4, self).__init__(sender, email, recipient)
 
     def _sign(self):
-        canonical_msg_str = PreparedMessageV4.canonicalEncryptedString(
+        canonical_msg_str = PreparedMessageV4.canonical_encrypted_string(
             self.uploads)
         signature = b64enc(self.sender.user_key.signing_key.sign(
             utf8Encode(canonical_msg_str)))
         return True, signature
 
     @staticmethod
-    def canonicalEncryptedString(blocks):
-        return PreparedMessageV3.canonicalEncryptedString(blocks)
+    def canonical_encrypted_string(blocks):
+        return PreparedMessageV3.canonical_encrypted_string(blocks)

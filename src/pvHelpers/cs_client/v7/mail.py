@@ -5,12 +5,12 @@ from pvHelpers.utils import params
 
 class MailV7(object):
     @params(object, LocalUser, PreparedMessageBase)
-    def sendEmail(self, user, prepared_message):
+    def send_email(self, user, prepared_message):
         # this uploads to sender's mail_cid
         self.uploadEmailBlocks(user, prepared_message)
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/send",
-            "POST", prepared_message.toDict()
+            "POST", prepared_message.to_dict()
         )
         resp = self.post(url, headers, raw_body)
         resp.raise_for_status()

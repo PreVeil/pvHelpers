@@ -1,13 +1,9 @@
 
 
-from pvHelpers.crypto import (ASYMM_KEY_PROTOCOL_VERSION,
-                              SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory)
-from pvHelpers.crypto.utils import CryptoException
+from pvHelpers.crypto import PVKeyFactory, SYMM_KEY_PROTOCOL_VERSION
 from pvHelpers.mail.email import EmailBase
-from pvHelpers.user import LocalUser, User
-from pvHelpers.utils import b64enc, params
-
-from .helpers import PreparedMessageError
+from pvHelpers.user import LocalUser
+from pvHelpers.utils import params
 
 
 class PreparedMessageBase(object):

@@ -11,21 +11,21 @@ from ..utils import ServerResponseError
 
 class MailV4(object):
     @params(object, LocalUser, PreparedMessageBase)
-    def sendEmail(self, user, prepared_message):
+    def send_email(self, user, prepared_message):
         self.uploadEmailBlocks(user, prepared_message)
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}".format(prepared_message.recipient.mail_cid),
-            "POST", prepared_message.toDict()
+            "POST", prepared_message.to_dict()
         )
         resp = self.post(url, headers, raw_body)
         resp.raise_for_status()
 
     @params(object, LocalUser, PreparedMessageBase, unicode)
-    def appendEmailToMailbox(self, user, prepared_message, mailbox_id):
+    def append_email_to_mailbox(self, user, prepared_message, mailbox_id):
         self.uploadEmailBlocks(user, prepared_message)
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
-            "POST", {"message" : prepared_message.toDict()}
+            "POST", {"message": prepared_message.to_dict()}
         )
         resp = self.post(url, headers, raw_body)
         resp.raise_for_status()
@@ -38,7 +38,7 @@ class MailV4(object):
         return data
 
     @params(object, {LocalUser, UserDBNode}, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
-    def updateFlags(self, user, mailbox_id, updates):
+    def update_flags(self, user, mailbox_id, updates):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
             "PATCH", {u"updates": updates}

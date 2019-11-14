@@ -1,16 +1,12 @@
 # vim: set fileencoding=utf-8 :
 import os
 import StringIO
-import unittest
-
-from werkzeug.datastructures import FileStorage
 
 from pvHelpers.mail import EmailFactory
-from pvHelpers.mail.email import (DUMMY_CONTENT_TYPE, PROTOCOL_VERSION,
-                                  Attachment, AttachmentMetadata,
-                                  AttachmentType, Content, EmailHelpers,
-                                  EmailV4)
-from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
+from pvHelpers.mail.email import (Attachment, AttachmentMetadata,
+                                  AttachmentType, Content, EmailHelpers, PROTOCOL_VERSION)
+from pvHelpers.utils import NOT_ASSIGNED, randUnicode
+from werkzeug.datastructures import FileStorage
 
 
 class User():
@@ -18,12 +14,13 @@ class User():
         self.user_id = randUnicode()
         self.display_name = randUnicode()
 
+
 def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments,
                     in_reply_to, references, reply_tos=[], flags=[],
                     server_attr=NOT_ASSIGNED(), message_id=None):
     if message_id is None:
-        message_id = u"<{}>".format(EmailHelpers.newMessageId())
-    body = EmailHelpers.serializeBody({"text": text, "html": html})
+        message_id = u"<{}>".format(EmailHelpers.new_message_id())
+    body = EmailHelpers.serialize_body({"text": text, "html": html})
     return EmailFactory.new(**{
         "server_attr": server_attr,
         "flags": flags,
@@ -34,7 +31,7 @@ def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments,
         "bccs": [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs],
         "message_id": message_id,
         "body": Content(body),
-        "attachments": [Attachment.fromFileStorage(
+        "attachments": [Attachment.from_file_storage(
             _file, AttachmentMetadata(_file.filename, _file.content_type)) for _file in attachments],
         "in_reply_to": in_reply_to,
         "reply_tos": [],
@@ -42,14 +39,14 @@ def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments,
         "protocol_version": PROTOCOL_VERSION.V4
     })
 
+
 def test_to_mime():
     from_account, to_account = User(), User()
     # with no attachments
-    # FileStorage(stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode() + ".jpg", content_type="image/jpeg")
     attachments = []
     email = create_email_v4(
         from_account, [to_account], [], [], u"S S", u"text", u"html", attachments, None, [], [], [])
-    raw_mime = email.toMime()
+    raw_mime = email.to_mime()
 
     assert raw_mime.content_type.is_multipart()
     parts = []
@@ -64,14 +61,17 @@ def test_to_mime():
 
     # with multiple atts
     attachments = [
-        FileStorage(stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="image/png"),
-        FileStorage(stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="video/mp4"),
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="application/octet-stream"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="image/png"),
+        FileStorage(
+            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="video/mp4"),
+        FileStorage(
+            stream=StringIO.StringIO(os.urandom(1024)),
+            filename=randUnicode(), content_type="application/octet-stream"),
         FileStorage(stream=StringIO.StringIO(randUnicode()), filename=randUnicode(), content_type="text/html"),
     ]
     email = create_email_v4(from_account, [to_account], [], [], u"subject", u"a", u"b", attachments, None, [])
-    raw_mime = email.toMime()
+    raw_mime = email.to_mime()
 
     assert raw_mime.content_type.is_multipart()
     parts = []
@@ -91,7 +91,7 @@ def test_to_mime():
 
     # lets make first attachment inline
     email.attachments[0].metadata.content_disposition = AttachmentType.INLINE
-    raw_mime = email.toMime()
+    raw_mime = email.to_mime()
     assert raw_mime.content_type.is_multipart()
     parts = []
     for part in raw_mime.walk(with_self=True):

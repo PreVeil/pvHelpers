@@ -1,12 +1,12 @@
 import types
 
-from pvHelpers.utils import (NOT_ASSIGNED, EncodingException, MergeDicts,
-                             WrapExceptions, jloads, params, toInt)
+from pvHelpers.utils import (EncodingException, jloads, MergeDicts, NOT_ASSIGNED,
+                             params, toInt, WrapExceptions)
 
 from .email import EmailV1, EmailV2, EmailV3, EmailV4, EmailV5, EmailV6
 from .email.attachment import Attachment, AttachmentMetadata
 from .email.content import Content
-from .email.helpers import PROTOCOL_VERSION, EmailException, EmailHelpers
+from .email.helpers import EmailException, EmailHelpers, PROTOCOL_VERSION
 from .email.server_attributes import ServerAttributes
 
 
@@ -37,8 +37,9 @@ class EmailFactory(object):
 
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
-    def fromDB(revision_id, version, server_id, metadata, server_time, flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
-        if server_id is None: # An email not having server_id means it's a local email
+    def from_db(revision_id, collection_id, version, server_id, metadata, server_time,
+                flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
+        if server_id is None:  # An email not having server_id means it's a local email
             server_info = NOT_ASSIGNED()
         else:
             # NOTEX: fix collection nullable in daemon
@@ -77,14 +78,12 @@ class EmailFactory(object):
         elif v is PROTOCOL_VERSION.V6:
             return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
+        raise EmailException(u"Unsupported protocol_version")
 
-        raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
-
-    @staticmethod
+    @staticmethod  # noqa: C901
     @WrapExceptions(EmailException, [KeyError])
-    # TODO: give required props. in params
-    @params(unicode, dict, unicode, int, {object, types.NoneType})
-    def fromServerMessage(for_user_id, decrypted_msg, wrapped_key, key_version, mailbox):
+    @params(unicode, dict, unicode, int, {object, types.NoneType})  # TODO: give required props. in params
+    def from_server_message(for_user_id, decrypted_msg, wrapped_key, key_version, mailbox):
         common_props = {
             "server_attr": ServerAttributes(
                 decrypted_msg["id"], decrypted_msg["collection_id"],
@@ -111,7 +110,8 @@ class EmailFactory(object):
         protocol_dependent_props = {}
         if decrypted_msg["protocol_version"] <= PROTOCOL_VERSION.V4:
             body = Content(
-                None, map(lambda b: b["id"], decrypted_msg["body"]["blocks"]), wrapped_key, key_version, decrypted_msg["body"]["size"])
+                None, map(lambda b: b["id"], decrypted_msg["body"]["blocks"]),
+                wrapped_key, key_version, decrypted_msg["body"]["size"])
             snippet = decrypted_msg["body"].get("snippet")
             attachments = [Attachment(
                 AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get(
@@ -134,7 +134,8 @@ class EmailFactory(object):
 
         elif decrypted_msg["protocol_version"] >= PROTOCOL_VERSION.V5:
             body = Content(
-                None, decrypted_msg["private_metadata"]["body"]["block_ids"], wrapped_key, key_version, decrypted_msg["private_metadata"]["body"]["size"])
+                None, decrypted_msg["private_metadata"]["body"]["block_ids"],
+                wrapped_key, key_version, decrypted_msg["private_metadata"]["body"]["size"])
             snippet = decrypted_msg["private_metadata"]["body"]["snippet"]
             attachments = [Attachment(
                 AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get(

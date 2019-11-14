@@ -1,11 +1,9 @@
-import copy
 import types
 
-from flanker import addresslib, mime
-
+from flanker import mime
 from pvHelpers.logger import g_log
-from pvHelpers.utils import (ASCIIToUnicode, EncodingException, WrapExceptions,
-                             encodeContentIfUnicode, toInt)
+from pvHelpers.utils import (ASCIIToUnicode, encodeContentIfUnicode, EncodingException,
+                             params, toInt, WrapExceptions)
 
 from .content import Content
 from .helpers import EmailException
@@ -20,19 +18,17 @@ class AttachmentMetadata(object):
     __initialized = False
 
     @WrapExceptions(EmailException, [EncodingException])
-    def __init__(self, filename=None, content_type=None, content_disposition=AttachmentType.ATTACHMENT, content_id=None, size=None):
+    @params(object, {str, unicode, types.NoneType}, {str, unicode, types.NoneType}, {str, unicode, types.NoneType},
+            {str, unicode, types.NoneType}, {str, unicode, int, long, types.NoneType})
+    def __init__(self, filename=None, content_type=None,
+                 content_disposition=None, content_id=None, size=None):
         if isinstance(filename, str):
             filename = ASCIIToUnicode(filename)
 
-        if not isinstance(filename, (unicode, types.NoneType)):
-            raise EmailException(u"AttachmentMetadata.__init__: filename must be unicode, {}".format(filename))
         self.filename = filename
 
         if isinstance(content_type, str):
             content_type = ASCIIToUnicode(content_type)
-
-        if not isinstance(content_type, (unicode, types.NoneType)):
-            raise EmailException(u"AttachmentMetadata.__init__:: content_type must be of type unicode, {}".format(content_type))
 
         if content_type is None:
             self.content_type = u"application/octet-stream"
@@ -46,26 +42,23 @@ class AttachmentMetadata(object):
         if isinstance(content_disposition, str):
             content_disposition = ASCIIToUnicode(content_disposition)
 
-        if not isinstance(content_disposition, unicode):
-            raise EmailException(u"AttachmentMetadata.__init__: content_disposition must be unicode, value: {}".format(content_disposition))
         self.content_disposition = content_disposition
 
         if isinstance(content_id, str):
             content_id = ASCIIToUnicode(content_id)
 
         if not isinstance(content_id, (unicode, types.NoneType)):
-            raise EmailException(u"AttachmentMetadata.__init__: content_id must be unicode, value: {}".format(content_id))
+            raise EmailException(
+                u"AttachmentMetadata.__init__: content_id must be unicode, value: {}".format(content_id))
         self.content_id = content_id
 
         if isinstance(size, (str, unicode)):
             status, int_size = toInt(size)
-            if status == False:
+            if not status:
                 g_log.error(u"AttachmentMetadata.__init__: size int coercion failed {}".format(size))
                 size = 0
             size = int_size
 
-        if not isinstance(size, (int, long, types.NoneType)):
-            raise EmailException(u"AttachmentMetadata.__init__: size must be of type int/long/None")
         self.size = size
 
         self.__initialized = True
@@ -76,24 +69,27 @@ class AttachmentMetadata(object):
         object.__setattr__(self, key, value)
 
     @staticmethod
-    def fromDict(data):
-        return AttachmentMetadata(data.get("filename"), data.get("content_type"), data.get("content_disposition"), data.get("content_id"), data.get("size"))
+    def from_dict(data):
+        return AttachmentMetadata(
+            data.get("filename"), data.get("content_type"),
+            data.get("content_disposition"), data.get("content_id"), data.get("size"))
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            "filename" : self.filename,
-            "content_type" : self.content_type,
-            "content_disposition" : self.content_disposition,
-            "content_id" : self.content_id,
+            "filename": self.filename,
+            "content_type": self.content_type,
+            "content_disposition": self.content_disposition,
+            "content_id": self.content_id,
             "size": self.size
         }
+
 
 class Attachment(object):
     __initialized = False
 
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
-    def fromFileStorage(_file, metadata):
+    def from_file_storage(_file, metadata):
         if not isinstance(metadata, AttachmentMetadata):
             raise EmailException(u"metadata must be of type AttachmentMetadata")
 
@@ -104,17 +100,19 @@ class Attachment(object):
         # it also makes some assumptions based on filename if c-t is (application/octet-stream)
         # so keeping our object consistent with the MIME which is going to be generated
         try:
-            main, sub = mime.message.headers.parametrized.fix_content_type(_file.content_type, default=(u"application", u"octet-stream"))
-            content_type = mime.message.part.adjust_content_type(mime.message.ContentType(main, sub),  content, _file.filename)
+            main, sub = mime.message.headers.parametrized.fix_content_type(
+                _file.content_type, default=(u"application", u"octet-stream"))
+            content_type = mime.message.part.adjust_content_type(
+                mime.message.ContentType(main, sub),  content, _file.filename)
             metadata.content_type = content_type.value
         except mime.MimeError as e:
-            raise EmailException(u"fromFileStorage: flanker exception, value: {}".format(e))
+            raise EmailException(e)
 
         metadata.size = len(content)
         return Attachment(metadata, Content(content))
 
     @staticmethod
-    def fromDict(data):
+    def from_dict(data):
         metadata = data.get("metadata")
         metadata = AttachmentMetadata(
             metadata.get("filename"),
@@ -126,17 +124,13 @@ class Attachment(object):
         return Attachment(metadata, Content(**data.get("content")))
 
     # should use Email.fromDict() unless certain about types
+    @params(object, AttachmentMetadata, Content)
     def __init__(self, metadata, content):
-        if not isinstance(content, Content):
-            raise EmailException(u"__init__: Bad content, reference_id: {}".format(reference_id))
         self.content = content
-
-        if not isinstance(metadata, AttachmentMetadata):
-            raise EmailException(u"__init__: bad metadata, value: {}".format(metadata))
         self.metadata = metadata
 
         # fix metadata size if content is loaded
-        if self.isLoaded():
+        if self.is_loaded():
             self.metadata.size = len(self.content.content)
 
         self.__initialized = True
@@ -146,31 +140,33 @@ class Attachment(object):
             raise KeyError(u"Attachment has not have an attribute {}".format(key))
         object.__setattr__(self, key, value)
 
-    def loadContent(self, content):
+    def load_content(self, content):
         self.content.content = content
 
     # This must only be used in an email that's protocol_version 1,
     # TODO: make attachment factory
-    def toMime(self):
+    def to_mime(self):
         if self.content.content is None:
-            #TODO: pass fetcher handles to Content object, so the instance can lazily load the content
-            raise EmailException(u"toMime: content must be loaded")
+            # TODO: pass fetcher handles to Content object, so the instance can lazily load the content
+            raise EmailException(u"content must be loaded")
         try:
-            part = mime.create.attachment(content_type=self.metadata.content_type, body=self.content.content, filename=self.metadata.filename, disposition=self.metadata.content_disposition)
+            part = mime.create.attachment(
+                content_type=self.metadata.content_type, body=self.content.content,
+                filename=self.metadata.filename, disposition=self.metadata.content_disposition)
             if self.metadata.content_id:
                 part.headers["Content-Id"] = self.metadata.content_id
         except mime.EncodingError as e:
-            raise EmailException(u"toMime: flanker exception, {}".format(e))
+            raise EmailException(e)
         return part
 
-    def toDict(self):
+    def to_dict(self):
         return {
-            "content" : self.content.toDict(),
-            "metadata" : self.metadata.toDict()
+            "content": self.content.to_dict(),
+            "metadata": self.metadata.to_dict()
         }
 
-    def isLoaded(self):
-        return self.content.isLoaded()
+    def is_loaded(self):
+        return self.content.is_loaded()
 
-    def isInline(self):
+    def is_inline(self):
         return self.metadata.content_disposition == AttachmentType.INLINE

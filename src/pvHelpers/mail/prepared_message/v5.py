@@ -19,8 +19,8 @@ class PreparedMessageV5(PreparedMessageHelpers, PreparedMessageBase):
 
         self.sealed_opaque_key = self.wrapped_key_for(
             self.opaque_key, self.sender)
-        self._prepareAttachments(self.email.attachments, PROTOCOL_VERSION.V5)
-        self._prepareBody(self.email.body.content, PROTOCOL_VERSION.V5)
+        self._prepare_attachments(self.email.attachments, PROTOCOL_VERSION.V5)
+        self._prepare_body(self.email.body.content, PROTOCOL_VERSION.V5)
 
         self.private_metadata["body"] = self.body
         self.private_metadata["attachments"] = self.attachments
@@ -68,7 +68,7 @@ class PreparedMessageV5(PreparedMessageHelpers, PreparedMessageBase):
             out.append(entry)
         return out
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "message": self._message(),
             "recipients": self._recipients_for_server,
@@ -84,5 +84,6 @@ class PreparedMessageV5(PreparedMessageHelpers, PreparedMessageBase):
             "private_metadata": self.private_metadata,
             "signature": self.signature,
             "wrapped_key": self.sealed_opaque_key,
-            "block_ids": self.body["block_ids"] + reduce(lambda acc, item: acc + item["block_ids"], self.attachments, [])
+            "block_ids":
+                self.body["block_ids"] + reduce(lambda acc, item: acc + item["block_ids"], self.attachments, [])
         }

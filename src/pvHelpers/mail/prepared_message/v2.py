@@ -18,8 +18,8 @@ class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
         self.sealed_opaque_key = None
 
         self.sealed_opaque_key = self.wrapped_key_for(self.opaque_key, self.recipient)
-        self._prepareAttachments(self.email.attachments, self.protocol_version)
-        self._prepareBody(self.email.body.content, self.protocol_version)
+        self._prepare_attachments(self.email.attachments, self.protocol_version)
+        self._prepare_body(self.email.body.content, self.protocol_version)
 
         status, signature = self._sign()
         if not status:
@@ -47,7 +47,7 @@ class PreparedMessageV2(PreparedMessageHelpers, PreparedMessageBase):
         self.private_metadata = encrypted_metadata["ciphertext"]
 
     def _sign(self):
-        status, canonical_msg_str = PreparedMessageV1.canonicalEncryptedString(self.uploads)
+        status, canonical_msg_str = PreparedMessageV1.canonical_encrypted_string(self.uploads)
         if not status:
             g_log.error(u"PreparedMessageV2._sign: Failed to get canonical encrypted string")
             return False, None

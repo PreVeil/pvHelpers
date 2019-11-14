@@ -3,13 +3,11 @@ import os
 import StringIO
 
 from flanker import mime
-from werkzeug.datastructures import FileStorage
-
 from pvHelpers.crypto.utils import HexEncode, Sha256Sum
-from pvHelpers.mail.email import (DUMMY_CONTENT_TYPE, Attachment,
-                                  AttachmentMetadata, AttachmentType, Content,
-                                  EmailHelpers, EmailV1, createMime)
+from pvHelpers.mail.email import (Attachment, AttachmentMetadata, AttachmentType,
+                                  create_mime, DUMMY_CONTENT_TYPE, EmailHelpers, EmailV1)
 from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
+from werkzeug.datastructures import FileStorage
 
 
 class User():
@@ -22,7 +20,7 @@ def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
                     in_reply_to, references, reply_tos=[], flags=[],
                     server_attr=NOT_ASSIGNED(), message_id=None):
     if message_id is None:
-        message_id = u"<{}>".format(EmailHelpers.newMessageId())
+        message_id = u"<{}>".format(EmailHelpers.new_message_id())
     sender = {"user_id": sender.user_id, "display_name": sender.display_name}
     tos = [{"user_id": to.user_id, "display_name": to.display_name} for to in tos]
     ccs = [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs]
@@ -30,12 +28,13 @@ def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
     time = None
     if not isinstance(server_attr, NOT_ASSIGNED):
         time = server_attr.server_time
-    raw_mime = createMime(
+    raw_mime = create_mime(
         text, html, [
-            Attachment.fromFileStorage(_file, AttachmentMetadata(_file.filename, _file.content_type))
+            Attachment.from_file_storage(_file, AttachmentMetadata(_file.filename, _file.content_type))
             for _file in attachments
         ], message_id, time, subject, tos, ccs, bccs, reply_tos, sender, in_reply_to, references)
-    return EmailV1.fromMime(raw_mime.to_string(), flags, sender)
+    return EmailV1.from_mime(raw_mime.to_string(), flags, sender)
+
 
 def test_from_mime():
     # create email from separated mime and test if it get reconstructed ok
@@ -56,17 +55,16 @@ def test_from_mime():
         attachments.append(a)
         a.to_string()
         root_mime.append(a)
-    root_mime.headers["Message-Id"] = u"<{}>".format(EmailHelpers.newMessageId())
-    email = EmailV1.fromMime(root_mime.to_string(), [], {"user_id": u"s@b.com", "display_name": u"S B"})
+    root_mime.headers["Message-Id"] = u"<{}>".format(EmailHelpers.new_message_id())
+    email = EmailV1.from_mime(root_mime.to_string(), [], {"user_id": u"s@b.com", "display_name": u"S B"})
 
     # check if the attachments have been all separated properly
     body_mime = mime.from_string(email.body.content)
     assert len(attachments) == len(filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
     # check att hashes are properly inserted as filenames
     assert map(lambda a: HexEncode(Sha256Sum(a.to_string())), attachments) == \
-           map(
-               lambda p: p.content_disposition[1]["filename"],
-               filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
+        map(lambda p: p.content_disposition[1]["filename"],
+            filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
 
 
 def test_attachment_reconstruction():
@@ -77,7 +75,7 @@ Subject:
 Message-Id: <0A83DC22-971B-418B-BEBF-BA0046C34868@preveil.com>
 Date: Mon, 27 Jun 2016 10:43:03 -0400
 To: iOS Dev <ios@preveil.com>
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Mime-Version: 1.0 (Mac OS X Mail 9.3 (3124))
 
 --Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6
 Content-Transfer-Encoding: 7bit
@@ -94,13 +92,15 @@ Content-Type: dummy/dummy; name="handle"
 cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
 """
     attachment_content = randUnicode()
-    raw_attachment = "Content-Type: text/plain; name=\"test.txt\"\r\nContent-Disposition: attachment; filename=\"test.txt\"\r\n\r\n{}".format(attachment_content)
+    raw_attachment = \
+        "Content-Type: text/plain; name=\"test.txt\"\r\nContent-Disposition: attachment; " + \
+        "filename=\"test.txt\"\r\n\r\n{}".format(attachment_content)
 
     message = mime.from_string(raw_message)
     attachment = mime.from_string(raw_attachment)
     attachments = {"handle": attachment}
 
-    status, restored_message = EmailV1.restoreAttachments(message, attachments)
+    status, restored_message = EmailV1.restore_attachments(message, attachments)
     assert status
     assert len(restored_message.parts) == 2
     assert restored_message.parts[1] == attachment
@@ -114,7 +114,7 @@ def test_to_mime():
     email = create_email_v1(
         from_account, [to_account], [], [], u"S S", u"text", u"html", attachments, None, [], [], [])
 
-    raw_mime = email.toMime()
+    raw_mime = email.to_mime()
 
     assert raw_mime.content_type.is_multipart()
     parts = []
@@ -142,7 +142,7 @@ def test_to_mime():
     ]
     email = create_email_v1(from_account, [to_account], [], [], u"subject", u"a", u"b", attachments, None, [])
 
-    raw_mime = email.toMime()
+    raw_mime = email.to_mime()
 
     assert raw_mime.content_type.is_multipart()
     parts = []

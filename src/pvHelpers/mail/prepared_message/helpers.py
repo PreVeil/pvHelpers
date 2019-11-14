@@ -1,8 +1,9 @@
-from pvHelpers.crypto import SYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto import ASYMM_KEY_PROTOCOL_VERSION, SYMM_KEY_PROTOCOL_VERSION
 from pvHelpers.crypto.utils import CryptoException
+from pvHelpers.mail.email import PROTOCOL_VERSION
 from pvHelpers.utils import b64enc, utf8Encode
 
-FILE_BLOCK_SIZE = 2 * 1024 * 1024 # max 2MB block size
+FILE_BLOCK_SIZE = 2 * 1024 * 1024  # max 2MB block size
 
 
 class PreparedMessageHelpers(object):
@@ -39,8 +40,8 @@ class PreparedMessageHelpers(object):
             return self.sender.public_user_key.key_version
         raise PreparedMessageError(u"Invalid protocol version {}".format(protocol_version))
 
-    def _prepareBody(self, body, protocol_version):
-        blocks, totalsize = self._encryptBlock(body)
+    def _prepare_body(self, body, protocol_version):
+        blocks, totalsize = self._encrypt_block(body)
         for block in blocks:
             self.uploads[block["cipherhash"]] = {
                 "data": block["ciphertext"],
@@ -60,9 +61,9 @@ class PreparedMessageHelpers(object):
             "size": totalsize
         }
 
-    def _prepareAttachments(self, attachments, protocol_version):
+    def _prepare_attachments(self, attachments, protocol_version):
         for attachment in attachments:
-            blocks, totalsize = self._encryptBlock(attachment.content.content)
+            blocks, totalsize = self._encrypt_block(attachment.content.content)
 
             if protocol_version <= PROTOCOL_VERSION.V4:
                 name = self._encrypt(
@@ -88,7 +89,7 @@ class PreparedMessageHelpers(object):
                 }
             })
 
-    def _encryptBlock(self, data):
+    def _encrypt_block(self, data):
         # break the message up into chunks of at most FILE_BLOCK_SIZE
         chunks = [data[i:i+FILE_BLOCK_SIZE] for i in xrange(0, len(data), FILE_BLOCK_SIZE)]
         size = 0
@@ -100,7 +101,7 @@ class PreparedMessageHelpers(object):
 
         return blocks, size
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "message_id": self.email.message_id,
             "in_reply_to": self.email.in_reply_to,

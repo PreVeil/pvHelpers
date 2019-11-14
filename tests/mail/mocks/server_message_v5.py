@@ -1,6 +1,7 @@
 from random import randint
+
 from pvHelpers.crypto import PVKeyFactory, Sha256Sum
-from pvHelpers.utils import MergeDicts, randUnicode, jdumps, utf8Encode, b64enc
+from pvHelpers.utils import b64enc, jdumps, MergeDicts, randUnicode, utf8Encode
 
 from . import MockServerMessageBase, recipient
 
@@ -29,7 +30,7 @@ class MockPrivateMetadataV5(object):
         self.user_key = user_key if user_key else PVKeyFactory.newUserKey(
             key_version=0)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "subject": self.subject,
             "sender": self.sender,
@@ -40,8 +41,8 @@ class MockPrivateMetadataV5(object):
             "other_headers": self.other_headers
         }
 
-    def signAndEncrypt(self):
-        json_private_metadata = jdumps(self.toDict())
+    def sign_and_encrypt(self):
+        json_private_metadata = jdumps(self.to_dict())
         utf8_encode_pvm = utf8Encode(json_private_metadata)
         pvm_hash = Sha256Sum(utf8_encode_pvm)
         return b64enc(self.user_key.signing_key.sign(
@@ -61,8 +62,8 @@ class MockServerMessageV5(MockServerMessageBase):
         self.wrapped_bccs = wrapped_bccs
         super(MockServerMessageV5, self).__init__(self.protocol_version, private_metadata)
 
-    def toDict(self):
-        commons = super(MockServerMessageV5, self).toDict()
+    def to_dict(self):
+        commons = super(MockServerMessageV5, self).to_dict()
         specifics = {
             "signature": self.signature,
             "sender_key_version": self.sender_key_version,

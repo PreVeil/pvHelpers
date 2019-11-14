@@ -53,7 +53,7 @@ class EmailSend(object):
         self.doUpdate([user_id])
         return data
 
-    def sendSMTPEmailFromCryptoEndpoint(self, protocol_version, sender_id, tos, raw_msg):
+    def send_smtp_email(self, protocol_version, sender_id, tos, raw_msg):
         resp = self.put(
             u"{}/put/account/{}/message/smtp".format(self.url, sender_id), headers=self.__headers__,
             raw_body=jdumps({"tos": tos, "raw_msg": b64enc(raw_msg), "protocol_version": protocol_version})
@@ -62,7 +62,7 @@ class EmailSend(object):
         self.doUpdate([sender_id] + tos)
         return resp.json()
 
-    def appendIMAPEmailFromCryptoEndpoint(self, protocol_version, user_id, mailbox_id, flags, raw_msg):
+    def append_imap_email(self, protocol_version, user_id, mailbox_id, flags, raw_msg):
         resp = self.put(
             u"{}/put/account/{}/message/imap".format(self.url, user_id), headers=self.__headers__,
             raw_body=jdumps({
@@ -74,7 +74,9 @@ class EmailSend(object):
         self.doUpdate([user_id])
         return resp.json()
 
-    def send_email(self, protocol_version, sender, tos, ccs, bccs, subject, text, html, attachments, in_reply_to, references, reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
+    def send_email(self, protocol_version, sender, tos, ccs, bccs,
+                   subject, text, html, attachments, in_reply_to, references,
+                   reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
         # send attachments as multipart form-encode
         resp = self.put(
             u"{}/put/account/{}/message".format(self.url, sender["user_id"]), {},
@@ -95,7 +97,7 @@ class EmailSend(object):
                         "filename": file_.filename,
                         "content_type": file_.content_type,
                         "content_disposition": "attachment",
-                        "content_id": u"<{}>".format(EmailHelpers.newMessageId()),
+                        "content_id": u"<{}>".format(EmailHelpers.new_message_id()),
                         "blob_reference": file_.filename
                     } for file_ in attachments]
                 })

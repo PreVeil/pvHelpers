@@ -3,7 +3,7 @@ from .base import EmailBase
 from .content import Content
 from .helpers import (DUMMY_CONTENT_TYPE, DUMMY_DISPOSITION, PROTOCOL_VERSION,
                       EmailException, EmailHelpers, EmailRecipients)
-from .parsers import createMime, parseMime
+from .parsers import create_mime, parse_mime
 from .server_attributes import ServerAttributes
 from .v1 import EmailV1
 from .v2 import EmailV2

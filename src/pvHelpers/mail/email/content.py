@@ -7,9 +7,9 @@ from .helpers import EmailException
 
 class Content(object):
     __initialized = False
-    @params(
-        object, {bytes, str, types.NoneType}, [unicode],
-        {unicode, types.NoneType}, {int, long, types.NoneType}, {int, long, types.NoneType})
+
+    @params(object, {bytes, str, types.NoneType}, [unicode],
+            {unicode, types.NoneType}, {int, long, types.NoneType}, {int, long, types.NoneType})
     def __init__(self, content=None, block_ids=[], wrapped_key=None, key_version=None, size=None):
         self.content = content
         self.block_ids = block_ids
@@ -26,7 +26,7 @@ class Content(object):
             raise KeyError(u"Content has not attribute {}".format(key))
         object.__setattr__(self, key, value)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "content": self.content,
             "block_ids": self.block_ids,
@@ -39,7 +39,7 @@ class Content(object):
     def reference_id(self):
         return u",".join(self.block_ids)
 
-    def isLoaded(self):
+    def is_loaded(self):
         return self.content is not None
 
     @property

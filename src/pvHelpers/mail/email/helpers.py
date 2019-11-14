@@ -1,17 +1,20 @@
 import uuid
 
-import pvHelpers as H
-from pvHelpers.utils import (EncodingException, WrapExceptions,
-                             encodeContentIfUnicode, jdumps, jloads, params,
-                             utf8Decode)
+from pvHelpers.utils import (encodeContentIfUnicode, EncodingException,
+                             jdumps, jloads, params, utf8Decode, WrapExceptions)
 
 
 DUMMY_DISPOSITION = u"dummy"
 DUMMY_CONTENT_TYPE = u"dummy/dummy"
-MAILBOX_ALIAS = {u"INBOX":u"inbox", u"Drafts":u"drafts", u"Sent Messages":u"sent", u"Deleted Messages":u"trash"}
+MAILBOX_ALIAS = {
+    u"INBOX": u"inbox",
+    u"Drafts": u"drafts",
+    u"Sent Messages": u"sent",
+    u"Deleted Messages": u"trash"
+}
 
 
-class PROTOCOL_VERSION(object):
+class PROTOCOL_VERSION(object):  # noqa: N801
     """
     This protocol version represents the structure of a prepared message,
     which indicates how it should be parsed.
@@ -42,30 +45,30 @@ class EmailHelpers(object):
     # FIXME: this works when we only have aliases for the 4 default maiboxes,
     # and use the real "DB" mailbox_name for a custom mailbox
     @staticmethod
-    def getMailboxAlias(mailbox_name):
+    def get_mailbox_alias(mailbox_name):
         if mailbox_name in MAILBOX_ALIAS:
             return MAILBOX_ALIAS[mailbox_name]
         return mailbox_name
 
     @staticmethod
-    def newMessageId():
+    def new_message_id():
         return u"{}@preveil.com".format(str(uuid.uuid4()))
 
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
     @params(dict)
-    def serializeBody(body):
+    def serialize_body(body):
         return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
     @params(bytes)
-    def deserializeBody(body):
+    def deserialize_body(body):
         body = jloads(utf8Decode(body))
         return body
 
     @staticmethod
-    def isLocalEmail(email_id):
+    def is_local_email(email_id):
         return email_id.startswith(u"__local__")
 
     @staticmethod
