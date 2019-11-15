@@ -7,11 +7,11 @@ from pvHelpers.utils import params
 
 class DeviceV5(object):
     @params(object, LocalUser, UserKeyBase)
-    def refreshDeviceKey(self, user, new_device_key):
+    def rotate_device_key(self, user, new_device_key):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/devices/keys/{}".format(user.device.id), "PUT", {
                 "user_id": user.user_id,
-                "public_key" : new_device_key.public_user_key.serialize(),
+                "public_key": new_device_key.public_user_key.serialize(),
             }
         )
         resp = self.put(url, headers, raw_body)
@@ -43,7 +43,7 @@ class DeviceV5(object):
         return resp.json()
 
     @params(object, LocalUser, {types.NoneType, unicode})
-    def getUserDevices(self, user, for_user=None):
+    def get_user_devices(self, user, for_user=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/devices/keys",
             "GET", None

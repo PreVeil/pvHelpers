@@ -4,7 +4,7 @@ from pvHelpers.utils import params
 
 class OrgV4(object):
     @params(object, LocalUser, unicode)
-    def getOrgInfo(self, user, org_id):
+    def get_org_info(self, user, org_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}".format(org_id), "GET", None
         )

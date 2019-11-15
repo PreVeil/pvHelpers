@@ -39,7 +39,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, UserRequest, bool, dict)
-    def respondToOrgApproval(self, user, org_id, request, response, metadata={}):
+    def respond_to_org_approval(self, user, org_id, request, response, metadata={}):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests/{}".format(org_id, request.request_id),
             "PUT", MergeDicts({
@@ -53,7 +53,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, unicode, {types.NoneType, unicode})
-    def getOrgAPGInfo(self, user, org_id, group_id, group_version):
+    def get_org_apg_info(self, user, org_id, group_id, group_version):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/groups/{}".format(org_id, group_id),
             "GET", None

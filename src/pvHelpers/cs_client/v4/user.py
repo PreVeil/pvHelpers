@@ -4,7 +4,7 @@ from pvHelpers.crypto import PVKeyFactory
 from pvHelpers.crypto.user_key import PublicUserKeyBase
 from pvHelpers.crypto.utils import HexEncode, Sha256Sum
 from pvHelpers.logger import g_log
-from pvHelpers.user import LocalUser, OrganizationInfo, User
+from pvHelpers.user import LocalUser, OrganizationInfo, User, UserGroup
 from pvHelpers.utils import (b64enc, CaseInsensitiveDict, jloads,
                              params, utf8Encode)
 import requests
@@ -66,14 +66,14 @@ class UserV4(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, {int, long})
-    def fetchUser(self, user, user_id, key_version=-1):
+    def fetch_user(self, user, user_id, key_version=-1):
         user_data = self.fetchUsers(user, [(user_id, key_version)])
         if len(user_data) != 1 or user_id not in user_data:
             return None
         return user_data[user_id]
 
     @params(object, LocalUser, [(unicode, int)])
-    def fetchUsers(self, user, user_ids):
+    def fetch_users(self, user, user_ids):
         user_ids = list(set(user_ids))
         query_data = []
         for x in user_ids:
@@ -92,7 +92,7 @@ class UserV4(object):
         users = data["users"]
         output = CaseInsensitiveDict()
         org_ids = set(map(lambda u: u["entity_id"], users))
-        org_infos = {id_: self.getOrgInfo(user, id_) for id_ in org_ids if id_}
+        org_infos = {id_: self.get_org_info(user, id_) for id_ in org_ids if id_}
         # TODO: take account_version into account!
         # make deserialization more explicit, add checks for key_versions
         for u in users:

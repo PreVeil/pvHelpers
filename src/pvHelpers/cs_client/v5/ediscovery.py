@@ -4,13 +4,13 @@ from pvHelpers.utils import params
 
 class EDiscoveryV5(object):
     @params(object, LocalUser, {int, long}, unicode, unicode, unicode)
-    def getMailHistoryForExport(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
+    def get_mail_history_for_export(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(for_user_cid),
             "GET", None, False, (export_id, for_user_id)
         )
         resp = self.get(url, headers, raw_body, params={
-            "since_rev_id" : last_rev_id,
+            "since_rev_id": last_rev_id,
         })
         resp.raise_for_status()
         return resp.json()
@@ -25,7 +25,7 @@ class EDiscoveryV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, unicode)
-    def getEDiscoveryShards(self, user, org_id, export_id):
+    def get_export_shards(self, user, org_id, export_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/export/{}/group/shards".format(org_id),
             "GET", None
@@ -72,7 +72,7 @@ class EDiscoveryV5(object):
         return resp.json()
 
     # deprecated
-    def getEDiscReq(self, user, org_id, request_id):
+    def get_export_request(self, user, org_id, request_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/export/{}/request/{}".format(org_id, request_id),
             "GET", None

@@ -25,7 +25,7 @@ class StorageV4(object):
             resp.raise_for_status()
 
     @params(object, LocalUser, [unicode], {types.NoneType, unicode})
-    def downloadBlocks(self, user, block_ids, collection_id=None):
+    def get_blocks(self, user, block_ids, collection_id=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/storage/{}/blocks".format(
                 user.mail_cid if not collection_id else collection_id),

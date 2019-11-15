@@ -7,11 +7,11 @@ from pvHelpers.utils import MergeDicts, b64enc, params, utf8Encode
 
 class ApprovalsV5(object):
     @params(object, LocalUser, UserRequest, dict)
-    def createUserRequest(self, user, request, metadata={}):
+    def create_user_request(self, user, request, metadata={}):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/requests", "POST", MergeDicts({
                 "signature": request.signature,
-                "request_payload" : request.serialized_req,
+                "request_payload": request.serialized_req,
             }, metadata)
         )
         resp = self.post(url, headers, raw_body, params={"user_id": user.user_id})
@@ -50,7 +50,7 @@ class ApprovalsV5(object):
         return resp.json()
 
     @params(object, LocalUser, {unicode, types.NoneType}, {unicode, types.NoneType}, {bool, types.NoneType}, {types.NoneType, int}, {types.NoneType, int})
-    def getUserApprovals(self, user, status=None, response=None, hide_expired=None, offset=None, limit=None):
+    def get_user_approvals(self, user, status=None, response=None, hide_expired=None, offset=None, limit=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/approvals",
             "GET", None
