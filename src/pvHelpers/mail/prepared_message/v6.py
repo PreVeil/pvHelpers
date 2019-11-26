@@ -1,4 +1,4 @@
-from pvHelpers.crypto import Sha256Sum
+from pvHelpers.crypto import sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.mail.email import EmailRecipients, PROTOCOL_VERSION
 from pvHelpers.user import UserGroup
@@ -39,7 +39,7 @@ class PreparedMessageV6(PreparedMessageHelpers, PreparedMessageBase):
         # sign the sha256(private_metadata)
         json_private_metadata = jdumps(self.private_metadata)
         utf8_encode_pvm = utf8Encode(json_private_metadata)
-        pvm_hash = Sha256Sum(utf8_encode_pvm)
+        pvm_hash = sha_256_sum(utf8_encode_pvm)
         self.signature = b64enc(
             self.sender.user_key.signing_key.sign(pvm_hash))
 

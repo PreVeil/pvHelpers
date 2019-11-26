@@ -1,7 +1,7 @@
 import calendar
 import time
 
-from pvHelpers.crypto import Sha256Sum
+from pvHelpers.crypto import sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.utils import (b64dec, CaseInsensitiveSet, jloads,
                              MergeDicts, utf8Decode, utf8Encode, WrapExceptions)
@@ -22,7 +22,7 @@ def verify_server_message(message, verify_key):
     if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         utf8_decode_pvm = utf8Decode(message["raw_private_metadata"])
         signature = b64dec(message["signature"])
-        canonical_str = Sha256Sum(utf8Encode(utf8_decode_pvm))
+        canonical_str = sha_256_sum(utf8Encode(utf8_decode_pvm))
     elif message["protocol_version"] == PROTOCOL_VERSION.V4:
         signature = b64dec(message["private_metadata"]["signature"])
 

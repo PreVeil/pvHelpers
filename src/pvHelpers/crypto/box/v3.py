@@ -1,13 +1,7 @@
-import struct
 
-import fipscrypto as FC
-import libnacl
-
-from pvHelpers.crypto.asymm_key import (AsymmKeyBase, AsymmKeyV3,
-                                        PublicKeyBase, PublicKeyV3)
-from pvHelpers.crypto.header_bytes import (ASYMM_BIT, BINARY_BIT,
-                                           HEADER_LENGTH, TEXT_BIT)
-from pvHelpers.utils import WrapExceptions, params
+import fipscrypto as FC  # noqa: N812
+from pvHelpers.crypto.asymm_key import AsymmKeyV3, PublicKeyV3
+from pvHelpers.utils import params
 
 
 class AsymmBoxV3(object):
@@ -19,7 +13,6 @@ class AsymmBoxV3(object):
             (private_key._curve25519_secret, private_key._p256_secret),
             (public_key.curve25519_pub, public_key.p256_pub))
 
-
     @staticmethod
     @params(AsymmKeyV3, PublicKeyV3, bytes)
     def encrypt(private_key, public_key, plaintext):
@@ -27,7 +20,6 @@ class AsymmBoxV3(object):
             (private_key._curve25519_secret, private_key._p256_secret),
             (public_key.curve25519_pub, public_key.p256_pub),
             plaintext)
-
 
     @staticmethod
     @params(AsymmKeyV3, PublicKeyV3, bytes)

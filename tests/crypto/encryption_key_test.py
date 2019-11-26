@@ -1,9 +1,9 @@
 import os
-import base64
 import random
-import pytest
 
 from pvHelpers.crypto import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
+import pytest
+
 
 @pytest.mark.parametrize("protocol_version", [
     ASYMM_KEY_PROTOCOL_VERSION.V0,
@@ -12,7 +12,7 @@ from pvHelpers.crypto import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
     ASYMM_KEY_PROTOCOL_VERSION.V3
 ])
 def test_encryption_key_v3(protocol_version):
-    k = PVKeyFactory.newAsymmKey(protocol_version=protocol_version)
+    k = PVKeyFactory.new_asymm_key(protocol_version=protocol_version)
 
     # seal/unseal
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
@@ -22,7 +22,7 @@ def test_encryption_key_v3(protocol_version):
     #     base64.encodestring(os.urandom(1024 * 2 + random.randint(0, 1024))))
     # assert plaintext == k.unsealText(k.public_key.sealText(plaintext))
 
-    k2 = PVKeyFactory.newAsymmKey(
+    k2 = PVKeyFactory.new_asymm_key(
         protocol_version=protocol_version, key=k.key)
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
     assert plaintext == k.unseal(k2.public_key.seal(plaintext))

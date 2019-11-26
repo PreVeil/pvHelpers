@@ -1,6 +1,6 @@
 from random import randint
 
-from pvHelpers.crypto import PVKeyFactory, Sha256Sum
+from pvHelpers.crypto import PVKeyFactory, sha_256_sum
 from pvHelpers.utils import b64enc, jdumps, MergeDicts, randUnicode, utf8Encode
 
 from . import MockServerMessageBase, recipient
@@ -14,7 +14,7 @@ class MockPrivateMetadataV5(object):
                  subject=None,
                  sender=None,
                  user_key=None,
-                 symm_key=PVKeyFactory.newSymmKey()):
+                 symm_key=PVKeyFactory.new_symm_key()):
         self.subject = subject if subject else randUnicode(5)
         self.sender = sender if sender else randUnicode(5)
         self.tos = [recipient() for _ in range(3)]
@@ -27,7 +27,7 @@ class MockPrivateMetadataV5(object):
         self.attachments = []
         self.other_headers = {}
         self.symm_key = symm_key
-        self.user_key = user_key if user_key else PVKeyFactory.newUserKey(
+        self.user_key = user_key if user_key else PVKeyFactory.new_user_key(
             key_version=0)
 
     def to_dict(self):
@@ -44,7 +44,7 @@ class MockPrivateMetadataV5(object):
     def sign_and_encrypt(self):
         json_private_metadata = jdumps(self.to_dict())
         utf8_encode_pvm = utf8Encode(json_private_metadata)
-        pvm_hash = Sha256Sum(utf8_encode_pvm)
+        pvm_hash = sha_256_sum(utf8_encode_pvm)
         return b64enc(self.user_key.signing_key.sign(
             pvm_hash)), b64enc(self.symm_key.encrypt(utf8_encode_pvm))
 

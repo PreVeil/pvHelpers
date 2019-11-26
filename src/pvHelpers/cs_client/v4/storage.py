@@ -1,6 +1,6 @@
 import types
 
-from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.mail import PreparedMessageBase
 from pvHelpers.user import LocalUser
 from pvHelpers.utils import b64dec, jdumps, params
@@ -50,7 +50,7 @@ class StorageV4(object):
                 raise ServerResponseError("Missing block content")
 
             raw_cipher = b64dec(b64enc_block)
-            content_hash = HexEncode(Sha256Sum(raw_cipher))
+            content_hash = hex_encode(sha_256_sum(raw_cipher))
             if content_hash.upper() not in canonical_str:
                 raise ServerResponseError(
                     "Returned block content hash does not match any requested block_ids")

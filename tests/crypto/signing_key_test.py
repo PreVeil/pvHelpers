@@ -1,10 +1,8 @@
-import base64
 import os
 import random
 
+from pvHelpers.crypto import PVKeyFactory, SIGN_KEY_PROTOCOL_VERSION
 import pytest
-
-from pvHelpers.crypto import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
 @pytest.mark.parametrize("protocol_version", [
@@ -13,7 +11,7 @@ from pvHelpers.crypto import SIGN_KEY_PROTOCOL_VERSION, PVKeyFactory
     SIGN_KEY_PROTOCOL_VERSION.V3
 ])
 def test_signing_key_v3(protocol_version):
-    k = PVKeyFactory.newSignKey(protocol_version=protocol_version)
+    k = PVKeyFactory.new_sign_key(protocol_version=protocol_version)
 
     # sign/verify
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
@@ -29,7 +27,7 @@ def test_signing_key_v3(protocol_version):
         assert k.verify_key.verify(
             plaintext, s[:21] + "a" + s[22:]) is False
 
-    k2 = PVKeyFactory.newSignKey(
+    k2 = PVKeyFactory.new_sign_key(
         protocol_version=protocol_version, key=k.key)
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
     assert k2.verify_key.verify(plaintext, k.sign(plaintext))

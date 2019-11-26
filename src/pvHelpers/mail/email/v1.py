@@ -2,7 +2,7 @@ import email.utils
 import types
 
 from flanker import addresslib, mime
-from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.utils import (b64enc, encodeContentIfUnicode,
                              EncodingException, NOT_ASSIGNED, params)
@@ -116,7 +116,7 @@ class EmailV1(EmailHelpers, EmailBase):
         if t not in ("attachment", "inline"):
             return msg, []
         else:
-            att_hash = HexEncode(Sha256Sum(msg.to_string()))
+            att_hash = hex_encode(sha_256_sum(msg.to_string()))
             # Insert a dummy node into the message tree so we know where to insert
             # this attachment when reconstructing the email
             placeholder = mime.create.attachment(
@@ -209,7 +209,7 @@ class EmailV1(EmailHelpers, EmailBase):
             status, message = EmailV1.restore_attachments(
                 mime.create.from_string(self.body.content),
                 {
-                    HexEncode(Sha256Sum(att.content.content)): mime.create.from_string(att.content.content)
+                    hex_encode(sha_256_sum(att.content.content)): mime.create.from_string(att.content.content)
                     for att in self.attachments
                 }
             )

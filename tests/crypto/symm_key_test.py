@@ -1,10 +1,8 @@
-import base64
 import os
 import random
 
+from pvHelpers.crypto import PVKeyFactory, SYMM_KEY_PROTOCOL_VERSION
 import pytest
-
-from pvHelpers.crypto import SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory
 
 
 @pytest.mark.parametrize("protocol_version", [
@@ -12,7 +10,7 @@ from pvHelpers.crypto import SYMM_KEY_PROTOCOL_VERSION, PVKeyFactory
     SYMM_KEY_PROTOCOL_VERSION.V1
 ])
 def test_symmetric_key(protocol_version):
-    k = PVKeyFactory.newSymmKey(protocol_version=protocol_version)
+    k = PVKeyFactory.new_symm_key(protocol_version=protocol_version)
 
     # encrypt/decrypt
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
@@ -21,7 +19,7 @@ def test_symmetric_key(protocol_version):
     for c in ciphers:
         assert plaintext == k.decrypt(c)
 
-    k2 = PVKeyFactory.newSymmKey(
+    k2 = PVKeyFactory.new_symm_key(
         protocol_version=protocol_version, secret=k._secret)
     plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
     assert plaintext == k.decrypt(k2.encrypt(plaintext))

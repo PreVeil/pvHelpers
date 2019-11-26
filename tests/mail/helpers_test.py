@@ -76,7 +76,7 @@ def _verify_email(email, pvm, msg):
 def test_server_message_parser_v6():
     sender_key_version = random.randint(0, 100)
     recipient_key_version = random.randint(0, 100)
-    sender_user_key = PVKeyFactory.newUserKey(key_version=sender_key_version)
+    sender_user_key = PVKeyFactory.new_user_key(key_version=sender_key_version)
     sender = User(
         randUnicode(6), random.randint(0, 99999), randUnicode(6),
         randUnicode(5), [sender_user_key.public_user_key], None)
@@ -143,7 +143,7 @@ def test_server_message_parser_v6():
 def test_server_message_parser_v5():
     sender_key_version = random.randint(0, 100)
     recipient_key_version = random.randint(0, 100)
-    sender_user_key = PVKeyFactory.newUserKey(key_version=sender_key_version)
+    sender_user_key = PVKeyFactory.new_user_key(key_version=sender_key_version)
     sender = User(
         randUnicode(6), random.randint(0, 99999), randUnicode(6),
         randUnicode(5), [sender_user_key.public_user_key], None)
@@ -164,7 +164,7 @@ def test_server_message_parser_v5():
 
     u = User(
         randUnicode(6), random.randint(0, 99999), randUnicode(6), randUnicode(5),
-        [PVKeyFactory.newUserKey(key_version=0).public_user_key], None)
+        [PVKeyFactory.new_user_key(key_version=0).public_user_key], None)
     with pytest.raises(EmailException):
         # bad wrapped recipients
         decrypted_msg = decrypt_server_message(msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
@@ -189,7 +189,7 @@ def test_server_message_parser_v5():
     # no bcc
     to = User(
         pvm.tos[0]["user_id"], random.randint(0, 99999), randUnicode(6), randUnicode(5),
-        [PVKeyFactory.newUserKey(key_version=0).public_user_key], None)
+        [PVKeyFactory.new_user_key(key_version=0).public_user_key], None)
     email = EmailFactory.from_server_message(
         to.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
 
@@ -214,7 +214,7 @@ def test_server_message_parser_v5():
         CaseInsensitiveSet(map(lambda u: u["user_id"], bccs))
 
     # wrong verify key
-    bad_user_key = PVKeyFactory.newUserKey(key_version=1)
+    bad_user_key = PVKeyFactory.new_user_key(key_version=1)
     assert not verify_server_message(
         decrypted_msg, bad_user_key.public_user_key.verify_key)
 

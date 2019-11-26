@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.crypto import PVKeyFactory
 from pvHelpers.crypto.user_key import PublicUserKeyBase
-from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.user import LocalUser, OrganizationInfo, User, UserGroup
 from pvHelpers.utils import (b64enc, CaseInsensitiveDict, jloads,
@@ -103,7 +103,7 @@ class UserV4(object):
 
             public_user_keys = []
             if u["public_key"]:
-                public_user_keys = [PVKeyFactory.deserializePublicUserKey(u["public_key"])]
+                public_user_keys = [PVKeyFactory.deserialize_public_user_key(u["public_key"])]
 
             user = User(
                 u["user_id"], u["account_version"], u["display_name"], u["mail_collection_id"],
@@ -143,7 +143,7 @@ class UserV4(object):
 
                 public_user_keys = []
                 if u["public_key"]:
-                    public_user_keys = [PVKeyFactory.deserializePublicUserKey(u["public_key"])]
+                    public_user_keys = [PVKeyFactory.deserialize_public_user_key(u["public_key"])]
 
                 invitee_user = User(
                     u["user_id"], u["account_version"], u["display_name"], u["mail_collection_id"],
@@ -180,9 +180,9 @@ class UserV4(object):
         wrapped_group_key = b64enc(recipient_public_key.public_key.seal(group_key))
 
         to_hash_group_key = b64dec(wrapped_group_key)
-        hashed_wrapped_key = Sha256Sum(to_hash_group_key)
+        hashed_wrapped_key = sha_256_sum(to_hash_group_key)
 
-        text_to_sign = recipient_id.lower() + "," + str(recipient_public_key.key_version) + "," + group_id + "," + str(group_key_version) + "," + HexEncode(hashed_wrapped_key).lower()
+        text_to_sign = recipient_id.lower() + "," + str(recipient_public_key.key_version) + "," + group_id + "," + str(group_key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
         signature = b64enc(user.user_key.signing_key.sign(utf8Encode(text_to_sign)))
 
@@ -208,9 +208,9 @@ class UserV4(object):
     def grantWrappedKeyToGroup(self, user, collection_id, wrapped_key, key_version, role, group_id, group_key_version):
         g_log.info("grantWrappedKeyToGroup: {} granting to {}".format(user.user_id, group_id))
         to_hash_key_for_group = b64dec(wrapped_key)
-        hashed_wrapped_key = Sha256Sum(to_hash_key_for_group)
+        hashed_wrapped_key = sha_256_sum(to_hash_key_for_group)
 
-        text_to_sign = group_id + "," + str(group_key_version) + "," + collection_id + "," + role.upper() + "," + str(key_version) + "," + HexEncode(hashed_wrapped_key).lower()
+        text_to_sign = group_id + "," + str(group_key_version) + "," + collection_id + "," + role.upper() + "," + str(key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
         signature = b64enc(user.user_key.signing_key.sign(utf8Encode(text_to_sign)))
 

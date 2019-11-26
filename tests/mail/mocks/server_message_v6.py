@@ -25,7 +25,7 @@ class MockPrivateMetadataV6(MockPrivateMetadataV5):
                  subject=None,
                  sender=None,
                  user_key=None,
-                 symm_key=PVKeyFactory.newSymmKey()):
+                 symm_key=PVKeyFactory.new_symm_key()):
         super(MockPrivateMetadataV6, self).__init__(
             subject,
             sender,

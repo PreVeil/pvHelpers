@@ -18,7 +18,7 @@ class PreparedMessageBase(object):
         self.uploads = {}
         self.body = {}
         self.private_metadata = {}
-        self.opaque_key = PVKeyFactory.newSymmKey(SYMM_KEY_PROTOCOL_VERSION.Latest)
+        self.opaque_key = PVKeyFactory.new_symm_key(SYMM_KEY_PROTOCOL_VERSION.Latest)
 
         self.__initialized = True
 

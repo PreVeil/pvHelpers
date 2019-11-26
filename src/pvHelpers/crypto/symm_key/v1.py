@@ -1,17 +1,16 @@
 import types
 
-import fipscrypto as FC
-from pvHelpers.crypto.utils import (CryptoException, HexEncode, RandomBytes,
-                                    Sha256Sum)
+import fipscrypto as FC  # noqa: N812
+from pvHelpers.crypto.utils import (CryptoException, hex_encode, random_bytes,
+                                    sha_256_sum)
 from pvHelpers.protos import Key as KeyBuffer
 from pvHelpers.utils import params
 
-from .symm_key_base import SymmKeyBase
+from .base import SymmKeyBase
 
 
 class SymmKeyV1(SymmKeyBase):
     protocol_version = 1
-
 
     @params(object, {bytes, types.NoneType})
     def __init__(self, secret=None):
@@ -19,13 +18,11 @@ class SymmKeyV1(SymmKeyBase):
         if secret and len(secret) != FC.AES_KEY_LENGTH:
             raise CryptoException("Invalid aes key length")
 
-        self._secret = secret or RandomBytes(length=FC.AES_KEY_LENGTH)
-
+        self._secret = secret or random_bytes(length=FC.AES_KEY_LENGTH)
 
     @property
     def secret(self):
         return self._secret
-
 
     @property
     def buffer(self):
@@ -34,22 +31,19 @@ class SymmKeyV1(SymmKeyBase):
             key=self._secret
         )
 
-
     def serialize(self):
         return self.buffer.SerializeToString()
-
 
     @params(object, bytes, {dict, types.NoneType})
     def encrypt(self, message, details=None):
         cipher, tag, iv = FC.aes_encrypt(self._secret, message)
         cipher = cipher + iv + tag
 
-        if details != None:
-            details["sha256"] = HexEncode(Sha256Sum(cipher))
+        if details is not None:
+            details["sha256"] = hex_encode(sha_256_sum(cipher))
             details["length"] = len(cipher)
 
         return cipher
-
 
     @params(object, bytes)
     def decrypt(self, cipher):
@@ -59,11 +53,9 @@ class SymmKeyV1(SymmKeyBase):
 
         return FC.aes_decrypt(self._secret, raw_cipher, tag, iv)
 
-
     def __eq__(self, other):
         return self.protocol_version == other.protocol_version and \
             self._secret == other._secret
-
 
     def __ne__(self, other):
         return not self.__eq__(other)

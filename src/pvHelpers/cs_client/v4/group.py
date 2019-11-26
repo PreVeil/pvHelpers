@@ -64,7 +64,7 @@ class GroupV4(object):
 
 # UGH, get rid of this!!!!
 def createCollectionKey(version, public_key):
-    new_key = PVKeyFactory.newUserKey(version)
+    new_key = PVKeyFactory.new_user_key(version)
 
     # don't B64 encode for filesync
     wrapped_private_key = b64enc(public_key.seal(new_key.buffer.SerializeToString()))

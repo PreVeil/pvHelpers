@@ -45,7 +45,7 @@ class Device(object):
         return cls(
             device_data["device_id"],
             device_data["device_name"],
-            PVKeyFactory.deserializePublicUserKey(device_data["public_key"]),
+            PVKeyFactory.deserialize_public_user_key(device_data["public_key"]),
             device_data["metadata"],
             device_data.get("status", DeviceStatus.LOCAL),
             device_data["platform"]

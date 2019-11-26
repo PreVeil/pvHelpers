@@ -31,7 +31,7 @@ class LocalDevice(Device):
     def new(cls, key_version=1):
         return cls(
             unicode(uuid.uuid4()), None,
-            PVKeyFactory.newUserKey(key_version), {}, DeviceStatus.LOCAL
+            PVKeyFactory.new_user_key(key_version), {}, DeviceStatus.LOCAL
         )
 
     @classmethod
@@ -39,7 +39,7 @@ class LocalDevice(Device):
         return cls(
             device_data["device_id"],
             device_data["device_name"],
-            PVKeyFactory.userKeyfromDB(device_data["key"]),
+            PVKeyFactory.user_key_from_db(device_data["key"]),
             device_data["metadata"],
             device_data["status"]
         )

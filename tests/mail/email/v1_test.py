@@ -3,7 +3,7 @@ import os
 import StringIO
 
 from flanker import mime
-from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata, AttachmentType,
                                   create_mime, DUMMY_CONTENT_TYPE, EmailHelpers, EmailV1)
 from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
@@ -62,7 +62,7 @@ def test_from_mime():
     body_mime = mime.from_string(email.body.content)
     assert len(attachments) == len(filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
     # check att hashes are properly inserted as filenames
-    assert map(lambda a: HexEncode(Sha256Sum(a.to_string())), attachments) == \
+    assert map(lambda a: hex_encode(sha_256_sum(a.to_string())), attachments) == \
         map(lambda p: p.content_disposition[1]["filename"],
             filter(lambda p: p.content_type.value == DUMMY_CONTENT_TYPE, body_mime.parts))
 

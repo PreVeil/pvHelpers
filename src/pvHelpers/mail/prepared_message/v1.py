@@ -1,5 +1,5 @@
 from flanker import mime
-from pvHelpers.crypto.utils import HexEncode, Sha256Sum
+from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.mail.email import EmailV1, PROTOCOL_VERSION
 from pvHelpers.utils import b64enc, jdumps, utf8Encode
@@ -32,7 +32,7 @@ class PreparedMessageV1(PreparedMessageHelpers, PreparedMessageBase):
         # of any encryption or server storage upload
         status, body_mime = EmailV1.replaceDummyReferences(
             body_mime, {
-                HexEncode(Sha256Sum(att.content.content)): u",".join(att.content.block_ids)
+                hex_encode(sha_256_sum(att.content.content)): u",".join(att.content.block_ids)
                 for att in self.email.attachments
             })
 
