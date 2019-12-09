@@ -2,24 +2,33 @@ import types
 
 from pvHelpers.request import UserRequest
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import merge_dicts, b64enc, params, utf8_encode
+from pvHelpers.utils import b64enc, merge_dicts, params, utf8_encode
 
 
 class OrgV5(object):
-    @params(object, LocalUser, unicode, {types.NoneType, unicode}, {types.NoneType, bool}, {types.NoneType, unicode}, {types.NoneType, int}, {types.NoneType, int})
-    def getOrgRequests(self, user, org_id, status=None, hide_expired=None, request_type=None, limit=None, offset=None):
+    @params(object, LocalUser, unicode, {types.NoneType, unicode},
+            {types.NoneType, bool}, {types.NoneType, unicode}, {types.NoneType, int}, {types.NoneType, int})
+    def get_org_requests(self, user, org_id, status=None, hide_expired=None,
+                         request_type=None, limit=None, offset=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests".format(org_id),
             "GET", None
         )
-        hide_expired = str(hide_expired).lower() if hide_expired != None else hide_expired
-        request_type = str(request_type).lower() if request_type != None else request_type
-        resp = self.get(url, headers, params={"user_id": user.user_id, "status": status, "hide_expired": hide_expired, "request_type": request_type, "limit": limit, "offset": offset})
+        hide_expired = str(hide_expired).lower() if hide_expired is not None else hide_expired
+        request_type = str(request_type).lower() if request_type is not None else request_type
+        resp = self.get(url, headers, params={
+            "user_id": user.user_id,
+            "status": status,
+            "hide_expired": hide_expired,
+            "request_type": request_type,
+            "limit": limit,
+            "offset": offset
+        })
         resp.raise_for_status()
         return resp.json()
 
     @params(object, LocalUser, unicode, unicode)
-    def getOrgRequestResponses(self, user, org_id, request_id):
+    def get_org_request_responses(self, user, org_id, request_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests/{}/responses".format(org_id, request_id),
             "GET", None
@@ -29,7 +38,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, unicode)
-    def deleteOrgRequest(self, user, org_id, request_id):
+    def delete_org_request(self, user, org_id, request_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests/{}".format(org_id, request_id),
             "DELETE", None
@@ -63,7 +72,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode)
-    def getOrgWhitelist(self, user, org_id):
+    def get_org_whitelist(self, user, org_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/whitelist".format(org_id),
             "GET", None
@@ -73,7 +82,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, {types.NoneType, list}, {types.NoneType, list})
-    def addToOrgWhitelist(self, user, org_id, users, domains):
+    def add_to_org_whitelist(self, user, org_id, users, domains):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/whitelist/add".format(org_id),
             "PUT", {
@@ -86,7 +95,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, {types.NoneType, list}, {types.NoneType, list})
-    def removeFromOrgWhitelist(self, user, org_id, users, domains):
+    def remove_from_org_whitelist(self, user, org_id, users, domains):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/whitelist/remove".format(org_id),
             "PUT", {
@@ -99,7 +108,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, bool)
-    def toggleOrgWhitelist(self, user, org_id, set_active):
+    def toggle_org_whitelist(self, user, org_id, set_active):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/whitelist".format(org_id),
             "PATCH", {
@@ -111,7 +120,7 @@ class OrgV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, bool)
-    def toggleOrgInviteEmailType(self, user, org_id, no_download_email):
+    def toggle_org_invite_email_send(self, user, org_id, no_download_email):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/invite_email_type".format(org_id),
             "PATCH", {

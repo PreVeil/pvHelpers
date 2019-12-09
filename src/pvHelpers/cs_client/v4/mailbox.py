@@ -6,10 +6,10 @@ from ..utils import ServerResponseError
 
 class MailboxV4(object):
     @params(object, LocalUser, unicode)
-    def createMailbox(self, user, name):
+    def create_mailbox(self, user, name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes".format(user.mail_cid),
-            "POST", {"name" : name}
+            "POST", {"name": name}
         )
         resp = self.post(url, headers, raw_body)
         resp.raise_for_status()
@@ -20,10 +20,10 @@ class MailboxV4(object):
             raise ServerResponseError(e)
 
     @params(object, LocalUser, unicode, unicode)
-    def renameMailbox(self, user, server_id, new_name):
+    def rename_mailbox(self, user, server_id, new_name):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
-            "PUT", {"name" : new_name}
+            "PUT", {"name": new_name}
         )
         resp = self.put(url, headers, raw_body)
         resp.raise_for_status()
@@ -34,7 +34,7 @@ class MailboxV4(object):
             raise ServerResponseError(e)
 
     @params(object, LocalUser, unicode)
-    def deleteMailbox(self, user, server_id):
+    def delete_mailbox(self, user, server_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
             "DELETE", None
@@ -48,7 +48,7 @@ class MailboxV4(object):
             raise ServerResponseError(e)
 
     @params(object, LocalUser, unicode)
-    def getMailboxNextUID(self, user, mailbox_id):
+    def get_mailbox_next_uid(self, user, mailbox_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes/{}/uid".format(user.mail_cid, mailbox_id),
             "GET", None
@@ -65,7 +65,7 @@ class MailboxV4(object):
         return next_uid
 
     @params(object, LocalUser, int)
-    def getUserMailboxes(self, user, since_rev_id=0):
+    def get_user_mailboxes(self, user, since_rev_id=0):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),
             "GET", None

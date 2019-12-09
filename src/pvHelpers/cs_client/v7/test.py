@@ -4,7 +4,7 @@ from pvHelpers.utils import params
 
 class TestV7(object):
     @params(object, LocalUser, unicode)
-    def expireDevice(self, user, device_id):
+    def expire_device(self, user, device_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/devices/{}/expire".format(device_id), "PATCH", None
         )

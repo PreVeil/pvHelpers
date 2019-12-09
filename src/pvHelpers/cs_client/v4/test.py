@@ -12,7 +12,7 @@ class TestV4(object):
         return resp.json()
 
     @params(object, unicode)
-    def createRecoveryRequest(self, user_id):
+    def create_recovery_request(self, user_id):
         url, raw_body, headers = self.preparePublicRequest(
             u"/users/approvers/secret", "GET", None
         )

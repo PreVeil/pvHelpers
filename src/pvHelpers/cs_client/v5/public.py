@@ -1,7 +1,5 @@
-import types
-
 from pvHelpers.crypto.user_key import UserKeyBase
-from pvHelpers.user import LocalUser, LocalDevice
+from pvHelpers.user import LocalDevice
 from pvHelpers.utils import params
 
 
@@ -12,12 +10,12 @@ class PublicV5(object):
             u"/users", "PUT", {
                 "user_id": user_id,
                 "secret": secret,
-                "public_keys" : {
-                    u"public_key" : user_key.public_user_key.serialize(),
-                    u"log_viewer_key" : serialized_log_viewer_key
+                "public_keys": {
+                    u"public_key": user_key.public_user_key.serialize(),
+                    u"log_viewer_key": serialized_log_viewer_key
                 },
                 "wrapped_keys": {
-                    u"wrapped_log_viewer_private_key" : wrapped_log_viewer_private_key
+                    u"wrapped_log_viewer_private_key": wrapped_log_viewer_private_key
                 },
                 "device": {
                     "device_id": device.id,

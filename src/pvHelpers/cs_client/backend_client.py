@@ -1,10 +1,9 @@
 import datetime
 import inspect
 
-import requests
-
 from pvHelpers.logger import g_log
 from pvHelpers.user import LocalUser
+import requests
 
 from .utils import (ExpiredDeviceKey, ExpiredUserKey, RequestError,
                     UnauthorizedReqLimitException)
@@ -25,23 +24,24 @@ class BackendClient(object):
 
     _MAX_UNAUTHORIZED_COUNT = 25
 
-    # only call this from _handlersWrapper
-    def _isUserSynced(self, user_id):
-        return (user_id not in self.users_sync) or (self.users_sync[user_id]["401_exception_count"] <= self._MAX_UNAUTHORIZED_COUNT)
+    # only call this from _handlers_wrapper
+    def _is_user_synced(self, user_id):
+        return (user_id not in self.users_sync or
+                self.users_sync[user_id]["401_exception_count"] <= self._MAX_UNAUTHORIZED_COUNT)
 
     # TODO: use this method to reset 401 count after CryptoStore has updated the user; eg in the case of rekey
-    def resetUserUnauthorizedState(self, user_id):
+    def reset_user_unauthorized_state(self, user_id):
         if user_id not in self.users_sync:
             g_log.warn(
                 "{} does not encounter any unauthorized request yet.".format(user_id))
             return
         self.users_sync.pop(user_id)
 
-    def _handlersWrapper(self, fun):
+    def _handlers_wrapper(self, fun):  # noqa: C901
         def __wrapper(*args, **kwargs):
             if args and isinstance(args[0], LocalUser):
                 u = args[0]
-                if not self._isUserSynced(u.user_id):
+                if not self._is_user_synced(u.user_id):
                     # user has too many 401 unauthorized response
                     time_diff = datetime.datetime.now(
                     ) - self.users_sync[u.user_id]["latest_req_time"]
@@ -50,7 +50,7 @@ class BackendClient(object):
                         self.users_sync.pop(u.user_id)
                     else:
                         raise UnauthorizedReqLimitException(
-                            "User {} reached max limit of 401 unauthorized req!".format(u.user_id))
+                            u"User {} reached max limit of 401 unauthorized req!".format(u.user_id))
 
                 try:
                     return fun(*args, **kwargs)
@@ -105,16 +105,17 @@ class BackendClient(object):
     def accept_version(self):
         return self.latest_accept_version
 
-    def latestPrepareSignRequest(self, *a, **kw):
+    def latest_prepare_sign_request(self, *a, **kw):
         v = self.client_versions
         return self._clients[v[len(v) - 1][0]]._prepareSignedRequest(*a, **kw)
 
-    def latestPreparePublicRequest(self, *a, **kw):
+    def latest_prepare_public_request(self, *a, **kw):
         v = self.client_versions
         return self._clients[v[len(v) - 1][0]]._preparePublicRequest(*a, **kw)
 
     def init(self, backend):
         this = self
+
         class _ClientWrapper(object):
             def __init__(self, instance, wrapper):
                 self._c_instance = instance
@@ -132,25 +133,27 @@ class BackendClient(object):
 
                 # set preparer methods to latest for all older client instances.
                 setattr(self._c_instance, "accept_version", lambda: this.latest_accept_version)
-                setattr(self._c_instance, "prepareSignedRequest", this.latestPrepareSignRequest)
-                setattr(self._c_instance, "preparePublicRequest", this.latestPreparePublicRequest)
+                setattr(self._c_instance, "prepareSignedRequest", this.latest_prepare_sign_request)
+                setattr(self._c_instance, "preparePublicRequest", this.latest_prepare_public_request)
                 setattr(self, "accept_version", lambda: this.latest_accept_version)
-                setattr(self, "prepareSignedRequest", this.latestPrepareSignRequest)
-                setattr(self, "preparePublicRequest", this.latestPreparePublicRequest)
+                setattr(self, "prepareSignedRequest", this.latest_prepare_sign_request)
+                setattr(self, "preparePublicRequest", this.latest_prepare_public_request)
 
         self._clients = {}
         methods = []
         for (version, klass) in self.client_versions:
             self._clients[version] = klass(backend)
-            c = _ClientWrapper(self._clients[version], self._handlersWrapper)
+            c = _ClientWrapper(self._clients[version], self._handlers_wrapper)
             setattr(self, "V{}".format(version), c)
             methods = methods + c._c_methods
 
         self._current_client = next(client for (
             version, client) in self._clients.iteritems() if version == self.__current_version__)
         # do not wrap `APIClient` inheritted internal methods, for `BACKED_CLIENT`
-        for method_name in set(map(lambda (name, _): name, methods)).difference(["__init__", "put", "get", "delete", "post", "patch"]):
-            setattr(self, method_name, self._handlersWrapper(getattr(self.current_client, method_name)))
+        non_internal_methods = set(
+            map(lambda (name, _): name, methods)).difference(["__init__", "put", "get", "delete", "post", "patch"])
+        for method_name in non_internal_methods:
+            setattr(self, method_name, self._handlers_wrapper(getattr(self.current_client, method_name)))
 
     @property
     def current_client(self):
@@ -160,4 +163,3 @@ class BackendClient(object):
 
 
 BACKEND_CLIENT = BackendClient()
-1

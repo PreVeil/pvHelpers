@@ -15,7 +15,7 @@ class EDiscoveryV5(object):
         resp.raise_for_status()
         return resp.json()
 
-    def getExportMessage(self, user, export_id, collection_id, member_id, id, version=None):
+    def get_export_mail(self, user, export_id, collection_id, member_id, id, version=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/mail/{}/messages/{}".format(collection_id, id),
             "GET", None, export=(export_id, member_id)
@@ -34,7 +34,7 @@ class EDiscoveryV5(object):
         resp.raise_for_status()
         return resp.json()
 
-    def submitExportShards(self, user, org_id, shards, group_id, group_version):
+    def submit_export_shards(self, user, org_id, shards, group_id, group_version):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/submit_export_shards".format(org_id),
             "POST", {
@@ -45,38 +45,5 @@ class EDiscoveryV5(object):
             }
         )
         resp = self.post(url, headers, raw_body)
-        resp.raise_for_status()
-        return resp.json()
-
-    # deprecated
-    def makeEDiscReq(self, user, org_id, until, users):
-        url, raw_body, headers = self.prepareSignedRequest(
-            user, u"/export/{}/request".format(org_id),
-            "POST", {
-                "until": until,
-                "users": users,
-            }
-        )
-        resp = self.post(url, headers, raw_body)
-        resp.raise_for_status()
-        return resp.json()
-
-    # deprecated
-    def approveEDiscReq(self, user, org_id, request_id):
-        url, raw_body, headers = self.prepareSignedRequest(
-            user, u"/export/{}/request/{}/approve".format(org_id, request_id),
-            "POST", None
-        )
-        resp = self.post(url, headers, raw_body)
-        resp.raise_for_status()
-        return resp.json()
-
-    # deprecated
-    def get_export_request(self, user, org_id, request_id):
-        url, raw_body, headers = self.prepareSignedRequest(
-            user, u"/export/{}/request/{}".format(org_id, request_id),
-            "GET", None
-        )
-        resp = self.get(url, headers, raw_body)
         resp.raise_for_status()
         return resp.json()

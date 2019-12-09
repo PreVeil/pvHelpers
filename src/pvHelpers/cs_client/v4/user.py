@@ -5,7 +5,7 @@ from pvHelpers.crypto.user_key import PublicUserKeyBase
 from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.user import LocalUser, OrganizationInfo, User, UserGroup
-from pvHelpers.utils import (b64enc, CaseInsensitiveDict, jloads,
+from pvHelpers.utils import (b64dec, b64enc, CaseInsensitiveDict, jloads,
                              params, utf8_encode)
 import requests
 
@@ -16,7 +16,7 @@ EXISTS = "exists"
 
 class UserV4(object):
     @params(object, LocalUser, int)
-    def getUserGroups(self, user, seq):
+    def get_user_groups(self, user, seq):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/groups/user", "GET", None
         )
@@ -27,23 +27,8 @@ class UserV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    # PV Admins privilaged
-    @params(object, LocalUser, bool, int, int)
-    def getUsersList(self, user, show_unclaimed, limit, offset):
-        url, raw_body, headers = self.prepareSignedRequest(
-            user,  u"/users/list", "GET", None
-        )
-        resp = self.get(url, headers, raw_body, params={
-            "show_unclaimed": show_unclaimed,
-            "offset": offset,
-            "limit": limit
-        })
-        resp.raise_for_status()
-        return resp.json()
-
-
     @params(object, LocalUser, unicode)
-    def getUserShard(self, user, for_user_id):
+    def get_user_shards(self, user, for_user_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/approvers/shard", "GET", None
         )
@@ -55,7 +40,7 @@ class UserV4(object):
         return resp.json()
 
     @params(object, LocalUser, {unicode, types.NoneType})
-    def fetchUserApprovalGroup(self, user, user_id=None):
+    def get_user_approval_group(self, user, user_id=None):
         if not user_id:
             user_id = user.user_id
         url, raw_body, headers = self.prepareSignedRequest(
@@ -120,7 +105,7 @@ class UserV4(object):
         return output
 
     @params(object, LocalUser, unicode)
-    def inviteUser(self, user, invitee_id):
+    def invite_user(self, user, invitee_id):
         g_log.info("inviteUser: {}, {}".format(user.user_id, invitee_id))
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/invite", "PUT", {
@@ -155,11 +140,11 @@ class UserV4(object):
         return invitee_user
 
     @params(object, LocalUser)
-    def fetchLogKeys(self, user):
+    def fetch_log_keys(self, user):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/users/log_keys", "GET", None
         )
-        resp = self.get(url, headers, raw_body, params={u"user_id" : user.user_id})
+        resp = self.get(url, headers, raw_body, params={u"user_id": user.user_id})
         resp.raise_for_status()
 
         text = resp.text
@@ -173,16 +158,16 @@ class UserV4(object):
 
         return log_keys
 
-
     @params(object, LocalUser, unicode, PublicUserKeyBase, unicode, str, int)
-    def grantGroupKeyToUser(self, user, recipient_id, recipient_public_key, group_id, group_key, group_key_version):
+    def grant_group_key_to_user(self, user, recipient_id, recipient_public_key, group_id, group_key, group_key_version):
         g_log.info("grantGroupKeyToUser: {} granting to {} ".format(user.user_id, recipient_id))
         wrapped_group_key = b64enc(recipient_public_key.public_key.seal(group_key))
 
         to_hash_group_key = b64dec(wrapped_group_key)
         hashed_wrapped_key = sha_256_sum(to_hash_group_key)
 
-        text_to_sign = recipient_id.lower() + "," + str(recipient_public_key.key_version) + "," + group_id + "," + str(group_key_version) + "," + hex_encode(hashed_wrapped_key).lower()
+        text_to_sign = recipient_id.lower() + "," + str(recipient_public_key.key_version) + \
+            "," + group_id + "," + str(group_key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
         signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
@@ -205,12 +190,14 @@ class UserV4(object):
         return
 
     @params(object, LocalUser, unicode, unicode, int, unicode, unicode, int)
-    def grantWrappedKeyToGroup(self, user, collection_id, wrapped_key, key_version, role, group_id, group_key_version):
+    def grant_wrapped_key_to_group(self, user, collection_id, wrapped_key,
+                                   key_version, role, group_id, group_key_version):
         g_log.info("grantWrappedKeyToGroup: {} granting to {}".format(user.user_id, group_id))
         to_hash_key_for_group = b64dec(wrapped_key)
         hashed_wrapped_key = sha_256_sum(to_hash_key_for_group)
 
-        text_to_sign = group_id + "," + str(group_key_version) + "," + collection_id + "," + role.upper() + "," + str(key_version) + "," + hex_encode(hashed_wrapped_key).lower()
+        text_to_sign = group_id + "," + str(group_key_version) + "," + collection_id + "," + \
+            role.upper() + "," + str(key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
         signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
@@ -237,7 +224,7 @@ class UserV4(object):
         resp.raise_for_status()
         return
 
-    def setUserAPG(self, user, approvers_group, optional_count):
+    def set_user_approval_group(self, user, approvers_group, optional_count):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/approvers", "POST", {
                 "user_id": user.user_id,

@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.request import UserRequest
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import merge_dicts, b64enc, params, utf8_encode
+from pvHelpers.utils import b64enc, merge_dicts, params, utf8_encode
 
 
 class ApprovalsV5(object):
@@ -18,19 +18,27 @@ class ApprovalsV5(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, LocalUser, {types.NoneType, unicode}, {types.NoneType, bool}, {types.NoneType, int}, {types.NoneType, int})
-    def getUserRequests(self, user, status=None, hide_expired=None, limit=None, offset=None):
+    @params(object, LocalUser, {types.NoneType, unicode},
+            {types.NoneType, bool}, {types.NoneType, int}, {types.NoneType, int})
+    def get_user_requests(self, user, status=None, hide_expired=None, limit=None, offset=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/requests",
             "GET", None
         )
-        hide_expired = str(hide_expired).lower() if hide_expired != None else hide_expired
-        resp = self.get(url, headers, params={"user_id": user.user_id, "status": status, "hide_expired": hide_expired, "limit": limit, "offset": offset})
+        hide_expired = str(hide_expired).lower() if hide_expired is not None else hide_expired
+        resp = self.get(
+            url, headers, params={
+                "user_id": user.user_id,
+                "status": status,
+                "hide_expired": hide_expired,
+                "limit": limit,
+                "offset": offset
+            })
         resp.raise_for_status()
         return resp.json()
 
     @params(object, LocalUser, unicode)
-    def getUserRequestResponses(self, user, request_id):
+    def get_user_request_responses(self, user, request_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/requests/{}/responses".format(request_id),
             "GET", None
@@ -40,7 +48,7 @@ class ApprovalsV5(object):
         return resp.json()
 
     @params(object, LocalUser, unicode)
-    def deleteUserRequest(self, user, request_id):
+    def delete_user_request(self, user, request_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/requests/{}".format(request_id),
             "DELETE", None
@@ -49,13 +57,14 @@ class ApprovalsV5(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, LocalUser, {unicode, types.NoneType}, {unicode, types.NoneType}, {bool, types.NoneType}, {types.NoneType, int}, {types.NoneType, int})
+    @params(object, LocalUser, {unicode, types.NoneType}, {unicode, types.NoneType},
+            {bool, types.NoneType}, {types.NoneType, int}, {types.NoneType, int})
     def get_user_approvals(self, user, status=None, response=None, hide_expired=None, offset=None, limit=None):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/approvals",
             "GET", None
         )
-        hide_expired = str(hide_expired).lower() if hide_expired != None else hide_expired
+        hide_expired = str(hide_expired).lower() if hide_expired is not None else hide_expired
         resp = self.get(url, headers, params={
             "user_id": user.user_id, "status": status, "response": response,
             "hide_expired": hide_expired, "limit": limit, "offset": offset
@@ -64,7 +73,7 @@ class ApprovalsV5(object):
         return resp.json()
 
     @params(object, LocalUser, UserRequest, bool)
-    def respondToUserApproval(self, user, request, response):
+    def respond_to_user_approval(self, user, request, response):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/approvals/{}".format(request.request_id),
             "PUT", {

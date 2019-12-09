@@ -13,7 +13,7 @@ STORAGE_REQUEST_TIMEOUT = 120
 class StorageV4(object):
     # NOTEXX: needs fixing on consumers
     @params(object, LocalUser, unicode, PreparedMessageBase)
-    def uploadEmailBlocks(self, user, collection_id, prepared_message):
+    def upload_blocks(self, user, collection_id, prepared_message):
         for block_id, block in prepared_message.uploads.iteritems():
             url, raw_body, headers = self.prepareSignedRequest(
                 user,
