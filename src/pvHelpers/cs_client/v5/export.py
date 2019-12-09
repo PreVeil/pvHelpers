@@ -2,7 +2,7 @@ from pvHelpers.user import LocalUser
 from pvHelpers.utils import params
 
 
-class EDiscoveryV5(object):
+class ExportV5(object):
     @params(object, LocalUser, {int, long}, unicode, unicode, unicode)
     def get_mail_history_for_export(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
         url, raw_body, headers = self.prepareSignedRequest(

@@ -1,8 +1,8 @@
-from pvHelpers.utils import jdumps, rand_unicode
+from pvHelpers.utils import jdumps, merge_dicts, rand_unicode
 
 
 class Organization(object):
-    def getOrgInfo(self, user_id, org_id):
+    def get_org_info(self, user_id, org_id):
         resp = self.put(
             u"{}/get/{}/orgs/{}".format(self.url, user_id, org_id), headers=self.__headers__,
         )
@@ -18,7 +18,7 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def deleteOrgMember(self, admin_id, org_id, member_id):
+    def delete_org_member(self, admin_id, org_id, member_id):
         resp = self.put(
             u"{}/delete/users/{}/orgs/{}/members/{}".format(self.url, admin_id, org_id, member_id),
             headers=self.__headers__
@@ -26,13 +26,13 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def changeMemberDepartment(self, admin_id, org_id, member_id, department):
+    def update_org_member_metadata(self, admin_id, org_id, member_id, department):
         resp = self.put(
             u"{}/put/{}/orgs/{}/members".format(self.url, admin_id, org_id, member_id),
             headers=self.__headers__,
             raw_body=jdumps({
-                u"department" : department,
-                u"member_id"  : member_id
+                u"department": department,
+                u"member_id": member_id
             })
         )
         resp.raise_for_status()
@@ -70,10 +70,10 @@ class Organization(object):
             u"{}/post/{}/orgs/{}/groups".format(self.url, user_id, org_id),
             headers=self.__headers__,
             raw_body=jdumps({
-                "name": group_name, "optionals_required" : optionals_required,
+                "name": group_name, "optionals_required": optionals_required,
                 "approvers": map(lambda a: {
                     "user_id": a['user_id'],
-                    "account_version": 0, # this needs fixing!
+                    "account_version": 0,  # this needs fixing!
                     "required": False
                 }, approvers)
             })
@@ -81,14 +81,14 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def getOrgApprovalGroups(self, user_id, org_id):
+    def get_org_approval_groups(self, user_id, org_id):
         resp = self.put(
             u"{}/get/{}/orgs/{}/groups".format(self.url, user_id, org_id), headers=self.__headers__
         )
         resp.raise_for_status()
         return resp.json()
 
-    def deleteOrgApprovalGroup(self, user_id, org_id, group_id):
+    def delete_org_approval_group(self, user_id, org_id, group_id):
         resp = self.put(
             u"{}/delete/{}/orgs/{}/groups/{}".format(self.url, user_id, org_id, group_id), headers=self.__headers__,
         )
@@ -99,23 +99,25 @@ class Organization(object):
         resp = self.put(
             u"{}/put/{}/orgs/{}/groups/{}".format(self.url, user_id, org_id, group_id),
             headers=self.__headers__,
-            raw_body=jdumps({"group_version" : group_version, "group_role" : group_role})
+            raw_body=jdumps({"group_version": group_version, "group_role": group_role})
         )
         resp.raise_for_status()
         return resp.json()
 
-    def setMembersApprovalGroup(self, user_id, org_id, group_id, group_version, approvers, members, current_group_id=None, current_group_version=None):
+    def set_members_approval_group(self, user_id, org_id, group_id, group_version,
+                                   approvers, members, current_group_id=None, current_group_version=None):
         resp = self.put(
-            u"{}/post/{}/orgs/{}/groups/{}/members".format(self.url, user_id, org_id, group_id), headers=self.__headers__,
+            u"{}/post/{}/orgs/{}/groups/{}/members".format(
+                self.url, user_id, org_id, group_id), headers=self.__headers__,
             raw_body=jdumps(merge_dicts(approvers, {
-                u"users" : map(lambda u: u.user_id, members), "group_version": group_version,
+                u"users": map(lambda u: u.user_id, members), "group_version": group_version,
                 "current_group_id": current_group_id, "current_group_version": current_group_version
             }))
         )
         resp.raise_for_status()
         return resp.json()
 
-    def respondToOrgApproval(self, user_id, org_id, request_id, request_payload, response):
+    def respond_to_org_approval(self, user_id, org_id, request_id, request_payload, response):
         resp = self.put(
             u"{}/put/users/{}/orgs/{}/approvals/{}".format(self.url, user_id, org_id, request_id),
             headers=self.__headers__,
@@ -124,7 +126,7 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def getOrgRequests(self, user_id, org_id, status=u"pending", hide_expired=True, limit=50, offset=0):
+    def get_org_requests(self, user_id, org_id, status=u"pending", hide_expired=True, limit=50, offset=0):
         resp = self.put(
             u"{}/get/users/{}/orgs/{}/requests".format(self.url, user_id, org_id), headers=self.__headers__,
             raw_body=jdumps({"status": status, "hide_expired": hide_expired, "limit": limit, "offset": offset})
@@ -132,15 +134,14 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def deleteOrgRequest(self, user_id, org_id, request_id):
+    def delete_org_request(self, user_id, org_id, request_id):
         resp = self.put(
-            u"{}/delete/users/{}/orgs/{}/requests/{}".format(self.url, user_id, org_id, request_id), headers=self.__headers__,
-
-        )
+            u"{}/delete/users/{}/orgs/{}/requests/{}".format(self.url, user_id, org_id, request_id),
+            headers=self.__headers__)
         resp.raise_for_status()
         return resp.json()
 
-    def makeEDiscReq(self, user_id, org_id, required_users):
+    def create_export_request(self, user_id, org_id, required_users):
         resp = self.put(
             u"{}/post/users/{}/orgs/{}/exportrequests".format(self.url, user_id, org_id),
             headers=self.__headers__,
@@ -149,7 +150,7 @@ class Organization(object):
         resp.raise_for_status()
         return resp.json()
 
-    def getLocalEDiscoveryRequests(self, user_id):
+    def get_local_export_requests(self, user_id):
         resp = self.put(
             u"{}/get/users/{}/exportrequests".format(self.url, user_id), headers=self.__headers__,
         )

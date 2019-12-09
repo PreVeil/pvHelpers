@@ -3,14 +3,14 @@ from pvHelpers.utils import b64enc, jdumps, utf8_encode
 from ..v4 import APIClientV4
 from .approvals import ApprovalsV5
 from .device import DeviceV5
-from .ediscovery import EDiscoveryV5
+from .export import ExportV5
 from .mail import MailV5
 from .org import OrgV5
 from .public import PublicV5
 from .user import UserV5
 
 
-class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, PublicV5, APIClientV4):
+class APIClientV5(UserV5, OrgV5, MailV5, ExportV5, ApprovalsV5, DeviceV5, PublicV5, APIClientV4):
     __api_version__ = 5
 
     def __init__(self, backend):

@@ -1,8 +1,9 @@
 from pvHelpers.mail.email import EmailHelpers
 from pvHelpers.utils import b64enc, jdumps, NotAssigned
 
+
 class EmailFetch(object):
-    def fetchEmailsWithContent(self, user_id, server_ids, inlines_only=False):
+    def fetch_emails_with_content(self, user_id, server_ids, inlines_only=False):
         resp = self.put(
             u"{}/mail/thread/{}".format(self.url, user_id),
             headers=self.__headers__,
@@ -13,7 +14,7 @@ class EmailFetch(object):
         assert set(server_ids) == set(emails_with_content["messages"].keys())
         return emails_with_content["messages"]
 
-    def fetchPaginatedThreads(self, user_id, mailbox_id, limit, offset):
+    def fetch_paginated_threads(self, user_id, mailbox_id, limit, offset):
         self.doUpdate([user_id])
         resp = self.put(
             u"{}/mail/{}".format(self.url, user_id), headers=self.__headers__,
@@ -24,7 +25,7 @@ class EmailFetch(object):
         assert mailbox_id in mailbox_update
         return mailbox_update[mailbox_id]
 
-    def copyEmailFromCryptoEndpoint(self, user_id, src_mid, dest_mid, server_ids, trash_src):
+    def copy_emails(self, user_id, src_mid, dest_mid, server_ids, trash_src):
         resp = self.put(
             u"{}/post/account/{}/copy".format(self.url, user_id), headers=self.__headers__,
             raw_body=jdumps({
@@ -42,7 +43,7 @@ class EmailFetch(object):
 
 
 class EmailSend(object):
-    def deleteEmailFromCryptoEndpoint(self, user_id, server_id):
+    def delete_email(self, user_id, server_id):
         resp = self.put(
             u"{}/delete/account/{}/emails/".format(self.url, user_id), headers=self.__headers__,
             raw_body=jdumps({"emails": [server_id]})

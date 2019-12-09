@@ -49,7 +49,7 @@ class MailV4(object):
             raise ServerResponseError(e)
 
     @params(object, LocalUser, unicode, unicode, [{int, long}])
-    def dupe_messages(self, user, src_mailbox_id, dest_mailbox_id, uids):
+    def copy_emails(self, user, src_mailbox_id, dest_mailbox_id, uids):
         url, raw_body, headers = self.prepareSignedRequest(
             user, "/mail/{}/mailboxes/{}/messages/copy".format(user.mail_cid, dest_mailbox_id),
             "POST", {u"source_mbid": src_mailbox_id, u"uids": uids}

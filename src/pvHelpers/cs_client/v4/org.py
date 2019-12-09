@@ -44,7 +44,7 @@ class OrgV4(object):
         return resp.json()
 
     @params(object, LocalUser, unicode, unicode)
-    def deleteorg_approval_group(self, user, org_id, group_id):
+    def delete_org_approval_group(self, user, org_id, group_id):
         url, raw_body, headers = self.prepareSignedRequest(
             user,  u"/users/orgs/{}/groups/{}".format(org_id, group_id), "DELETE", None
         )
