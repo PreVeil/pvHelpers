@@ -1,17 +1,19 @@
+# flake8: noqa
 import ctypes
+from ctypes import wintypes
 import os
 import subprocess
 import sys
 import types
-from ctypes import wintypes
 
+from pvHelpers.logger import g_log
 import win32api
 import win32con
 import win32event
 import win32process
 import win32security as ws
 import win32ts
-from pvHelpers.logger import g_log
+
 
 DWORD = ctypes.c_ulong
 ULONG = ctypes.c_ulong
@@ -26,12 +28,11 @@ REF = ctypes.byref
 PySID = type(LOCAL_SYSTEM_SID)
 
 
-def loggedOnUserSid():
-    cUserName = win32api.GetUserName()
-    return getUserSid(cUserName)
+def logged_on_user_sid():
+    return get_user_sid(win32api.GetUserName())
 
 
-def getUserSid(username):
+def get_user_sid(username):
     (cuser_sid, _dm, _st) = ws.LookupAccountName(None, username)
     return cuser_sid
 
@@ -44,17 +45,15 @@ class WIN_ERROR:
     ERROR_INSUFFICIENT_BUFFER = 122
     # ... #
 
+
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366909(v=vs.85).aspx
-
-
 class TCP_STATE:
     # ... #
     MIB_TCP_STATE_ESTAB = 5
     # ... #
 
+
 # https://msdn.microsoft.com/en-us/library/windows/desktop/bb485761(v=vs.85).aspx
-
-
 class MIB_TCPROW2(ctypes.Structure):
     _fields_ = [("dwState", DWORD),
                 ("dwLocalAddr", DWORD),
@@ -65,9 +64,9 @@ class MIB_TCPROW2(ctypes.Structure):
                 ("dwOffloadState", DWORD)]
 
 
-def MIB_TCPTABLE2(row_num=1):
-    # https://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
-    class _MIB_TCPTABLE2(ctypes.Structure):
+# https://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
+def MIB_TCPTABLE2(row_num=1):  # noqa: N802
+    class _MIB_TCPTABLE2(ctypes.Structure):  # noqa: N801
         _fields_ = [
             ("dwNumEntries", DWORD),
             ("table", MIB_TCPROW2 * row_num)
@@ -76,7 +75,6 @@ def MIB_TCPTABLE2(row_num=1):
     return _MIB_TCPTABLE2()
 
 
-# taken from :
 # https://stackoverflow.com/questions/29566330/is-there-a-good-example-of-using-pywin32-createprocessasuser-and-getting-the-out
 kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
 advapi32 = ctypes.WinDLL('advapi32', use_last_error=True)
@@ -258,19 +256,19 @@ class DWORD_IDV(wintypes.DWORD):
 
 def _check_ihv(result, func, args):
     if result.value == INVALID_HANDLE_VALUE:
-        raise ctypes.WinError(ctypes.get_last_error())
+        raise ctypes.WIN_ERROR(ctypes.get_last_error())
     return result.value
 
 
 def _check_idv(result, func, args):
     if result.value == INVALID_DWORD_VALUE:
-        raise ctypes.WinError(ctypes.get_last_error())
+        raise ctypes.WIN_ERROR(ctypes.get_last_error())
     return result.value
 
 
 def _check_bool(result, func, args):
     if not result:
-        raise ctypes.WinError(ctypes.get_last_error())
+        raise ctypes.WIN_ERROR(ctypes.get_last_error())
     return args
 
 
@@ -601,12 +599,13 @@ def list_active_sessions():
         win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
     )
 
-def runWindowsProcessAsCurrentUser(command):
+
+def run_windows_process_as_current_user(command):
     user_token, thread_handle, process_handle = None, None, None
     try:
         sessions = list_active_sessions()
 
-        if len(sessions) == 0: # no active session!
+        if len(sessions) == 0:  # no active session!
             return False
         elif len(sessions) == 1:
             session_id = sessions[0]["SessionId"]

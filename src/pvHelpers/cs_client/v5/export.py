@@ -5,7 +5,7 @@ from pvHelpers.utils import params
 class ExportV5(object):
     @params(object, LocalUser, {int, long}, unicode, unicode, unicode)
     def get_mail_history_for_export(self, user, last_rev_id, for_user_id, for_user_cid, export_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes".format(for_user_cid),
             "GET", None, False, (export_id, for_user_id)
         )
@@ -16,7 +16,7 @@ class ExportV5(object):
         return resp.json()
 
     def get_export_mail(self, user, export_id, collection_id, member_id, id, version=None):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/mail/{}/messages/{}".format(collection_id, id),
             "GET", None, export=(export_id, member_id)
         )
@@ -26,7 +26,7 @@ class ExportV5(object):
 
     @params(object, LocalUser, unicode, unicode)
     def get_export_shards(self, user, org_id, export_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/export/{}/group/shards".format(org_id),
             "GET", None
         )
@@ -35,7 +35,7 @@ class ExportV5(object):
         return resp.json()
 
     def submit_export_shards(self, user, org_id, shards, group_id, group_version):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/users/orgs/{}/submit_export_shards".format(org_id),
             "POST", {
                 "user_id": user.user_id,

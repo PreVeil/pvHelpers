@@ -8,7 +8,7 @@ from pvHelpers.utils import b64enc, merge_dicts, params, utf8_encode
 class ApprovalsV5(object):
     @params(object, LocalUser, UserRequest, dict)
     def create_user_request(self, user, request, metadata={}):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/requests", "POST", merge_dicts({
                 "signature": request.signature,
                 "request_payload": request.serialized_req,
@@ -21,7 +21,7 @@ class ApprovalsV5(object):
     @params(object, LocalUser, {types.NoneType, unicode},
             {types.NoneType, bool}, {types.NoneType, int}, {types.NoneType, int})
     def get_user_requests(self, user, status=None, hide_expired=None, limit=None, offset=None):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/requests",
             "GET", None
         )
@@ -39,7 +39,7 @@ class ApprovalsV5(object):
 
     @params(object, LocalUser, unicode)
     def get_user_request_responses(self, user, request_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/requests/{}/responses".format(request_id),
             "GET", None
         )
@@ -49,7 +49,7 @@ class ApprovalsV5(object):
 
     @params(object, LocalUser, unicode)
     def delete_user_request(self, user, request_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/requests/{}".format(request_id),
             "DELETE", None
         )
@@ -60,7 +60,7 @@ class ApprovalsV5(object):
     @params(object, LocalUser, {unicode, types.NoneType}, {unicode, types.NoneType},
             {bool, types.NoneType}, {types.NoneType, int}, {types.NoneType, int})
     def get_user_approvals(self, user, status=None, response=None, hide_expired=None, offset=None, limit=None):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/approvals",
             "GET", None
         )
@@ -74,7 +74,7 @@ class ApprovalsV5(object):
 
     @params(object, LocalUser, UserRequest, bool)
     def respond_to_user_approval(self, user, request, response):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/approvals/{}".format(request.request_id),
             "PUT", {
                 "user_id": user.user_id,

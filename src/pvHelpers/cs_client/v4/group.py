@@ -18,7 +18,7 @@ def create_collection_key(version, public_key):
 class GroupV4(object):
     @params(object, LocalUser, unicode)
     def get_group_info(self, user, group_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/groups", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
@@ -59,7 +59,7 @@ class GroupV4(object):
             u"log_viewer": wrapped_group_log_viewer_private_key,
         }
 
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/groups", "POST", {
                 u"user_id": user.user_id,
                 u"name": group_name,

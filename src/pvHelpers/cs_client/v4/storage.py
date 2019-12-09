@@ -15,7 +15,7 @@ class StorageV4(object):
     @params(object, LocalUser, unicode, PreparedMessageBase)
     def upload_blocks(self, user, collection_id, prepared_message):
         for block_id, block in prepared_message.uploads.iteritems():
-            url, raw_body, headers = self.prepareSignedRequest(
+            url, raw_body, headers = self.prepare_signed_request(
                 user,
                 "/storage/{}/blocks/{}".format(collection_id, block_id),
                 "PUT", block
@@ -26,7 +26,7 @@ class StorageV4(object):
 
     @params(object, LocalUser, [unicode], {types.NoneType, unicode})
     def get_blocks(self, user, block_ids, collection_id=None):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/storage/{}/blocks".format(
                 user.mail_cid if not collection_id else collection_id),
             "GET", None

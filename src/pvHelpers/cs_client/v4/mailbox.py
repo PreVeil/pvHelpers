@@ -7,7 +7,7 @@ from ..utils import ServerResponseError
 class MailboxV4(object):
     @params(object, LocalUser, unicode)
     def create_mailbox(self, user, name):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}/mailboxes".format(user.mail_cid),
             "POST", {"name": name}
         )
@@ -21,7 +21,7 @@ class MailboxV4(object):
 
     @params(object, LocalUser, unicode, unicode)
     def rename_mailbox(self, user, server_id, new_name):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
             "PUT", {"name": new_name}
         )
@@ -35,7 +35,7 @@ class MailboxV4(object):
 
     @params(object, LocalUser, unicode)
     def delete_mailbox(self, user, server_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}/mailboxes/{}".format(user.mail_cid, server_id),
             "DELETE", None
         )
@@ -49,7 +49,7 @@ class MailboxV4(object):
 
     @params(object, LocalUser, unicode)
     def get_mailbox_next_uid(self, user, mailbox_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes/{}/uid".format(user.mail_cid, mailbox_id),
             "GET", None
         )
@@ -66,7 +66,7 @@ class MailboxV4(object):
 
     @params(object, LocalUser, int)
     def get_user_mailboxes(self, user, since_rev_id=0):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),
             "GET", None
         )

@@ -107,11 +107,11 @@ class BackendClient(object):
 
     def latest_prepare_sign_request(self, *a, **kw):
         v = self.client_versions
-        return self._clients[v[len(v) - 1][0]]._prepareSignedRequest(*a, **kw)
+        return self._clients[v[len(v) - 1][0]]._prepare_signed_request(*a, **kw)
 
     def latest_prepare_public_request(self, *a, **kw):
         v = self.client_versions
-        return self._clients[v[len(v) - 1][0]]._preparePublicRequest(*a, **kw)
+        return self._clients[v[len(v) - 1][0]]._prepare_public_request(*a, **kw)
 
     def init(self, backend):
         this = self
@@ -133,11 +133,11 @@ class BackendClient(object):
 
                 # set preparer methods to latest for all older client instances.
                 setattr(self._c_instance, "accept_version", lambda: this.latest_accept_version)
-                setattr(self._c_instance, "prepareSignedRequest", this.latest_prepare_sign_request)
-                setattr(self._c_instance, "preparePublicRequest", this.latest_prepare_public_request)
+                setattr(self._c_instance, "prepare_signed_request", this.latest_prepare_sign_request)
+                setattr(self._c_instance, "prepare_public_request", this.latest_prepare_public_request)
                 setattr(self, "accept_version", lambda: this.latest_accept_version)
-                setattr(self, "prepareSignedRequest", this.latest_prepare_sign_request)
-                setattr(self, "preparePublicRequest", this.latest_prepare_public_request)
+                setattr(self, "prepare_signed_request", this.latest_prepare_sign_request)
+                setattr(self, "prepare_public_request", this.latest_prepare_public_request)
 
         self._clients = {}
         methods = []

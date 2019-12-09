@@ -16,7 +16,7 @@ class APIClientV5(UserV5, OrgV5, MailV5, ExportV5, ApprovalsV5, DeviceV5, Public
     def __init__(self, backend):
         super(APIClientV5, self).__init__(backend)
 
-    def _prepareSignedRequest(self, signer, resource, method, body, ignore_device_sign=False, export=None):
+    def _prepare_signed_request(self, signer, resource, method, body, ignore_device_sign=False, export=None):
         if not ignore_device_sign and not signer.has_device_key():
             raise MissingDeviceKey("V5 requires device key")
         url = self.url + resource

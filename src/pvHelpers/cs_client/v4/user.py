@@ -17,7 +17,7 @@ EXISTS = "exists"
 class UserV4(object):
     @params(object, LocalUser, int)
     def get_user_groups(self, user, seq):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/users/groups/user", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
@@ -29,7 +29,7 @@ class UserV4(object):
 
     @params(object, LocalUser, unicode)
     def get_user_shards(self, user, for_user_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/users/approvers/shard", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
@@ -43,7 +43,7 @@ class UserV4(object):
     def get_user_approval_group(self, user, user_id=None):
         if not user_id:
             user_id = user.user_id
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/users/approvers/info", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={"user_id": user_id})
@@ -66,7 +66,7 @@ class UserV4(object):
                 raise TypeError(u"expected (user_id, version) tuple")
             query_data.append({"user_id": x[0], "key_version": x[1]})
 
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/users/find", "POST", {
                 "spec":  query_data
             }
@@ -107,7 +107,7 @@ class UserV4(object):
     @params(object, LocalUser, unicode)
     def invite_user(self, user, invitee_id):
         g_log.info("inviteUser: {}, {}".format(user.user_id, invitee_id))
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/invite", "PUT", {
                 "user_id": user.user_id,
                 "invitee_email": invitee_id
@@ -141,7 +141,7 @@ class UserV4(object):
 
     @params(object, LocalUser)
     def fetch_log_keys(self, user):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/users/log_keys", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={u"user_id": user.user_id})
@@ -171,7 +171,7 @@ class UserV4(object):
 
         signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/groups/user", "PUT", {
                 "user_id": user.user_id,
                 "sharee_user_id": recipient_id,
@@ -201,7 +201,7 @@ class UserV4(object):
 
         signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/collection/grant", "PUT", {
                 "user_id": user.user_id,
                 "collection_id": collection_id,
@@ -225,7 +225,7 @@ class UserV4(object):
         return
 
     def set_user_approval_group(self, user, approvers_group, optional_count):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/approvers", "POST", {
                 "user_id": user.user_id,
                 "group": approvers_group,

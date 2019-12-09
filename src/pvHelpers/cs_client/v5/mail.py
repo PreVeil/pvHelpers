@@ -5,7 +5,7 @@ from pvHelpers.utils import params
 class MailV5(object):
     @params(object, LocalUser, unicode, int, int)
     def get_paginated_threads(self, user, mailbox_id, limit, offset):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes/{}/threads".format(user.mail_cid, mailbox_id),
             "GET", None
         )

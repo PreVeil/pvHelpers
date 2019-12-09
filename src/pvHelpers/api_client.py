@@ -1,10 +1,9 @@
 import types
 
-import requests
-
 from pvHelpers.logger import g_log
 from pvHelpers.proxy_config import ProxyConfig
-from pvHelpers.utils import jdumps, params
+from pvHelpers.utils import params
+import requests
 
 
 # If no authentication method is given with the auth argument, Requests will
@@ -23,7 +22,7 @@ HTTP_TIMEOUT = 60
 session_cache = {}
 
 
-def getSession(backend, default_headers={}):
+def get_session(backend, default_headers={}):
     if backend not in session_cache:
         # Let's avoid a random exploding cache.
         if len(session_cache) > 1000:
@@ -45,7 +44,7 @@ class APIClient(object):
 
     @property
     def session(self):
-        return getSession(self.url, self.default_headers)
+        return get_session(self.url, self.default_headers)
 
     def accept_version(self):
         return u"v{}".format(self.__api_version__)
@@ -87,8 +86,7 @@ class APIClient(object):
             return request_handle(
                 method, url, headers=headers, proxies=None, **kwargs)
 
-    def _request_common(
-        self, method, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+    def _request_common(self, method, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
         session = self.session
         headers.update(session.headers)
         return self._request_with_proxies_fall_over(
@@ -96,7 +94,7 @@ class APIClient(object):
             method,
             url,
             headers,
-            proxies=self.proxy_config.get_proxies(url) if self.proxy_config != None else None,
+            proxies=self.proxy_config.get_proxies(url) if self.proxy_config is not None else None,
             data=raw_body,
             params=params,
             timeout=timeout,
@@ -142,8 +140,8 @@ class APIClient(object):
         return self._request_common("PATCH", url, headers, raw_body, params,
                                     timeout)
 
-    def prepareSignedRequest(self):
+    def prepare_signed_request(self):
         raise NotImplementedError()
 
-    def preparePublicRequest(self):
+    def prepare_public_request(self):
         raise NotImplementedError()

@@ -1,3 +1,4 @@
+# flake8: noqa
 from multiprocessing import Array, current_process, Value
 import random
 import time

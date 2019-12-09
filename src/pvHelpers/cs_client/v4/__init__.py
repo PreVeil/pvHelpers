@@ -19,7 +19,7 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
     def __init__(self, backend):
         super(APIClientV4, self).__init__(backend)
 
-    def _preparePublicRequest(self, resource, method, body):
+    def _prepare_public_request(self, resource, method, body):
         url = self.url + resource
         if body is None:
             raw_body = u""
@@ -33,7 +33,7 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
         encoded_raw_body = utf8_encode(raw_body)
         return url, encoded_raw_body, headers
 
-    def _prepareSignedRequest(self, signer, resource, method, body):
+    def _prepare_signed_request(self, signer, resource, method, body):
         url = self.url + resource
         if body is None:
             raw_body = u""

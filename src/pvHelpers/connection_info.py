@@ -6,10 +6,12 @@ import subprocess
 import sys
 
 from pvHelpers.user import LUserInfo, LUserInfoWin
-from pvHelpers.utils import NotAssigned, g_log, params, to_int
+from pvHelpers.utils import g_log, params, to_int
 
 if sys.platform == "win32":
-    from .win_helpers import *
+    from .win_helpers import (MIB_TCPTABLE2, INT, SIZEOF, REF, ctypes, WIN_ERROR,
+                              DWORD, MIB_TCPROW2, TCP_STATE, win32api, pywintypes,
+                              win32con, ws)
 
 
 LSOF_CACHE = collections.deque(maxlen=3)
@@ -18,7 +20,9 @@ LSOF_CACHE = collections.deque(maxlen=3)
 @params({unicode, str}, int, {unicode, str}, int)
 def resolve_connection_info(remote_addr, remote_port, local_process_addr, local_process_port):
     if remote_addr != u"127.0.0.1":
-        g_log.error(u"resolve_connection_info: only 127.0.0.1 connections allowed, address: {}:{}".format(remote_addr, remote_port))
+        g_log.error(
+            u"resolve_connection_info: only 127.0.0.1 connections allowed, address: {}:{}".format(
+                remote_addr, remote_port))
         return False, None
 
     if sys.platform in ["linux2", "darwin"]:
@@ -27,6 +31,7 @@ def resolve_connection_info(remote_addr, remote_port, local_process_addr, local_
         return _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr, local_process_port)
 
     raise NotImplementedError(u"platform not supported")
+
 
 def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, local_process_port):
     ################
@@ -38,7 +43,8 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
     # -M => avoid the portmapper if enabled by default
     # -i => constrain for only internet files open for the address and protocol
     # -s => constrain for the state of the TCP connection.
-    # -F => prepare output for application use (not print format), `un` are field descriptors for uid and Internet address
+    # -F => prepare output for application use (not print format),
+    #       `un` are field descriptors for uid and Internet address
     # Internet address has this pattern : `n$LOCAL_ADDR:$LOCAL_PORT->$REMOTE_ADDR:$REMOTE_PORT`
     # The output will always include `pu` field descriptors (pid and file descriptor number)
     # thus, `-Fun` means the output will have five fields for each open file ; fields in the below order:
@@ -53,7 +59,8 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
         return False, None
 
     LSOF_CACHE.appendleft(open_files)
-    remote_client_files = filter(lambda f: f["local_addr"] == remote_addr and f["local_port"] == remote_port, open_files)
+    remote_client_files = filter(
+        lambda f: f["local_addr"] == remote_addr and f["local_port"] == remote_port, open_files)
 
     if len(remote_client_files) == 0:
         g_log.error(u"_get_conn_process_info_unix: couldn't fetch the connection file info")
@@ -71,6 +78,7 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
         "uid": LUserInfo.new(sys.platform, uid)
     }
 
+
 # https://msdn.microsoft.com/en-us/library/windows/desktop/bb408406(v=vs.85).aspx
 def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr, local_process_port):
     row_num = 1
@@ -79,12 +87,13 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
     counter = 0
     while(True):
         counter += 1
-        tcpTable = MIB_TCPTABLE2(row_num)
-        ulSize = INT(SIZEOF(tcpTable))
-        status = ctypes.windll.iphlpapi.GetTcpTable2(REF(tcpTable), REF(ulSize), False)
+        tcp_table = MIB_TCPTABLE2(row_num)
+        ul_size = INT(SIZEOF(tcp_table))
+        status = ctypes.windll.iphlpapi.GetTcpTable2(REF(tcp_table), REF(ul_size), False)
         if status == WIN_ERROR.ERROR_INSUFFICIENT_BUFFER:
-            required_buffer_size = ulSize.value
-            row_num = int((required_buffer_size - SIZEOF(DWORD)) / SIZEOF(MIB_TCPROW2())) + 2 # just adding space for 2 extra rows
+            required_buffer_size = ul_size.value
+            # just adding space for 2 extra rows
+            row_num = int((required_buffer_size - SIZEOF(DWORD)) / SIZEOF(MIB_TCPROW2())) + 2
         elif status != WIN_ERROR.NO_ERROR:
             g_log.error(u"_get_conn_process_info_windows: unexpected error code: {}".format(status))
             return False, None
@@ -96,21 +105,26 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
             return False, None
 
     tcp_connections = set()
-    for i in range(0, tcpTable.dwNumEntries):
-        _row = tcpTable.table[i]
+    for i in range(0, tcp_table.dwNumEntries):
+        _row = tcp_table.table[i]
         if _row.dwState == TCP_STATE.MIB_TCP_STATE_ESTAB:
 
-            lPort = socket.ntohs(_row.dwLocalPort)
-            lAddr = socket.inet_ntoa(struct.pack("L", _row.dwLocalAddr))
-            rPort = socket.ntohs(_row.dwRemotePort)
-            rAddr = socket.inet_ntoa(struct.pack("L", _row.dwRemoteAddr))
+            l_port = socket.ntohs(_row.dwLocalPort)
+            l_addr = socket.inet_ntoa(struct.pack("L", _row.dwLocalAddr))
+            r_port = socket.ntohs(_row.dwRemotePort)
+            r_addr = socket.inet_ntoa(struct.pack("L", _row.dwRemoteAddr))
             pid = _row.dwOwningPid
-            tcp_connections.add((pid, lAddr, lPort, rAddr, rPort))
+            tcp_connections.add((pid, l_addr, l_port, r_addr, r_port))
 
-    remote_connections = filter(lambda c: c[1] == remote_addr and c[2] == remote_port and c[3] == local_process_addr and c[4] == local_process_port, tcp_connections)
+    remote_connections = filter(
+        lambda c: (c[1] == remote_addr and c[2] == remote_port and
+                   c[3] == local_process_addr and c[4] == local_process_port),
+        tcp_connections)
 
     if len(remote_connections) != 1:
-        g_log.error(u"_get_conn_process_info_windows: couldn't fetch the connection file info, pcount: {}, p: {}".format(len(tcp_connections), tcp_connections))
+        g_log.error(
+            "_get_conn_process_info_windows: couldn't fetch the connection file "
+            "info, pcount: {}, p: {}".format(len(tcp_connections), tcp_connections))
         return False, None
 
     pid = remote_connections[0][0]
@@ -128,7 +142,8 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
     return True, {"pid": pid, "uid":  LUserInfoWin(_sid, _psids)}
 
 
-# This function assumes the executed losf command is : `lsof -l -n -P -M -iTCP@REMOTE_ADDR:REMOTE_PORT -sTCP:ESTABLISHED -Fun`
+# This function assumes the executed losf command is :
+#   `lsof -l -n -P -M -iTCP@REMOTE_ADDR:REMOTE_PORT -sTCP:ESTABLISHED -Fun`
 # Throws IndexError/AttributeError if the command returns are not as expected
 # TODO: improve this expensive lookup
 def _materialize_lsof(output):
@@ -139,18 +154,23 @@ def _materialize_lsof(output):
         # Start of a process set
         if f_array[i].startswith("p"):
             # all field values are prefixed with its field descriptor letter (`p123` for pid=123)
-            pid = f_array[i][1:]; i += 1
-            uid = f_array[i][1:]; i += 1
+            pid = f_array[i][1:]
+            i += 1
+            uid = f_array[i][1:]
+            i += 1
 
             while i < len(f_array) and f_array[i].startswith("f"):
-                fd = f_array[i][1:]; i += 1
-                internet_address = f_array[i][1:]; i += 1
+                fd = f_array[i][1:]
+                i += 1
+                internet_address = f_array[i][1:]
+                i += 1
                 match = re.match("^([0-9.]+):([0-9]+)->([0-9.]+):([0-9]+)$", internet_address)
                 if match is None:
-                    g_log.error("_materialize_lsof: internet_address doesn't match pattern: {}".format(internet_address))
+                    g_log.error(
+                        "_materialize_lsof: internet_address doesn't match pattern: {}".format(internet_address))
                     break
 
-                la, lp, ra, rp = match.group(1,2,3,4)
+                la, lp, ra, rp = match.group(1, 2, 3, 4)
                 status, _lp = to_int(lp)
                 if not status:
                     g_log.error("_materialize_lsof: lp port coercion failed: {}".format(lp))

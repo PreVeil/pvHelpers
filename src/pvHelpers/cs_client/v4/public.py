@@ -6,7 +6,7 @@ from pvHelpers.utils import params
 class PublicV4(object):
     @params(object, unicode, unicode, UserKeyBase, unicode, unicode, LocalDevice)
     def claim_user(self, user_id, secret, user_key, wrapped_log_viewer_private_key, serialized_log_viewer_key, device):
-        url, raw_body, headers = self.preparePublicRequest(
+        url, raw_body, headers = self.prepare_public_request(
             u"/users", "PUT", {
                 "user_id": user_id,
                 "secret": secret,
@@ -26,7 +26,7 @@ class PublicV4(object):
 
     @params(object, unicode, unicode)
     def create_user(self, user_id, name):
-        url, raw_body, headers = self.preparePublicRequest(
+        url, raw_body, headers = self.prepare_public_request(
             u"/users", "POST", {
                 "user_id": user_id,
                 "display_name": name
@@ -38,7 +38,7 @@ class PublicV4(object):
         return resp.json()
 
     def ping(self):
-        url, raw_body, headers = self.preparePublicRequest(
+        url, raw_body, headers = self.prepare_public_request(
             u"/ping", "GET", None
         )
         resp = self.get(url, headers, raw_body, timeout=1)
@@ -47,7 +47,7 @@ class PublicV4(object):
 
     @params(object, unicode, unicode)
     def fetch_approval_group_with_secret(self, user_id, secret):
-        url, raw_body, headers = self.preparePublicRequest(
+        url, raw_body, headers = self.prepare_public_request(
             u"/users/approvers/info", "GET", None
         )
 

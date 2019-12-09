@@ -10,7 +10,7 @@ EXISTS = "exists"
 class UserEventsV4(object):
     @params(object, LocalUser, {types.NoneType, unicode}, unicode)
     def create_user_event(self, user, member_id, payload):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/events", "POST", {
                 "user_id": member_id,
                 "requester_id": user.user_id,
@@ -25,7 +25,7 @@ class UserEventsV4(object):
 
     @params(object, LocalUser, int)
     def get_user_events(self, user, last_rev_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/events", "GET", None
         )
         resp = self.get(url, headers, raw_body, params={
@@ -37,7 +37,7 @@ class UserEventsV4(object):
 
     @params(object, LocalUser, unicode, dict)
     def respond_to_user_event(self, user, event_id, response):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/events/{}".format(event_id), "PUT", {
                 u"user_id": user.user_id,
                 u"request": response

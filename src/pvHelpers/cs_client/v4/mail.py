@@ -11,7 +11,7 @@ from ..utils import ServerResponseError
 class MailV4(object):
     @params(object, LocalUser, PreparedMessageBase)
     def send_email(self, user, prepared_message):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}".format(prepared_message.recipient.mail_cid),
             "POST", prepared_message.to_dict()
         )
@@ -20,7 +20,7 @@ class MailV4(object):
 
     @params(object, LocalUser, PreparedMessageBase, unicode)
     def append_email_to_mailbox(self, user, prepared_message, mailbox_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
             "POST", {"message": prepared_message.to_dict()}
         )
@@ -36,7 +36,7 @@ class MailV4(object):
 
     @params(object, LocalUser, unicode, [{"id": unicode, "last_version": unicode, "flags": [unicode]}])
     def update_flags(self, user, mailbox_id, updates):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}/mailboxes/{}/messages".format(user.mail_cid, mailbox_id),
             "PATCH", {u"updates": updates}
         )
@@ -50,7 +50,7 @@ class MailV4(object):
 
     @params(object, LocalUser, unicode, unicode, [{int, long}])
     def copy_emails(self, user, src_mailbox_id, dest_mailbox_id, uids):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/{}/mailboxes/{}/messages/copy".format(user.mail_cid, dest_mailbox_id),
             "POST", {u"source_mbid": src_mailbox_id, u"uids": uids}
         )
@@ -69,7 +69,7 @@ class MailV4(object):
 
     @params(object, LocalUser, {int, long})
     def get_mail_history(self, user, last_rev_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes".format(user.mail_cid),
             "GET", None
         )
@@ -81,7 +81,7 @@ class MailV4(object):
 
     @params(object, LocalUser, unicode, unicode)
     def expunge_mail(self, user, mailbox_id, email_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, u"/mail/{}/mailboxes/{}/messages/{}".format(user.mail_cid, mailbox_id, email_id),
             "DELETE", None
         )
@@ -91,7 +91,7 @@ class MailV4(object):
 
     @params(object, LocalUser, unicode)
     def get_mailbox_unseen_count(self, user, mailbox_id):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user,  u"/mail/{}/mailboxes/{}/unseen_count".format(user.mail_cid, mailbox_id),
             "GET", None
         )

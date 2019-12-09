@@ -6,7 +6,7 @@ from pvHelpers.utils import params
 class MailV7(object):
     @params(object, LocalUser, PreparedMessageBase)
     def send_email(self, user, prepared_message):
-        url, raw_body, headers = self.prepareSignedRequest(
+        url, raw_body, headers = self.prepare_signed_request(
             user, "/mail/send",
             "POST", prepared_message.to_dict()
         )
