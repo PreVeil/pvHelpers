@@ -39,11 +39,11 @@ class ProxyPac(object):
     def __ne__(self, other):
         return not self == other
 
-    def toDict(self):
+    def to_dict(self):
         return {"protocol": IPProtocol.PAC, "pac_url": self.pac_url}
 
     @classmethod
-    def fromDict(cls, data_dict):
+    def from_dict(cls, data_dict):
         return cls(data_dict["pac_url"])
 
 
@@ -83,7 +83,7 @@ class ProxyUrl(object):
             return "http://{}:{}@{}:{}".format(self.username, self.password,
                                                self.ip, self.port)
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "protocol": self.protocol,
             "ip": self.ip,
@@ -93,7 +93,7 @@ class ProxyUrl(object):
         }
 
     @classmethod
-    def fromDict(cls, request_dict):
+    def from_dict(cls, request_dict):
         return cls(
             request_dict["protocol"],
             request_dict["ip"],
@@ -135,13 +135,13 @@ class ProxyConfigItem(object):
 
     # need this to work with the existing temp object interface
     def to_db(self):
-        return self.toDict()
+        return self.to_dict()
 
-    def toDict(self):
-        return {k: v.toDict() for k, v in self.proxies.iteritems()}
+    def to_dict(self):
+        return {k: v.to_dict() for k, v in self.proxies.iteritems()}
 
     @classmethod
-    def fromDict(cls, data_dict):
+    def from_dict(cls, data_dict):
         proxies = {}
         for k, v in data_dict.iteritems():
             if k not in ProxyConfigItem.PROTOCOL_TYPES:
@@ -149,9 +149,9 @@ class ProxyConfigItem(object):
                     u"{} is not a supported proxy protocol type".format(k))
 
             if k in [IPProtocol.HTTP, IPProtocol.HTTPS]:
-                proxies[k] = ProxyUrl.fromDict(v)
+                proxies[k] = ProxyUrl.from_dict(v)
             elif k == IPProtocol.PAC:
-                proxies[k] = ProxyPac.fromDict(v)
+                proxies[k] = ProxyPac.from_dict(v)
         return cls(proxies)
 
     def set_basic_auth_cred(self, basic_proxy_auth):

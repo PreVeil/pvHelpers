@@ -1,8 +1,8 @@
 import pacparser
-import requests
-
 from pvHelpers.logger import g_log
 from pvHelpers.utils import parse_file_uri
+import requests
+
 
 RETRYABLE_EXCEPTION = (requests.exceptions.ConnectionError,
                        requests.exceptions.Timeout)
@@ -30,7 +30,7 @@ class Pac(object):
             else:
                 pacparser.init()
                 pacparser.parse_pac_file(url)
-        except:
+        except Exception:
             # neither a valid url or valid file path
             g_log.error("Unsupported pac url {}".format(self.pac_url))
             g_log.debug("Cleaning up pacparser...")
@@ -126,6 +126,7 @@ def download_pac(candidate_urls, timeout=1, allowed_content_types=None):
             continue
     return None
 
+
 def parse_pac_value(value, proxy_auth=None, socks_scheme=None):
     """
     Parse the return value of ``FindProxyForURL()`` into a list.
@@ -182,7 +183,7 @@ def proxy_url(value, proxy_auth=None, socks_scheme=None):
                                               proxy_auth.password, proxy)
             return "{}://{}".format(socks_scheme, proxy)
 
-        # TODO: also support keyword 'HTTP' and 'HTTPS'
-        # as describe here: https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_(PAC)_file
+        # TODO: also support keyword 'HTTP' and 'HTTPS' as describe here:
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_(PAC)_file
 
     raise ValueError("Unrecognized proxy config value '{}'".format(value))

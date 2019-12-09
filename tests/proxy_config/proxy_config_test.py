@@ -151,11 +151,11 @@ def test_OS_proxy_processer():
     # win32
     assert process_os_proxies(win_no_proxy, "win32") is None
     assert process_os_proxies(win_proxy_str_inenable, "win32") is None
-    assert process_os_proxies(win_proxy_str_one_ip_port_for_all, "win32").toDict() == \
+    assert process_os_proxies(win_proxy_str_one_ip_port_for_all, "win32").to_dict() == \
         {"http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "2121"},
          "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2121"}}
 
-    assert process_os_proxies(win_proxy_str, "win32").toDict() == \
+    assert process_os_proxies(win_proxy_str, "win32").to_dict() == \
         {"http": {"username": None, "ip": "localhost",
                   "password": None, "protocol": "http", "port": "3333"}}
     with pytest.raises(IOError):
@@ -163,11 +163,11 @@ def test_OS_proxy_processer():
 
     # darwin
     assert process_os_proxies(scutil_no_proxy, "darwin") is None
-    assert process_os_proxies(scutil_with_proxy_info_inenable, "darwin").toDict() == \
+    assert process_os_proxies(scutil_with_proxy_info_inenable, "darwin").to_dict() == \
         {"https": {"username": None, "ip": "localhost",
                    "password": None, "protocol": "https", "port": "2222"}}
 
-    assert process_os_proxies(scutil_with_proxy, "darwin").toDict() == \
+    assert process_os_proxies(scutil_with_proxy, "darwin").to_dict() == \
         {"pac": {"pac_url": os.path.join(get_dir(__file__), "test_pac_file.pac"), "protocol": "pac"},
             "http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "3128"},
             "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}

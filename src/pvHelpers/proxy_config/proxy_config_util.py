@@ -210,15 +210,15 @@ class ProxyConfig(object):
             return self.os_proxy_setting.get_proxies(url)
         return None
 
-    def toDict(self):
+    def to_dict(self):
         if self.manual_proxy_setting is not None:
             return {
                 "setting_type": "manual",
-                "setting_values": self.manual_proxy_setting.toDict()
+                "setting_values": self.manual_proxy_setting.to_dict()
             }
         if self.os_proxy_setting is not None:
             return {
                 "setting_type": "os",
-                "setting_values": self.os_proxy_setting.toDict()
+                "setting_values": self.os_proxy_setting.to_dict()
             }
         return {"setting_type": None, "setting_values": {}}
