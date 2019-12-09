@@ -3,7 +3,7 @@ import types
 import uuid
 
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import b64enc, jdumps, jloads, params, utf8Encode
+from pvHelpers.utils import b64enc, jdumps, jloads, params, utf8_encode
 
 REQUEST_EXPIRATION_DAYS = 7
 
@@ -46,7 +46,7 @@ class MemberAPGChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -75,7 +75,7 @@ class MemberRekeyAndAPGChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -102,7 +102,7 @@ class APGChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -133,7 +133,7 @@ class RekeyAndAPGChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -158,7 +158,7 @@ class GroupRoleChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -183,7 +183,7 @@ class ExportRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -215,7 +215,7 @@ class MemberRoleChangeRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -240,7 +240,7 @@ class MemberDeletionRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):
@@ -266,7 +266,7 @@ class SubsumeAccountRequest(UserRequest):
             "protocol_version": cls.__protocol_version__
         })
         request_id = u"__local__" + unicode(uuid.uuid4())
-        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8Encode(payload))), request_id)
+        return cls(payload, b64enc(user.user_key.signing_key.sign(utf8_encode(payload))), request_id)
 
     @params(object, unicode, unicode, unicode)
     def __init__(self, serialized_req, signature, request_id):

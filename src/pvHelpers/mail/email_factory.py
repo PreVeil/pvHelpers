@@ -1,7 +1,7 @@
 import types
 
-from pvHelpers.utils import (EncodingException, jloads, MergeDicts, NOT_ASSIGNED,
-                             params, toInt, WrapExceptions)
+from pvHelpers.utils import (EncodingException, jloads, merge_dicts, NotAssigned,
+                             params, to_int, WrapExceptions)
 
 from .email import EmailV1, EmailV2, EmailV3, EmailV4, EmailV5, EmailV6
 from .email.attachment import Attachment, AttachmentMetadata
@@ -40,7 +40,7 @@ class EmailFactory(object):
     def from_db(revision_id, collection_id, version, server_id, metadata, server_time,
                 flags, uid, mailbox_server_id, thread_id, mailbox_name, expunged):
         if server_id is None:  # An email not having server_id means it's a local email
-            server_info = NOT_ASSIGNED()
+            server_info = NotAssigned()
         else:
             # NOTEX: fix collection nullable in daemon
             server_info = ServerAttributes(
@@ -49,7 +49,7 @@ class EmailFactory(object):
 
         flags = jloads(flags)
         metadata = jloads(metadata)
-        status, v = toInt(metadata.get("protocol_version"))
+        status, v = to_int(metadata.get("protocol_version"))
         if not status:
             raise EmailException(u"protocol_version must coerce to int")
 
@@ -66,17 +66,17 @@ class EmailFactory(object):
         })
 
         if v is PROTOCOL_VERSION.V1:
-            return EmailV1(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV1(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V2:
-            return EmailV2(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV2(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V3:
-            return EmailV3(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV3(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V4:
-            return EmailV4(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV4(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V5:
-            return EmailV5(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV5(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V6:
-            return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+            return EmailV6(**merge_dicts({"server_attr": server_info, "flags": flags}, metadata))
 
         raise EmailException(u"Unsupported protocol_version")
 
@@ -175,7 +175,7 @@ class EmailFactory(object):
             "bccs": bccs,
         }
 
-        email_dict = MergeDicts(common_props, protocol_dependent_props)
+        email_dict = merge_dicts(common_props, protocol_dependent_props)
         if decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V1:
             return EmailV1(**email_dict)
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V2:

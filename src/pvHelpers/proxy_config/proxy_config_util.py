@@ -4,7 +4,7 @@ import sys
 import time
 
 from pvHelpers.logger import g_log
-from pvHelpers.utils import randUnicode
+from pvHelpers.utils import rand_unicode
 
 from .constants import IPProtocol, ProxyKey
 from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
@@ -130,8 +130,8 @@ def get_os_proxies():
         # the current logic of running the process as current user
         # does not give us access to the process's stdout.
         # so need to write to a temp file first then read from it. :(
-        temp_path = os.path.join(tempfile.gettempdir(),
-                                 randUnicode(5) + ".txt")
+        temp_path = os.path.join(tempfile.gettemp_dir(),
+                                 rand_unicode(5) + ".txt")
 
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
             ps, reg_internet_setting, temp_path)

@@ -4,7 +4,7 @@ from pvHelpers.crypto.sign_key import (SignKeyBase, SignKeyV0, VerifyKeyBase,
                                        VerifyKeyV0)
 from pvHelpers.crypto.utils import CryptoException
 from pvHelpers.utils import (b64dec, b64enc, EncodingException, jdumps, jloads,
-                             params, utf8Decode, utf8Encode, WrapExceptions)
+                             params, utf8_decode, utf8_encode, WrapExceptions)
 
 from .base import PublicUserKeyBase, UserKeyBase
 
@@ -72,7 +72,7 @@ class UserKeyV0(UserKeyBase):
     @params(object, unicode)
     def deserialize(cls, b64):
         encoded = b64dec(b64)
-        json_serialized = utf8Decode(encoded)
+        json_serialized = utf8_decode(encoded)
         key_dict = jloads(json_serialized)
         private_key = b64dec(key_dict["private_key"])
         signing_key_seed = b64dec(key_dict["signing_key"])
@@ -93,7 +93,7 @@ class UserKeyV0(UserKeyBase):
             "version": self.key_version,
             "protocol_version": self.protocol_version
         })
-        encoded = utf8Encode(json_serialized)
+        encoded = utf8_encode(json_serialized)
         b64 = b64enc(encoded)
         return b64
 

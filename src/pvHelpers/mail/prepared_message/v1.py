@@ -2,7 +2,7 @@ from flanker import mime
 from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.mail.email import EmailV1, PROTOCOL_VERSION
-from pvHelpers.utils import b64enc, jdumps, utf8Encode
+from pvHelpers.utils import b64enc, jdumps, utf8_encode
 
 from .base import PreparedMessageBase
 from .helpers import PreparedMessageError, PreparedMessageHelpers
@@ -79,7 +79,7 @@ class PreparedMessageV1(PreparedMessageHelpers, PreparedMessageBase):
             g_log.error(u"PreparedMessageV1._sign: Failed to get canonical encrypted string")
             return False, None
 
-        signature = b64enc(self.sender.user_key.signing_key.sign(utf8Encode(canonical_msg_str)))
+        signature = b64enc(self.sender.user_key.signing_key.sign(utf8_encode(canonical_msg_str)))
         return True, signature
 
     @staticmethod

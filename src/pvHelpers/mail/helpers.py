@@ -4,7 +4,7 @@ import time
 from pvHelpers.crypto import sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.utils import (b64dec, CaseInsensitiveSet, jloads,
-                             MergeDicts, utf8Decode, utf8Encode, WrapExceptions)
+                             merge_dicts, utf8_decode, utf8_encode, WrapExceptions)
 
 from .email import EmailException, PROTOCOL_VERSION
 
@@ -20,9 +20,9 @@ def flatten_recipient_groups(recip_groups):
 @WrapExceptions(EmailException, [KeyError])
 def verify_server_message(message, verify_key):
     if message["protocol_version"] >= PROTOCOL_VERSION.V5:
-        utf8_decode_pvm = utf8Decode(message["raw_private_metadata"])
+        utf8_decode_pvm = utf8_decode(message["raw_private_metadata"])
         signature = b64dec(message["signature"])
-        canonical_str = sha_256_sum(utf8Encode(utf8_decode_pvm))
+        canonical_str = sha_256_sum(utf8_encode(utf8_decode_pvm))
     elif message["protocol_version"] == PROTOCOL_VERSION.V4:
         signature = b64dec(message["private_metadata"]["signature"])
 
@@ -32,7 +32,7 @@ def verify_server_message(message, verify_key):
                 block_ids.append(block["id"])
         for block in message["body"]["blocks"]:
             block_ids.append(block["id"])
-        canonical_str = utf8Encode(u"".join(sorted(block_ids)))
+        canonical_str = utf8_encode(u"".join(sorted(block_ids)))
     else:
         # we don't verify signature for legacy protocol versions
         return True
@@ -61,14 +61,14 @@ def decrypt_server_message(message, user_encryption_key, mail_decrypt_key):
     if message["protocol_version"] >= PROTOCOL_VERSION.V5:
         raw_private_metadata = mail_decrypt_key.decrypt(
             b64dec(message["private_metadata"]))
-        decrypted_private_metadata = jloads(utf8Decode(raw_private_metadata))
+        decrypted_private_metadata = jloads(utf8_decode(raw_private_metadata))
 
         bccs = []
-        recipients = jloads(utf8Decode(user_encryption_key.unseal(
+        recipients = jloads(utf8_decode(user_encryption_key.unseal(
             b64dec(message["wrapped_recipients"]))))
 
         if message["wrapped_bccs"]:
-            bccs = jloads(utf8Decode(user_encryption_key.unseal(
+            bccs = jloads(utf8_decode(user_encryption_key.unseal(
                 b64dec(message["wrapped_bccs"]))))
 
         # verify the integrity of the wrapped_recipients against private metadata
@@ -110,7 +110,7 @@ def decrypt_server_message(message, user_encryption_key, mail_decrypt_key):
         decrypted_private_metadata["ccs_groups"] = ccs_groups_flatten
 
         decrypted_private_metadata["bccs"] = bccs
-        return MergeDicts(message, {
+        return merge_dicts(message, {
             "body": decrypted_private_metadata["body"],
             "private_metadata": decrypted_private_metadata,
             "raw_private_metadata": raw_private_metadata,  # use for the signature verification
@@ -118,17 +118,17 @@ def decrypt_server_message(message, user_encryption_key, mail_decrypt_key):
             "attachments": decrypted_private_metadata["attachments"]
         })
     else:
-        decrypted_private_metadata = jloads(utf8Decode(
+        decrypted_private_metadata = jloads(utf8_decode(
             mail_decrypt_key.decrypt(b64dec(message["private_metadata"]))))
 
-        return MergeDicts(message, {
-            "body": MergeDicts(
+        return merge_dicts(message, {
+            "body": merge_dicts(
                 message["body"],
-                {"snippet": utf8Decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
+                {"snippet": utf8_decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
             "private_metadata": decrypted_private_metadata,
             "timestamp": calendar.timegm(time.strptime(message["timestamp"], "%Y-%m-%dT%H:%M:%S")),
             "attachments": map(
-                lambda att: MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}),
+                lambda att: merge_dicts(att, {"name": utf8_decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}),
                 message["attachments"])
         })
 

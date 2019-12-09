@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.request import UserRequest
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import MergeDicts, b64enc, params, utf8Encode
+from pvHelpers.utils import merge_dicts, b64enc, params, utf8_encode
 
 
 class OrgV5(object):
@@ -42,9 +42,9 @@ class OrgV5(object):
     def respond_to_org_approval(self, user, org_id, request, response, metadata={}):
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/orgs/{}/requests/{}".format(org_id, request.request_id),
-            "PUT", MergeDicts({
+            "PUT", merge_dicts({
                 "requester_user_id": request.user_id,
-                "signature": b64enc(user.user_key.signing_key.sign(utf8Encode(request.serialized_req))),
+                "signature": b64enc(user.user_key.signing_key.sign(utf8_encode(request.serialized_req))),
                 "approve": response,
             }, metadata)
         )

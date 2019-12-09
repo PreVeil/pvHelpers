@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
 
 from pvHelpers.api_client import HTTP_TIMEOUT
 from pvHelpers.logger import g_log
-from pvHelpers.utils import getModeDir, params, readYAMLConfig
+from pvHelpers.utils import get_mode_dir, params, read_yaml_config
 
 
 def fetchConfigFromMaster(master_port, key):
@@ -47,9 +47,7 @@ class ApplicationConfig(object):
         if mode:
             if not config_file:
                 raise ValueError(u"missing config file")
-            status, confs = readYAMLConfig(config_file)
-            if not status:
-                raise ValueError(u"failed reading provided config_file: {}".format(config_file))
+            confs = read_yaml_config(config_file)
 
             if mode not in confs:
                 raise ValueError("config file missing mode {}".format(mode))
@@ -70,7 +68,7 @@ class ApplicationConfig(object):
             # ideally, each process's `working _dir` path shouldn't be dependent on
             # what `mode` it's running in. we can deal w this later when we have a
             # reliable updater that could safely change these fixed structures
-            self.__config__["working-dir"] = unicode(getModeDir(self.__config__["root-dir"], self.__config__["mode"]))
+            self.__config__["working-dir"] = unicode(get_mode_dir(self.__config__["root-dir"], self.__config__["mode"]))
 
         # replica instances
         elif master_port:

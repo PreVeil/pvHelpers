@@ -1,7 +1,7 @@
 import types
 
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import b64enc, params, utf8Encode
+from pvHelpers.utils import b64enc, params, utf8_encode
 
 EXISTS = "exists"
 
@@ -17,7 +17,7 @@ class UserEventsV4(object):
                 "user_id" : member_id,
                 "requester_id" : user.user_id,
                 "requester_key_version" : user.user_key.key_version,
-                "signature" : b64enc(user.user_key.signing_key.sign(utf8Encode(payload))),
+                "signature" : b64enc(user.user_key.signing_key.sign(utf8_encode(payload))),
                 "payload" : payload
             }
         )

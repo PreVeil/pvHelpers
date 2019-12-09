@@ -1,5 +1,5 @@
 from pvHelpers.user import LocalUser
-from pvHelpers.utils import params, toInt
+from pvHelpers.utils import params, to_int
 
 from ..utils import ServerResponseError
 
@@ -59,7 +59,7 @@ class MailboxV4(object):
         next_uid = data.get("next_uid")
         if not next_uid:
             raise ServerResponseError("'next_uid' missing")
-        status, next_uid = toInt(next_uid)
+        status, next_uid = to_int(next_uid)
         if not status:
             raise ServerResponseError("int coercion failed")
         return next_uid

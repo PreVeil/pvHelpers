@@ -9,14 +9,14 @@ import pem
 import pytest
 from certifi_win32 import generate_pem
 
-from pvHelpers.utils import getdir
+from pvHelpers.utils import get_dir
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="win specific test")
 def test_fetch_cert_from_trust_root_cert_ca():
     # get the self-signed cert
     proxy_cert = pem.parse_file(os.path.join(
-        H.getdir(__file__), "insecure.pem"))[-1]
+        H.get_dir(__file__), "insecure.pem"))[-1]
 
     original_where = certifi.where()
     assert original_where == os.path.join(
@@ -26,7 +26,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
 
     def _subprocess_run(cmd):
         return subprocess.check_output(
-            cmd, cwd=getdir(__file__), shell=True, stderr=subprocess.STDOUT)
+            cmd, cwd=get_dir(__file__), shell=True, stderr=subprocess.STDOUT)
 
     def import_cert_root_store(capath):
         # import the self signed cert
@@ -40,7 +40,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
     def remove_cert_root_store():
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         cmd = "{} {}".format(ps, os.path.join(
-            getdir(__file__), "remove_cert.ps1"))
+            get_dir(__file__), "remove_cert.ps1"))
 
         return _subprocess_run(cmd)
 
@@ -67,7 +67,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
         return found
 
     import_cert_root_store(os.path.join(
-        getdir(__file__), "insecure.crt"))
+        get_dir(__file__), "insecure.crt"))
 
     # 60 seconds timeout for cert to be found
     t = time.time()

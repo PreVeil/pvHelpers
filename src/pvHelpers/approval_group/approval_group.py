@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.user.user import User
-from pvHelpers.utils import params, utf8Decode, utf8Encode
+from pvHelpers.utils import params, utf8_decode, utf8_encode
 from SSSA import sssa
 
 from .export_shard import new as new_export_shard
@@ -61,7 +61,7 @@ class ApprovalGroup(object):
         if self.optionals_required > 0:
             required_parts_count += 1
 
-        bits = utf8Encode(secret)
+        bits = utf8_encode(secret)
         required_parts = sssa().create(required_parts_count, required_parts_count, bits)
 
         # Generate the optionals
@@ -114,5 +114,5 @@ class ApprovalGroup(object):
         if len(required_shards) < 1:
             raise ValueError(u"can't pass empty `required_shards` to combine()")
         raw_secret = sssa().combine(required_shards)
-        secret = utf8Decode(raw_secret)
+        secret = utf8_decode(raw_secret)
         return secret

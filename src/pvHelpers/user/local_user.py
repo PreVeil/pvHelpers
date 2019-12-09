@@ -1,7 +1,7 @@
 import types
 
 from pvHelpers.crypto.user_key import UserKeyBase
-from pvHelpers.utils import MergeDicts, NOT_ASSIGNED, params
+from pvHelpers.utils import merge_dicts, NotAssigned, params
 
 from .local_device import LocalDevice
 from .luser_info import LUserInfo
@@ -10,7 +10,7 @@ from .user import OrganizationInfo, User
 
 class LocalUser(User):
     @params(object, unicode, int, unicode, unicode, {OrganizationInfo, types.NoneType},
-            {NOT_ASSIGNED, LUserInfo}, unicode, [UserKeyBase], {types.NoneType, LocalDevice})
+            {NotAssigned, LUserInfo}, unicode, [UserKeyBase], {types.NoneType, LocalDevice})
     def __init__(self, user_id, account_version, display_name, mail_cid,
                  org_info, luser_info, password, user_keys, device):
         super(LocalUser, self).__init__(
@@ -48,7 +48,7 @@ class LocalUser(User):
     def to_dict(self):
         # NOTE: this method is used when serializing user info to respond
         # to clients. MUST not expose user keys in this.
-        return MergeDicts(super(LocalUser, self).to_dict(), {
+        return merge_dicts(super(LocalUser, self).to_dict(), {
             "public_user_key": self.public_user_key.serialize(),
             "password": self.password,
             "luser_info": str(self.luser_info),

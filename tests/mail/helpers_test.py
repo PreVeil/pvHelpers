@@ -9,8 +9,8 @@ from pvHelpers.mail import (decrypt_server_message, EmailFactory,
                             get_wrapped_key, verify_server_message)
 from pvHelpers.mail.email import EmailException, PROTOCOL_VERSION
 from pvHelpers.user import User
-from pvHelpers.utils import (b64enc, CaseInsensitiveSet, jdumps, randUnicode,
-                             utf8Encode)
+from pvHelpers.utils import (b64enc, CaseInsensitiveSet, jdumps, rand_unicode,
+                             utf8_encode)
 import pytest
 
 
@@ -78,8 +78,8 @@ def test_server_message_parser_v6():
     recipient_key_version = random.randint(0, 100)
     sender_user_key = PVKeyFactory.new_user_key(key_version=sender_key_version)
     sender = User(
-        randUnicode(6), random.randint(0, 99999), randUnicode(6),
-        randUnicode(5), [sender_user_key.public_user_key], None)
+        rand_unicode(6), random.randint(0, 99999), rand_unicode(6),
+        rand_unicode(5), [sender_user_key.public_user_key], None)
     pvm = MockPrivateMetadataV6(sender=sender.user_id, user_key=sender_user_key)
     signature, encrypted_pvm = pvm.sign_and_encrypt()
 
@@ -90,7 +90,7 @@ def test_server_message_parser_v6():
     ccs_groups_flatten = flatten_recipient_groups(pvm.ccs_groups)
     wrapped_recipients = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
-            utf8Encode(jdumps(pvm.tos + pvm.ccs + tos_groups_flatten + ccs_groups_flatten))))
+            utf8_encode(jdumps(pvm.tos + pvm.ccs + tos_groups_flatten + ccs_groups_flatten))))
 
     msg = MockServerMessageV6(encrypted_pvm, signature, sender_key_version,
                               recipient_key_version, wrapped_key,
@@ -110,7 +110,7 @@ def test_server_message_parser_v6():
     bccs = [recipient() for _ in range(3)]
     msg.wrapped_bccs = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
-            utf8Encode(jdumps(bccs))))
+            utf8_encode(jdumps(bccs))))
     decrypted_msg = decrypt_server_message(
         msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
     assert verify_server_message(
@@ -127,7 +127,7 @@ def test_server_message_parser_v6():
     bccs = pvm.tos_groups[random.randint(0, len(pvm.tos_groups) - 1)]["users"]
     msg.wrapped_bccs = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
-            utf8Encode(jdumps(bccs))))
+            utf8_encode(jdumps(bccs))))
     decrypted_msg = decrypt_server_message(
         msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
     assert verify_server_message(
@@ -145,8 +145,8 @@ def test_server_message_parser_v5():
     recipient_key_version = random.randint(0, 100)
     sender_user_key = PVKeyFactory.new_user_key(key_version=sender_key_version)
     sender = User(
-        randUnicode(6), random.randint(0, 99999), randUnicode(6),
-        randUnicode(5), [sender_user_key.public_user_key], None)
+        rand_unicode(6), random.randint(0, 99999), rand_unicode(6),
+        rand_unicode(5), [sender_user_key.public_user_key], None)
     pvm = MockPrivateMetadataV5(
         sender=sender.user_id, user_key=sender_user_key)
     signature, encrypted_pvm = pvm.sign_and_encrypt()
@@ -156,14 +156,14 @@ def test_server_message_parser_v5():
 
     recipients = [recipient() for _ in range(2)]
     bad_wrapped_recipients = b64enc(
-        pvm.user_key.public_user_key.public_key.seal(utf8Encode(jdumps(recipients))))
+        pvm.user_key.public_user_key.public_key.seal(utf8_encode(jdumps(recipients))))
 
     msg = MockServerMessageV5(
         encrypted_pvm, signature, sender_key_version,
         recipient_key_version, wrapped_key, bad_wrapped_recipients)
 
     u = User(
-        randUnicode(6), random.randint(0, 99999), randUnicode(6), randUnicode(5),
+        rand_unicode(6), random.randint(0, 99999), rand_unicode(6), rand_unicode(5),
         [PVKeyFactory.new_user_key(key_version=0).public_user_key], None)
     with pytest.raises(EmailException):
         # bad wrapped recipients
@@ -171,7 +171,7 @@ def test_server_message_parser_v5():
 
     msg.wrapped_recipients = b64enc(
         pvm.user_key.public_user_key.public_key.seal(
-            utf8Encode(jdumps(pvm.tos + pvm.ccs))))
+            utf8_encode(jdumps(pvm.tos + pvm.ccs))))
     decrypted_msg = decrypt_server_message(
         msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
     assert verify_server_message(
@@ -188,7 +188,7 @@ def test_server_message_parser_v5():
 
     # no bcc
     to = User(
-        pvm.tos[0]["user_id"], random.randint(0, 99999), randUnicode(6), randUnicode(5),
+        pvm.tos[0]["user_id"], random.randint(0, 99999), rand_unicode(6), rand_unicode(5),
         [PVKeyFactory.new_user_key(key_version=0).public_user_key], None)
     email = EmailFactory.from_server_message(
         to.user_id, decrypted_msg, wrapped_key, recipient_key_version, None)
@@ -199,7 +199,7 @@ def test_server_message_parser_v5():
     # sender can see all bccs
     bccs = [recipient() for _ in range(3)]
     msg.wrapped_bccs = b64enc(
-        pvm.user_key.public_user_key.public_key.seal(utf8Encode(jdumps(bccs))))
+        pvm.user_key.public_user_key.public_key.seal(utf8_encode(jdumps(bccs))))
     decrypted_msg = decrypt_server_message(
         msg.to_dict(), pvm.user_key.encryption_key, pvm.symm_key)
     assert verify_server_message(

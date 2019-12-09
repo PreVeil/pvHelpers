@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from pvHelpers.user import LUserInfo, LUserInfoWin
-from pvHelpers.utils import NOT_ASSIGNED, g_log, params, toInt
+from pvHelpers.utils import NotAssigned, g_log, params, to_int
 
 if sys.platform == "win32":
     from .win_helpers import *
@@ -61,7 +61,7 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
 
     # if len(remote_client_files) > 1 (the process has multiple connections open to Crypto Server),
     # they'll be identical in all attributes except for their file descriptor numbers
-    status, uid = toInt(remote_client_files[0]["uid"])
+    status, uid = to_int(remote_client_files[0]["uid"])
     if not status:
         g_log.error(u"_get_conn_process_info_unix: int coercion of uid failed")
         return False, None
@@ -151,11 +151,11 @@ def _materialize_lsof(output):
                     break
 
                 la, lp, ra, rp = match.group(1,2,3,4)
-                status, _lp = toInt(lp)
+                status, _lp = to_int(lp)
                 if not status:
                     g_log.error("_materialize_lsof: lp port coercion failed: {}".format(lp))
                     continue
-                status, _rp = toInt(rp)
+                status, _rp = to_int(rp)
                 if not status:
                     g_log.error("_materialize_lsof: rp port coercion failed: {}".format(rp))
                     continue

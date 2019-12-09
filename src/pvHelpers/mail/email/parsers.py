@@ -1,7 +1,7 @@
 import email.utils
 
 from flanker import mime
-from pvHelpers.utils import encodeContentIfUnicode, params
+from pvHelpers.utils import encode_content_if_unicode, params
 
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
@@ -139,7 +139,7 @@ def parse_mime(raw_mime):
             # it'll be `unicode` if content_type is `text/*`
             # this is troublesome for attachment files of `.html` `.txt` `.py`
             # hence should encode them if an attachment
-            encoded = encodeContentIfUnicode(part_content)
+            encoded = encode_content_if_unicode(part_content)
 
             attachments.append(
                 Attachment(AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
@@ -189,19 +189,19 @@ def parse_mime(raw_mime):
                     # message container parts also fall here message/rfc, message/news
                     pass
 
-                encoded = encodeContentIfUnicode(part_content)
+                encoded = encode_content_if_unicode(part_content)
                 attachments.append(
                     Attachment(AttachmentMetadata(filename, c_t, AttachmentType.INLINE, content_id), Content(encoded)))
 
             else:
                 # this part has no info on it's presentation and is not text or html
                 # hence, should default to attachment
-                encoded = encodeContentIfUnicode(part_content)
+                encoded = encode_content_if_unicode(part_content)
                 attachments.append(Attachment(
                     AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 
         else:  # Unknown content_dispositions, wrapping it as an attachment per RFC 2183
-            encoded = encodeContentIfUnicode(part_content)
+            encoded = encode_content_if_unicode(part_content)
             attachments.append(Attachment(
                 AttachmentMetadata(filename, c_t, AttachmentType.ATTACHMENT, content_id), Content(encoded)))
 

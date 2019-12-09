@@ -1,4 +1,4 @@
-from pvHelpers.utils import b64enc, jdumps, utf8Encode
+from pvHelpers.utils import b64enc, jdumps, utf8_encode
 
 from ..v4 import APIClientV4
 from .approvals import ApprovalsV5
@@ -27,15 +27,15 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
 
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
         if not ignore_device_sign:
-            device_key_version, device_signature = signer.sign_with_device_key(utf8Encode(canonical_request))
+            device_key_version, device_signature = signer.sign_with_device_key(utf8_encode(canonical_request))
             user_key_version, user_signature = signer.sign_with_user_key(device_signature)
         else:
-            user_key_version, user_signature = signer.sign_with_user_key(utf8Encode(canonical_request))
-        encoded_user_id = utf8Encode(signer.user_id)
+            user_key_version, user_signature = signer.sign_with_user_key(utf8_encode(canonical_request))
+        encoded_user_id = utf8_encode(signer.user_id)
         export_id, member_id = None, None
         if export:
             export_id, member_id = export
-            member_id = utf8Encode(member_id)
+            member_id = utf8_encode(member_id)
         headers = {
             "content-type" : "application/json",
             "x-user-key-version": str(user_key_version),
@@ -48,5 +48,5 @@ class APIClientV5(UserV5, OrgV5, MailV5, EDiscoveryV5, ApprovalsV5, DeviceV5, Pu
             "x-data-export-id": export_id,
             "x-for-user-id": member_id,
         }
-        encoded_raw_body = utf8Encode(raw_body)
+        encoded_raw_body = utf8_encode(raw_body)
         return url, encoded_raw_body, headers

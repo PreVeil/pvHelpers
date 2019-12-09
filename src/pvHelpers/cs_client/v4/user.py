@@ -6,7 +6,7 @@ from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
 from pvHelpers.user import LocalUser, OrganizationInfo, User, UserGroup
 from pvHelpers.utils import (b64enc, CaseInsensitiveDict, jloads,
-                             params, utf8Encode)
+                             params, utf8_encode)
 import requests
 
 from ..utils import ServerResponseError
@@ -184,7 +184,7 @@ class UserV4(object):
 
         text_to_sign = recipient_id.lower() + "," + str(recipient_public_key.key_version) + "," + group_id + "," + str(group_key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
-        signature = b64enc(user.user_key.signing_key.sign(utf8Encode(text_to_sign)))
+        signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/groups/user", "PUT", {
@@ -212,7 +212,7 @@ class UserV4(object):
 
         text_to_sign = group_id + "," + str(group_key_version) + "," + collection_id + "," + role.upper() + "," + str(key_version) + "," + hex_encode(hashed_wrapped_key).lower()
 
-        signature = b64enc(user.user_key.signing_key.sign(utf8Encode(text_to_sign)))
+        signature = b64enc(user.user_key.signing_key.sign(utf8_encode(text_to_sign)))
 
         url, raw_body, headers = self.prepareSignedRequest(
             user, u"/users/collection/grant", "PUT", {

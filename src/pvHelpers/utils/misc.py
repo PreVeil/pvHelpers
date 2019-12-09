@@ -1,11 +1,7 @@
 import base64
 import collections
 import copy
-import datetime
-import inspect
 import itertools
-import logging
-import logging.handlers
 import os
 import random
 import StringIO
@@ -14,15 +10,14 @@ import sys
 import time
 import types
 import urllib
-
-import requests
-import simplejson
 import urlparse
+
+import simplejson
 import yaml
-from sqlalchemy import create_engine, event, orm
 
 from .hook_decorators import WrapExceptions
 from .params import params
+
 
 DATA_DIR_MODE = 0o750
 
@@ -31,25 +26,22 @@ class EncodingException(Exception):
     def __init__(self, exception=u""):
         super(EncodingException, self).__init__(exception)
 
+
 if sys.platform in ["darwin", "linux2"]:
     import pwd
-    import grp
-else:
-    pass
 
 
-def initRandom():
+def init_random():
     seed = struct.unpack("=I", os.urandom(4))[0]
     random.seed(seed)
 
 
-def getdir(path):
+def get_dir(path):
     return os.path.dirname(os.path.realpath(path))
 
 
-def resolvePreVeilMode(mode_file_path):
+def resolve_preveil_mode(mode_file_path):
     if not isinstance(mode_file_path, unicode):
-        g_log.error(u"resolvePreVeilMode: mode_file_path must be unicode")
         return False, None
 
     # Precedence
@@ -58,13 +50,13 @@ def resolvePreVeilMode(mode_file_path):
     # 2. 'dev'
     mode = os.environ.get(u"PREVEIL_MODE")
     if mode is not None:
-        mode = unicodeIfUnicodeElseDecode(mode)
+        mode = unicode_if_unicode_else_decode(mode)
         return True, mode
 
     try:
         with open(mode_file_path, u"r") as f:
             mode = f.read().strip()
-        mode = ASCIIToUnicode(mode)
+        mode = ascii_to_unicode(mode)
         return True, mode
     except IOError:
         pass
@@ -77,61 +69,49 @@ def read_yaml_config(path):
         y = yaml.load(f.read())
     return y
 
-def readYAMLConfig(path):
-    if not isinstance(path, unicode):
-        return False, None
-
-    try:
-        with open(path, u"r") as f:
-            c = yaml.load(f.read())
-            return True, c
-    except IOError:
-        return False, None
-
-
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode)
-def unicodeToASCII(s):
+def unicode_to_ascii(s):
     return s.encode("ascii")
 
 
-def unicodeToASCIIWithReplace(s):
+def unicode_to_ascii_with_replace(s):
     return s.encode("ascii", "replace")
 
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(bytes)
-def ASCIIToUnicode(s):
+def ascii_to_unicode(s):
     return s.encode("utf-8").decode("utf-8")
 
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(unicode)
-def utf8Encode(s):
+def utf8_encode(s):
     return s.encode("utf-8")
 
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
 @params(bytes)
-def utf8Decode(s):
+def utf8_decode(s):
     return s.decode("utf-8")
 
 
-def unicodeIfUnicodeElseDecode(b):
+def unicode_if_unicode_else_decode(b):
     if isinstance(b, unicode):
         return b
     else:
-        return utf8Decode(b)
+        return utf8_decode(b)
 
 
-def encodeContentIfUnicode(content):
+def encode_content_if_unicode(content):
     if isinstance(content, unicode):
-        return utf8Encode(content)
+        return utf8_encode(content)
     return content
 
 
@@ -141,7 +121,7 @@ def encodeContentIfUnicode(content):
 @params(bytes, {types.NoneType, str})
 def b64enc(data, altchars=None):
     enc = base64.b64encode(data, altchars=altchars)
-    return ASCIIToUnicode(enc)
+    return ascii_to_unicode(enc)
 
 
 @WrapExceptions(
@@ -152,10 +132,9 @@ def b64dec(data, altchars=None):
     return base64.b64decode(data, altchars=altchars)
 
 
-def toInt(data):
-    if not (isinstance(data,
-                       (unicode, str)) or (isinstance(data,
-                                                      (int, long, float)))):
+def to_int(data):
+    if not (isinstance(data, (unicode, str)) or
+            isinstance(data, (int, long, float))):
         return False, None
 
     try:
@@ -189,13 +168,13 @@ def jload(fp):
         return False, None
 
 
-def getTempFilePath(mode_dir):
+def get_temp_file_path(mode_dir):
     return os.path.join(
-        tempDir(mode_dir),
+        temp_dir(mode_dir),
         "%s.%s.%s" % (time.time(), random.randint(0, 1000000), os.getpid()))
 
 
-def checkRunningAsRoot():
+def check_running_as_root():
     if sys.platform in ["darwin", "linux2"]:
         uid = os.getuid()
         gid = os.getgid()
@@ -233,7 +212,7 @@ class DoAsPreVeil(object):
                 os.setegid(preveil_pwuid.pw_gid)
                 os.seteuid(preveil_pwuid.pw_uid)
                 self._noop = False
-            except OSError as e:
+            except OSError:
                 pass
         else:
             pass
@@ -250,7 +229,7 @@ class DoAsPreVeil(object):
             raise value
 
 
-def switchUserPreVeil():
+def switch_user_preveil():
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
         os.setregid(preveil_pwuid.pw_gid, preveil_pwuid.pw_gid)
@@ -259,8 +238,8 @@ def switchUserPreVeil():
         pass
 
 
-# lifted from: http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
-def isSameDirOrChild(directory, test_child):
+# http://stackoverflow.com/questions/3812849/how-to-check-whether-a-directory-is-a-sub-directory-of-another-directory
+def is_same_dir_or_child(directory, test_child):
     directory = os.path.normpath(os.path.realpath(directory))
     test_child = os.path.normpath(os.path.realpath(test_child))
     if directory == test_child:
@@ -297,23 +276,23 @@ def file_no_ext(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
-def daemonDataDir(wd):
+def daemon_data_dir(wd):
     return os.path.join(wd, "daemon")
 
 
-def modesDir(wd):
-    return os.path.join(daemonDataDir(wd), "modes")
+def modes_dir(wd):
+    return os.path.join(daemon_data_dir(wd), "modes")
 
 
-def getModeDir(wd, mode):
-    return os.path.join(modesDir(wd), mode)
+def get_mode_dir(wd, mode):
+    return os.path.join(modes_dir(wd), mode)
 
 
-def logsDir(mode_dir):
+def logs_dir(mode_dir):
     return os.path.join(mode_dir, "logs")
 
 
-def tempDir(mode_dir):
+def temp_dir(mode_dir):
     return os.path.join(mode_dir, "temp")
 
 
@@ -321,11 +300,11 @@ def tempDir(mode_dir):
 # owner:group
 #
 # This function tries to provide the following guarentee, if a process returns
-# successfully from initDaemonDataDirs(), /var/preveil/* is available to it with the
+# successfully from init_daemon_data_dirs(), /var/preveil/* is available to it with the
 # correct owner:group.  This guarentee is easier to provide if all processes
 # only create these directories (or change their permissions) with this
 # function.
-def initDaemonDataDirs(wd, mode, is_test=False):
+def init_daemon_data_dirs(wd, mode, is_test=False):
     if sys.platform in ["darwin", "linux2"]:
         mask = os.umask(0o777)
         os.umask(mask)
@@ -335,12 +314,12 @@ def initDaemonDataDirs(wd, mode, is_test=False):
         pass
 
     quiet_mkdir(wd)
-    quiet_mkdir(daemonDataDir(wd))
-    quiet_mkdir(modesDir(wd))
-    mode_dir = getModeDir(wd, mode)
+    quiet_mkdir(daemon_data_dir(wd))
+    quiet_mkdir(modes_dir(wd))
+    mode_dir = get_mode_dir(wd, mode)
     quiet_mkdir(mode_dir)
-    quiet_mkdir(logsDir(mode_dir))
-    quiet_mkdir(tempDir(mode_dir))
+    quiet_mkdir(logs_dir(mode_dir))
+    quiet_mkdir(temp_dir(mode_dir))
 
     if not is_test:
         if sys.platform in ["darwin", "linux2"]:
@@ -372,7 +351,6 @@ class CaseInsensitiveSet(collections.Set):
 
     def union(self, other):
         if not isinstance(other, list):
-            g_log.error(u"other must be of type list")
             raise TypeError(u"other must be of type list")
 
         new = CaseInsensitiveDict(copy.deepcopy(self.data))
@@ -383,7 +361,6 @@ class CaseInsensitiveSet(collections.Set):
 
     def difference(self, other):
         if not isinstance(other, list):
-            g_log.error(u"other must be of type list")
             raise TypeError(u"other must be of type list")
         new = CaseInsensitiveDict(copy.deepcopy(self.data))
         for o in other:
@@ -421,7 +398,7 @@ class CaseInsensitiveDict(dict):
         return super(CaseInsensitiveDict, self).__contains__(self.__class__._k(key))
 
     def has_key(self, key):
-        return super(CaseInsensitiveDict, self).has_key(self.__class__._k(key))
+        return self.__class__._k(key) in super(CaseInsensitiveDict, self)
 
     def pop(self, key, *args, **kwargs):
         return super(CaseInsensitiveDict, self).pop(self.__class__._k(key), *args, **kwargs)
@@ -432,9 +409,9 @@ class CaseInsensitiveDict(dict):
     def setdefault(self, key, *args, **kwargs):
         return super(CaseInsensitiveDict, self).setdefault(self.__class__._k(key), *args, **kwargs)
 
-    def update(self, E={}, **F):
-        super(CaseInsensitiveDict, self).update(self.__class__(E))
-        super(CaseInsensitiveDict, self).update(self.__class__(**F))
+    def update(self, e={}, **f):
+        super(CaseInsensitiveDict, self).update(self.__class__(e))
+        super(CaseInsensitiveDict, self).update(self.__class__(**f))
 
     def _convert_keys(self):
         for k in list(self.keys()):
@@ -442,7 +419,7 @@ class CaseInsensitiveDict(dict):
             self.__setitem__(k, v)
 
 
-class NOT_ASSIGNED(object):
+class NotAssigned(object):
     def __init__(self):
         pass
 
@@ -453,26 +430,26 @@ class NOT_ASSIGNED(object):
         return self.__str__()
 
 
-def MergeDicts(*args):
+def merge_dicts(*args):
     ret = {}
     for _dict in args:
         if not isinstance(_dict, dict):
-            raise TypeError(u"MergeDicts: Arguments must be of type dict")
+            raise TypeError(u"merge_dicts: Arguments must be of type dict")
         ret.update(_dict)
     return ret
 
 
-def randUnicode(length=20):
-    GLYPHS = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz"
-    return u"".join(random.choice(GLYPHS) for _ in range(length))
+def rand_unicode(length=20):
+    glyphs = u"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz"
+    return u"".join(random.choice(glyphs) for _ in range(length))
 
 
-def randStr(size=1024):
+def rand_str(size=1024):
     return os.urandom(size)
 
 
-def randStream(size=1024):
-    return StringIO.StringIO(randStr(size))
+def rand_stream(size=1024):
+    return StringIO.StringIO(rand_str(size))
 
 
 # https://docs.python.org/dev/library/itertools.html#itertools-recipes
@@ -502,7 +479,7 @@ def parse_file_uri(path):
 
 
 # following this guideline: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-def makeUserAgentHeader(built_number, default_agent_header):
+def make_user_agent_header(built_number, default_agent_header):
     daemon_name = ""
     if len(sys.argv) == 1:
         daemon_name = sys.argv[0].split("/")[-1]
@@ -512,4 +489,3 @@ def makeUserAgentHeader(built_number, default_agent_header):
 #     "User-Agent": makeUserAgentHeader(Config.build_version, session_cache[backend].headers["user-agent"]),
 #     "X-DEVICE-METADATA": jdumps({"client_version": Config.build_version})
 # }
-

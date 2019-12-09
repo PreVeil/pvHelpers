@@ -7,7 +7,8 @@ class RetryError(Exception):
         super(RetryError, self).__init__(message)
 
 
-def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wrapping_exception=None, ret_validator_func=None):
+def retry(func, args=[], kwargs={}, exceptions=[Exception],  # noqa: C901
+          count=2, wait=0, wrapping_exception=None, ret_validator_func=None):
     if not callable(func):
         raise RetryError(u"func must be of type callable")
     if not isinstance(args, list):
@@ -43,7 +44,8 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
             continue
         except Exception as e:
             if wrapping_exception:
-                raise wrapping_exception(u"Function `{}` throwed {}: {}".format(func.__module__ + "." + func.__name__, type(e), traceback.format_exc()))
+                raise wrapping_exception(u"Function `{}` throwed {}: {}".format(
+                    func.__module__ + "." + func.__name__, type(e), traceback.format_exc()))
             raise
         else:
             # ret_validator_func add conditions for value of `return_value` so to perform retry upon them

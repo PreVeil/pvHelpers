@@ -1,5 +1,5 @@
 from pvHelpers.mail.email import EmailHelpers
-from pvHelpers.utils import b64enc, jdumps, NOT_ASSIGNED
+from pvHelpers.utils import b64enc, jdumps, NotAssigned
 
 class EmailFetch(object):
     def fetchEmailsWithContent(self, user_id, server_ids, inlines_only=False):
@@ -76,7 +76,7 @@ class EmailSend(object):
 
     def send_email(self, protocol_version, sender, tos, ccs, bccs,
                    subject, text, html, attachments, in_reply_to, references,
-                   reply_tos=[], flags=[], server_attr=NOT_ASSIGNED(), message_id=None):
+                   reply_tos=[], flags=[], server_attr=NotAssigned(), message_id=None):
         # send attachments as multipart form-encode
         resp = self.put(
             u"{}/put/account/{}/message".format(self.url, sender["user_id"]), {},

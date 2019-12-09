@@ -7,7 +7,7 @@ import time
 from flanker import addresslib, mime
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata, AttachmentType,
                                   create_mime, EmailHelpers, parse_mime)
-from pvHelpers.utils import randStr, randUnicode
+from pvHelpers.utils import rand_str, rand_unicode
 import pytest
 from werkzeug.datastructures import FileStorage
 
@@ -19,8 +19,8 @@ def test_create_plain_mime():
     with pytest.raises(TypeError):
         create_mime(u"text", None, [])
 
-    text = randUnicode(length=1024)
-    html = randUnicode(length=1024)
+    text = rand_unicode(length=1024)
+    html = rand_unicode(length=1024)
     raw_mime = create_mime(text, html, [])
     assert raw_mime.content_type.value == u"multipart/alternative"
 
@@ -34,12 +34,12 @@ def test_create_plain_mime():
 
 
 def test_create_mime_with_regular_attachment():
-    text = randUnicode(length=1024)
-    html = randUnicode(length=1024)
+    text = rand_unicode(length=1024)
+    html = rand_unicode(length=1024)
     attachments = []
     for _ in range(4):
-        content = randStr(size=4096)
-        _filename = randUnicode()
+        content = rand_str(size=4096)
+        _filename = rand_unicode()
         f = FileStorage(stream=StringIO.StringIO(content), filename=_filename, content_type="image/jpeg")
         attachments.append(Attachment.from_file_storage(f, AttachmentMetadata(f.filename, f.content_type)))
 
@@ -62,12 +62,12 @@ def test_create_mime_with_regular_attachment():
 
 
 def test_create_mime_with_inline_attachment():
-    text = randUnicode(length=1024)
-    html = randUnicode(length=1024)
+    text = rand_unicode(length=1024)
+    html = rand_unicode(length=1024)
     attachments = []
     for _ in range(4):
-        content = randStr(size=4096)
-        _filename = randUnicode()
+        content = rand_str(size=4096)
+        _filename = rand_unicode()
         f = FileStorage(stream=StringIO.StringIO(content), filename=_filename, content_type="image/jpeg")
         att = Attachment.from_file_storage(f, AttachmentMetadata(f.filename, f.content_type))
         att.metadata.content_disposition = AttachmentType.INLINE
@@ -91,20 +91,20 @@ def test_create_mime_with_inline_attachment():
 
 
 def test_create_mime_with_inline_and_regular_attachment():
-    text = randUnicode(length=1024)
-    html = randUnicode(length=2048)
+    text = rand_unicode(length=1024)
+    html = rand_unicode(length=2048)
     attachments = []
     for _ in range(4):
-        content = randStr(size=4096)
-        _filename = randUnicode()
+        content = rand_str(size=4096)
+        _filename = rand_unicode()
         f = FileStorage(stream=StringIO.StringIO(content), filename=_filename, content_type="image/jpeg")
         att = Attachment.from_file_storage(f, AttachmentMetadata(f.filename, f.content_type))
         att.metadata.content_disposition = AttachmentType.INLINE
         attachments.append(att)
 
     for _ in range(4):
-        content = randStr(size=1024)
-        _filename = randUnicode()
+        content = rand_str(size=1024)
+        _filename = rand_unicode()
         f = FileStorage(stream=StringIO.StringIO(content), filename=_filename, content_type="image/jpeg")
         attachments.append(Attachment.from_file_storage(f, AttachmentMetadata(f.filename, f.content_type)))
 
@@ -146,25 +146,25 @@ def test_create_mime_with_inline_and_regular_attachment():
 
 
 def test_create_mime_headers_validity():
-    text = randUnicode(length=2012)
-    html = randUnicode(length=2014)
+    text = rand_unicode(length=2012)
+    html = rand_unicode(length=2014)
     attachments = []
     for _ in range(4):
-        content = randStr(size=2017)
-        _filename = randUnicode()
+        content = rand_str(size=2017)
+        _filename = rand_unicode()
         f = FileStorage(stream=StringIO.StringIO(content), filename=_filename, content_type="image/jpeg")
         attachments.append(Attachment.from_file_storage(f, AttachmentMetadata(f.filename, f.content_type)))
 
-    message_id = randUnicode()
+    message_id = rand_unicode()
     _time = time.time()
-    tos = [{"user_id": randUnicode()+"@x.com", "display_name": randUnicode()} for _ in range(12)]
-    ccs = [{"user_id": randUnicode()+"@x.com", "display_name": randUnicode()} for _ in range(4)]
-    bccs = [{"user_id": randUnicode()+"@x.com", "display_name": randUnicode()} for _ in range(3)]
-    references = [randUnicode() for _ in range(5)]
-    in_reply_to = randUnicode()
-    subject = randUnicode()
-    reply_tos = [{"user_id": randUnicode()+"@x.com", "display_name": randUnicode()} for _ in range(2)]
-    sender = {"user_id": randUnicode()+"@x.com", "display_name": randUnicode()}
+    tos = [{"user_id": rand_unicode()+"@x.com", "display_name": rand_unicode()} for _ in range(12)]
+    ccs = [{"user_id": rand_unicode()+"@x.com", "display_name": rand_unicode()} for _ in range(4)]
+    bccs = [{"user_id": rand_unicode()+"@x.com", "display_name": rand_unicode()} for _ in range(3)]
+    references = [rand_unicode() for _ in range(5)]
+    in_reply_to = rand_unicode()
+    subject = rand_unicode()
+    reply_tos = [{"user_id": rand_unicode()+"@x.com", "display_name": rand_unicode()} for _ in range(2)]
+    sender = {"user_id": rand_unicode()+"@x.com", "display_name": rand_unicode()}
     raw_mime = create_mime(
         text, html, attachments, message_id, _time, subject, tos, ccs, bccs, reply_tos, sender, in_reply_to, references)
     assert message_id == raw_mime.headers.get("Message-Id")
@@ -193,7 +193,7 @@ def test_create_mime_headers_validity():
 
 
 def test_parse_mime_only_plaintext():
-    raw_mime = mime.create.text("plain", randUnicode(length=32321))
+    raw_mime = mime.create.text("plain", rand_unicode(length=32321))
 
     text, html, attachments = parse_mime(raw_mime)
 
@@ -204,7 +204,7 @@ def test_parse_mime_only_plaintext():
 
 
 def test_parse_mime_text_html():
-    raw_mime = mime.create.text("html", randUnicode(length=2))
+    raw_mime = mime.create.text("html", rand_unicode(length=2))
     text, html, attachments = parse_mime(raw_mime)
 
     assert text == u""
@@ -214,16 +214,16 @@ def test_parse_mime_text_html():
 
 def test_parse_mime_nested_alternative_and_text():
     root_mime = mime.create.multipart("mixed")
-    text_1 = mime.create.text("plain", randUnicode(length=1))
+    text_1 = mime.create.text("plain", rand_unicode(length=1))
     root_mime.append(text_1)
 
     alternate_mime = mime.create.multipart("alternative")
-    text_2 = mime.create.text("plain", randUnicode(length=2))
-    html_2 = mime.create.text("html", randUnicode(length=3))
+    text_2 = mime.create.text("plain", rand_unicode(length=2))
+    html_2 = mime.create.text("html", rand_unicode(length=3))
     alternate_mime.append(text_2)
     alternate_mime.append(html_2)
     root_mime.append(alternate_mime)
-    text_3 = mime.create.text("plain", randUnicode(length=5))
+    text_3 = mime.create.text("plain", rand_unicode(length=5))
     root_mime.append(text_3)
 
     text, html, attachments = parse_mime(root_mime)
@@ -239,11 +239,11 @@ def test_parse_mime_nested_alternative_and_text():
 
 def test_parse_mime_regular_attachment():
     root_mime = mime.create.multipart("mixed")
-    text_1 = mime.create.text("plain", randUnicode(length=1))
+    text_1 = mime.create.text("plain", rand_unicode(length=1))
     root_mime.append(text_1)
 
     for _ in range(3):
-        att = mime.create.attachment(u"image/png", randStr(size=12355), randUnicode(), AttachmentType.ATTACHMENT)
+        att = mime.create.attachment(u"image/png", rand_str(size=12355), rand_unicode(), AttachmentType.ATTACHMENT)
         root_mime.append(att)
 
     text, html, attachments = parse_mime(root_mime)
@@ -260,11 +260,11 @@ def test_parse_mime_regular_attachment():
 
     # add some nested atts
     nested_mime = mime.create.multipart("mixed")
-    html_1 = mime.create.text("html", randUnicode(length=454))
+    html_1 = mime.create.text("html", rand_unicode(length=454))
     nested_mime.append(html_1)
     for _ in range(5):
         att = mime.create.attachment(
-            u"application/octet-stream", randStr(size=545), randUnicode(length=12), AttachmentType.ATTACHMENT)
+            u"application/octet-stream", rand_str(size=545), rand_unicode(length=12), AttachmentType.ATTACHMENT)
         nested_mime.append(att)
 
     root_mime.append(nested_mime)
@@ -284,11 +284,11 @@ def test_parse_mime_regular_attachment():
 
 def test_parse_mime_inline_attachment():
     root_mime = mime.create.multipart("related")
-    html_1 = mime.create.text("html", randUnicode(length=10))
+    html_1 = mime.create.text("html", rand_unicode(length=10))
     root_mime.append(html_1)
 
     for _ in range(6):
-        root_mime.append(mime.create.attachment(u"image/png", randStr(size=235), randUnicode(), AttachmentType.INLINE))
+        root_mime.append(mime.create.attachment(u"image/png", rand_str(size=235), rand_unicode(), AttachmentType.INLINE))
 
     text, html, attachments = parse_mime(root_mime)
 
@@ -306,12 +306,12 @@ def test_parse_mime_inline_attachment():
 
     # test when inline atts have content_id
     root_mime = mime.create.multipart("alternative")
-    text_1 = mime.create.text("plain", randUnicode(length=19))
+    text_1 = mime.create.text("plain", rand_unicode(length=19))
     root_mime.append(text_1)
     related_mime = mime.create.multipart("related")
-    html_1 = mime.create.text("html", randUnicode(length=15))
+    html_1 = mime.create.text("html", rand_unicode(length=15))
     related_mime.append(html_1)
-    att = mime.create.attachment(u"application/octet-stream", randStr(size=421), randUnicode(), AttachmentType.INLINE)
+    att = mime.create.attachment(u"application/octet-stream", rand_str(size=421), rand_unicode(), AttachmentType.INLINE)
     cid = EmailHelpers.new_message_id()
     att.headers["Content-Id"] = cid
     related_mime.append(att)
@@ -324,10 +324,10 @@ def test_parse_mime_inline_attachment():
 
 def test_invalid_content_disposition():
     root_mime = mime.create.multipart("mixed")
-    text_1 = mime.create.text("plain", randUnicode(length=1653))
+    text_1 = mime.create.text("plain", rand_unicode(length=1653))
     root_mime.append(text_1)
 
-    att = mime.create.attachment(u"image/png", randStr(size=2052), randUnicode(), u"invalidCD")
+    att = mime.create.attachment(u"image/png", rand_str(size=2052), rand_unicode(), u"invalidCD")
     root_mime.append(att)
 
     text, html, attachments = parse_mime(root_mime)
@@ -345,13 +345,13 @@ def test_invalid_content_disposition():
 
 def test_unknown_content_type_with_no_disposition():
     root_mime = mime.create.multipart("mixed")
-    text_1 = mime.create.text("plain", randUnicode(length=1332))
+    text_1 = mime.create.text("plain", rand_unicode(length=1332))
     root_mime.append(text_1)
 
-    att = mime.create.attachment(u"image/png", randStr(size=8722), randUnicode(), AttachmentType.ATTACHMENT)
+    att = mime.create.attachment(u"image/png", rand_str(size=8722), rand_unicode(), AttachmentType.ATTACHMENT)
     root_mime.append(att)
 
-    content = randUnicode(length=1523)
+    content = rand_unicode(length=1523)
     unknown_part = mime.create.text("plain", content)
     unknown_part.headers["Content-Type"] = mime.message.ContentType(u"xx", u"yy")
 

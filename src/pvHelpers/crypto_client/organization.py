@@ -1,4 +1,4 @@
-from pvHelpers.utils import jdumps, randUnicode
+from pvHelpers.utils import jdumps, rand_unicode
 
 
 class Organization(object):
@@ -40,9 +40,9 @@ class Organization(object):
 
     def create_organization(self, user_id, org_name=None, department_name=None):
         if org_name is None:
-            org_name = randUnicode(5)
+            org_name = rand_unicode(5)
         if department_name is None:
-            department_name = randUnicode(5)
+            department_name = rand_unicode(5)
         resp = self.put(
             u"{}/post/account/{}/orgs".format(self.url, user_id), headers=self.__headers__,
             raw_body=jdumps({"org_name": org_name, "user_department": department_name})
@@ -107,7 +107,7 @@ class Organization(object):
     def setMembersApprovalGroup(self, user_id, org_id, group_id, group_version, approvers, members, current_group_id=None, current_group_version=None):
         resp = self.put(
             u"{}/post/{}/orgs/{}/groups/{}/members".format(self.url, user_id, org_id, group_id), headers=self.__headers__,
-            raw_body=jdumps(MergeDicts(approvers, {
+            raw_body=jdumps(merge_dicts(approvers, {
                 u"users" : map(lambda u: u.user_id, members), "group_version": group_version,
                 "current_group_id": current_group_id, "current_group_version": current_group_version
             }))

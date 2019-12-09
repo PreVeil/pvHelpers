@@ -1,7 +1,7 @@
 import copy
 import types
 
-from pvHelpers.utils import NOT_ASSIGNED, params
+from pvHelpers.utils import NotAssigned, params
 
 from .attachment import Attachment
 from .content import Content
@@ -16,7 +16,7 @@ class EmailBase(object):
 
     __initialized = False
 
-    @params(object, {ServerAttributes, NOT_ASSIGNED}, int, [unicode], [USER_INFO_TYPE],
+    @params(object, {ServerAttributes, NotAssigned}, int, [unicode], [USER_INFO_TYPE],
             [USER_INFO_TYPE], [USER_INFO_TYPE], USER_INFO_TYPE, [USER_INFO_TYPE], unicode,
             Content, [Attachment], [unicode], {unicode, types.NoneType}, unicode, {unicode, types.NoneType})
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,

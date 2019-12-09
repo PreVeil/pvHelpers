@@ -6,7 +6,7 @@ from requests.auth import HTTPProxyAuth
 
 from pvHelpers.proxy_config import (Pac, ProxyConfig, ProxyKey, ProxyPac,
                                     process_os_proxies)
-from pvHelpers.utils import getdir
+from pvHelpers.utils import get_dir
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -127,7 +127,7 @@ scutil_with_proxy = """<dictionary > {
             HTTPSProxy: localhost
             ProxyAutoConfigEnable: 1
             ProxyAutoConfigURLString: %s
-    }""" % os.path.join(getdir(__file__), "test_pac_file.pac")
+    }""" % os.path.join(get_dir(__file__), "test_pac_file.pac")
 
 scutil_with_proxy_info_inenable = """<dictionary > {
             HTTPEnable: 0
@@ -168,7 +168,7 @@ def test_OS_proxy_processer():
                    "password": None, "protocol": "https", "port": "2222"}}
 
     assert process_os_proxies(scutil_with_proxy, "darwin").toDict() == \
-        {"pac": {"pac_url": os.path.join(getdir(__file__), "test_pac_file.pac"), "protocol": "pac"},
+        {"pac": {"pac_url": os.path.join(get_dir(__file__), "test_pac_file.pac"), "protocol": "pac"},
             "http": {"username": None, "ip": "localhost", "password": None, "protocol": "http", "port": "3128"},
             "https": {"username": None, "ip": "localhost", "password": None, "protocol": "https", "port": "2222"}}
 
@@ -183,7 +183,7 @@ def test_bad_pacfile():
     with pytest.raises(IOError):
         Pac("C:\Users\\some_where.pac")
 
-    bad_pac_file = os.path.join(getdir(__file__), "bad_pac_file.pac")
+    bad_pac_file = os.path.join(get_dir(__file__), "bad_pac_file.pac")
     a = Pac(bad_pac_file)
     with pytest.raises(Exception):
         a.get_proxies("https://preveil.com")
@@ -192,7 +192,7 @@ def test_bad_pacfile():
         a.get_proxies("https://preveil.test.com")
 
     for s in ["", "file://"]:
-        test_pac_file = s + os.path.join(getdir(__file__), "test_pac_file.pac")
+        test_pac_file = s + os.path.join(get_dir(__file__), "test_pac_file.pac")
         pac = Pac(test_pac_file)
 
         assert pac.get_proxies("https://collections.preveil.com") == \
@@ -205,7 +205,7 @@ def test_bad_pacfile():
 
         assert pac.get_proxies("adsfads") is None
 
-    proxy_pac = ProxyPac(os.path.join(getdir(__file__), "test_pac_file.pac"))
+    proxy_pac = ProxyPac(os.path.join(get_dir(__file__), "test_pac_file.pac"))
     proxy_pac.set_basic_auth_cred(HTTPProxyAuth("user", "pass"))
     assert proxy_pac.get_proxies("https://collections.preveil.com") == \
         [

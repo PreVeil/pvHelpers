@@ -1,4 +1,4 @@
-from pvHelpers.utils import CaseInsensitiveDict, MergeDicts, params
+from pvHelpers.utils import CaseInsensitiveDict, merge_dicts, params
 
 from .user_request import ExportRequest
 
@@ -26,7 +26,7 @@ class ExportRequestLocalState(object):
     def __init__(self, request, approvers_info, status, dropdir, group_info):
         self.request = request
         self.approvers_info = CaseInsensitiveDict({
-            id_: MergeDicts(info, {"approver_shards": CaseInsensitiveDict(info["approver_shards"])})
+            id_: merge_dicts(info, {"approver_shards": CaseInsensitiveDict(info["approver_shards"])})
             for id_, info in approvers_info.iteritems()
         })
         self.status = status
@@ -34,7 +34,7 @@ class ExportRequestLocalState(object):
         self.group_info = group_info
 
     def add_or_update_approver_info(self, approver_id, approver_info):
-        self.approvers_info[approver_id] = MergeDicts(approver_info, {
+        self.approvers_info[approver_id] = merge_dicts(approver_info, {
             "approver_shards": CaseInsensitiveDict(approver_info["approver_shards"])
         })
 
@@ -43,9 +43,9 @@ class ExportRequestLocalState(object):
         return {
             "request": self.request.to_dict(),
             "approvers_info": CaseInsensitiveDict({
-                id_: MergeDicts(info, {
+                id_: merge_dicts(info, {
                     "approver_shards": CaseInsensitiveDict({
-                        mid: map(lambda k: MergeDicts(k, {"shard": None}), m_keys)
+                        mid: map(lambda k: merge_dicts(k, {"shard": None}), m_keys)
                         for mid, m_keys in info["approver_shards"].iteritems()
                     }),
                 }) for id_, info in self.approvers_info.iteritems()

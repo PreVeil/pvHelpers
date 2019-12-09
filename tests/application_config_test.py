@@ -6,7 +6,7 @@ import pytest
 import requests
 
 from pvHelpers.application_config import ApplicationConfig
-from pvHelpers.utils import randUnicode, readYAMLConfig
+from pvHelpers.utils import rand_unicode, read_yaml_config
 
 TEST_CONFIG_PATH = unicode(os.path.join(os.path.dirname(__file__), "test_config.yaml"))
 
@@ -46,7 +46,7 @@ def test_master_init_config():
         with pytest.raises(KeyError):
             master.initConfig()
         mocked_vars.append(master.config_keys[len(mocked_vars)])
-        os.environ.update({k.replace("-", "_").upper() if k != "mode" else "PREVEIL_MODE": str(randUnicode(5)) for k in mocked_vars})
+        os.environ.update({k.replace("-", "_").upper() if k != "mode" else "PREVEIL_MODE": str(rand_unicode(5)) for k in mocked_vars})
 
     # should just go through when all the required keys are in env
     master.initConfig()
@@ -64,11 +64,10 @@ def test_master_init_config():
 
     master.initConfig(mode=u"test", config_file=TEST_CONFIG_PATH)
 
-    assert master.initialized == True
+    assert master.initialized
 
-    status, confs = readYAMLConfig(TEST_CONFIG_PATH)
-    assert status
-    confs =  confs["test"]
+    confs = read_yaml_config(TEST_CONFIG_PATH)
+    confs = confs["test"]
     for k in set(master.config_keys) - set(["mode", "working-dir", "root-dir"]):
         assert confs[k] == master.getConfigByKey(k)
 

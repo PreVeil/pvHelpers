@@ -1,5 +1,5 @@
 from pvHelpers.api_client import APIClient
-from pvHelpers.utils import b64enc, jdumps, utf8Encode
+from pvHelpers.utils import b64enc, jdumps, utf8_encode
 
 from .admin import PVAdminV4
 from .events import UserEventsV4
@@ -30,7 +30,7 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
             "content-type" : "application/json",
             "accept-version" : str(self.accept_version())
         }
-        encoded_raw_body = utf8Encode(raw_body)
+        encoded_raw_body = utf8_encode(raw_body)
         return url, encoded_raw_body, headers
 
     def _prepareSignedRequest(self, signer, resource, method, body):
@@ -42,14 +42,14 @@ class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEve
 
         canonical_request = u"{};{};{}".format(resource, method, raw_body)
 
-        encoded_user_id = utf8Encode(signer.user_id)
-        user_key_version, user_signature = signer.sign_with_user_key(utf8Encode(canonical_request))
+        encoded_user_id = utf8_encode(signer.user_id)
+        user_key_version, user_signature = signer.sign_with_user_key(utf8_encode(canonical_request))
         headers = {
             "content-type": "application/json",
             "x-user-id": encoded_user_id,
             "x-signature": b64enc(user_signature),
             "accept-version" :  str(self.accept_version())
         }
-        encoded_raw_body = utf8Encode(raw_body)
+        encoded_raw_body = utf8_encode(raw_body)
 
         return url, encoded_raw_body, headers

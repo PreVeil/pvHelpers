@@ -2,8 +2,8 @@ import types
 
 from flanker import mime
 from pvHelpers.logger import g_log
-from pvHelpers.utils import (ASCIIToUnicode, encodeContentIfUnicode, EncodingException,
-                             params, toInt, WrapExceptions)
+from pvHelpers.utils import (ascii_to_unicode, encode_content_if_unicode, EncodingException,
+                             params, to_int, WrapExceptions)
 
 from .content import Content
 from .helpers import EmailException
@@ -23,12 +23,12 @@ class AttachmentMetadata(object):
     def __init__(self, filename=None, content_type=None,
                  content_disposition=None, content_id=None, size=None):
         if isinstance(filename, str):
-            filename = ASCIIToUnicode(filename)
+            filename = ascii_to_unicode(filename)
 
         self.filename = filename
 
         if isinstance(content_type, str):
-            content_type = ASCIIToUnicode(content_type)
+            content_type = ascii_to_unicode(content_type)
 
         if content_type is None:
             self.content_type = u"application/octet-stream"
@@ -40,12 +40,12 @@ class AttachmentMetadata(object):
         # and keep it MIME consistent with object
         content_disposition = AttachmentType.ATTACHMENT if content_disposition is None else content_disposition
         if isinstance(content_disposition, str):
-            content_disposition = ASCIIToUnicode(content_disposition)
+            content_disposition = ascii_to_unicode(content_disposition)
 
         self.content_disposition = content_disposition
 
         if isinstance(content_id, str):
-            content_id = ASCIIToUnicode(content_id)
+            content_id = ascii_to_unicode(content_id)
 
         if not isinstance(content_id, (unicode, types.NoneType)):
             raise EmailException(
@@ -53,7 +53,7 @@ class AttachmentMetadata(object):
         self.content_id = content_id
 
         if isinstance(size, (str, unicode)):
-            status, int_size = toInt(size)
+            status, int_size = to_int(size)
             if not status:
                 g_log.error(u"AttachmentMetadata.__init__: size int coercion failed {}".format(size))
                 size = 0
@@ -94,7 +94,7 @@ class Attachment(object):
             raise EmailException(u"metadata must be of type AttachmentMetadata")
 
         content = _file.read()
-        content = encodeContentIfUnicode(content)
+        content = encode_content_if_unicode(content)
 
         # flanker defaults the mime header to (application/octet-stream) if c-t not specified
         # it also makes some assumptions based on filename if c-t is (application/octet-stream)

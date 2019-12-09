@@ -1,10 +1,11 @@
 import traceback
 
+
 class WrapExceptions(object):
     def __init__(self, wrapping_exception=None, exceptions=[Exception]):
         if wrapping_exception is None:
             raise TypeError("must provide a wrapping exception type")
-        for exc in exceptions+ [wrapping_exception]:
+        for exc in exceptions + [wrapping_exception]:
             if not issubclass(exc, Exception):
                 raise TypeError("{} is not subclass of Exception".format({exc}))
         self._we = wrapping_exception
@@ -15,9 +16,11 @@ class WrapExceptions(object):
             try:
                 return function(*args, **kwargs)
             except self._exs as e:
-                raise self._we(u"Function `{}` throwed {}: {}".format(function.__module__ + "." + function.__name__, type(e), traceback.format_exc()))
+                raise self._we(u"Function `{}` throwed {}: {}".format(
+                    function.__module__ + "." + function.__name__, type(e), traceback.format_exc()))
 
         return wrapper
+
 
 class DoBefore(object):
     def __init__(self, handle, *args, **kwargs):

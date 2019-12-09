@@ -6,19 +6,19 @@ from flanker import mime
 from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata, AttachmentType,
                                   create_mime, DUMMY_CONTENT_TYPE, EmailHelpers, EmailV1)
-from pvHelpers.utils import NOT_ASSIGNED, randStr, randUnicode
+from pvHelpers.utils import NotAssigned, rand_str, rand_unicode
 from werkzeug.datastructures import FileStorage
 
 
 class User():
     def __init__(self):
-        self.user_id = randUnicode()
-        self.display_name = randUnicode()
+        self.user_id = rand_unicode()
+        self.display_name = rand_unicode()
 
 
 def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
                     in_reply_to, references, reply_tos=[], flags=[],
-                    server_attr=NOT_ASSIGNED(), message_id=None):
+                    server_attr=NotAssigned(), message_id=None):
     if message_id is None:
         message_id = u"<{}>".format(EmailHelpers.new_message_id())
     sender = {"user_id": sender.user_id, "display_name": sender.display_name}
@@ -26,7 +26,7 @@ def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
     ccs = [{"user_id": cc.user_id, "display_name": cc.display_name} for cc in ccs]
     bccs = [{"user_id": bcc.user_id, "display_name": bcc.display_name} for bcc in bccs]
     time = None
-    if not isinstance(server_attr, NOT_ASSIGNED):
+    if not isinstance(server_attr, NotAssigned):
         time = server_attr.server_time
     raw_mime = create_mime(
         text, html, [
@@ -39,19 +39,19 @@ def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments,
 def test_from_mime():
     # create email from separated mime and test if it get reconstructed ok
     root_mime = mime.create.multipart("mixed")
-    text_1 = mime.create.text("plain", randUnicode(length=3))
+    text_1 = mime.create.text("plain", rand_unicode(length=3))
     root_mime.append(text_1)
     attachments = []
     for _ in range(2):
-        a = mime.create.attachment("image/png", randStr(size=10), randUnicode(), AttachmentType.INLINE)
+        a = mime.create.attachment("image/png", rand_str(size=10), rand_unicode(), AttachmentType.INLINE)
         attachments.append(a)
         a.to_string()
         root_mime.append(a)
 
-    text_2 = mime.create.text("plain", randUnicode(length=3))
+    text_2 = mime.create.text("plain", rand_unicode(length=3))
     root_mime.append(text_2)
     for _ in range(3):
-        a = mime.create.attachment("video/mp4", randStr(size=15), randUnicode(), AttachmentType.ATTACHMENT)
+        a = mime.create.attachment("video/mp4", rand_str(size=15), rand_unicode(), AttachmentType.ATTACHMENT)
         attachments.append(a)
         a.to_string()
         root_mime.append(a)
@@ -91,7 +91,7 @@ Content-Type: dummy/dummy; name="handle"
 
 cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
 """
-    attachment_content = randUnicode()
+    attachment_content = rand_unicode()
     raw_attachment = \
         "Content-Type: text/plain; name=\"test.txt\"\r\nContent-Disposition: attachment; " + \
         "filename=\"test.txt\"\r\n\r\n{}".format(attachment_content)
@@ -110,7 +110,7 @@ def test_to_mime():
     from_account, to_account = User(), User()
     # with one attachment
     attachments = [FileStorage(
-        stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode() + ".jpg", content_type="image/jpeg")]
+        stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode() + ".jpg", content_type="image/jpeg")]
     email = create_email_v1(
         from_account, [to_account], [], [], u"S S", u"text", u"html", attachments, None, [], [], [])
 
@@ -132,13 +132,13 @@ def test_to_mime():
     # with multiple atts
     attachments = [
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="application/zip"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode(), content_type="application/zip"),
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="audio/jpeg"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode(), content_type="audio/jpeg"),
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="application/pdf"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode(), content_type="application/pdf"),
         FileStorage(
-            stream=StringIO.StringIO(randUnicode()), filename=randUnicode(), content_type="text/plain"),
+            stream=StringIO.StringIO(rand_unicode()), filename=rand_unicode(), content_type="text/plain"),
     ]
     email = create_email_v1(from_account, [to_account], [], [], u"subject", u"a", u"b", attachments, None, [])
 

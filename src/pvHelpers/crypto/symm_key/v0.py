@@ -6,7 +6,7 @@ from pvHelpers.crypto.header_bytes import (BINARY_BIT, HEADER_LENGTH,
                                            SECRET_BIT, TEXT_BIT)
 from pvHelpers.crypto.utils import CryptoException, hex_encode, sha_256_sum
 from pvHelpers.utils import (b64dec, b64enc, EncodingException, jdumps, jloads,
-                             params, utf8Decode, utf8Encode, WrapExceptions)
+                             params, utf8_decode, utf8_encode, WrapExceptions)
 
 from .base import SymmKeyBase
 
@@ -26,7 +26,7 @@ class SymmKeyV0(SymmKeyBase):
 
     def serialize(self):
         b64 = b64enc(self._box.sk)
-        return utf8Encode(b64enc(utf8Encode(jdumps({
+        return utf8_encode(b64enc(utf8_encode(jdumps({
             "material": b64
         }))))
 
@@ -34,7 +34,7 @@ class SymmKeyV0(SymmKeyBase):
     @WrapExceptions(CryptoException, [EncodingException])
     @params(object, bytes)
     def deserialize(cls, key):
-        key = jloads(utf8Decode(b64dec(utf8Decode(key))))
+        key = jloads(utf8_decode(b64dec(utf8_decode(key))))
 
         key = key.get("material")
         if not key:

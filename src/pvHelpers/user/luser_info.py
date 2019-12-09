@@ -2,7 +2,7 @@ import abc
 import sys
 
 from pvHelpers.utils import (EncodingException, jdumps, jloads,
-                             NOT_ASSIGNED, toInt)
+                             NotAssigned, to_int)
 
 if sys.platform in ["win32"]:
     from pvHelpers.win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
@@ -46,8 +46,8 @@ class LUserInfo(object):
     # Temp helper to unpack user_store value
     @staticmethod
     def deserialize(json_str):
-        if json_str == str(NOT_ASSIGNED()):
-            return NOT_ASSIGNED()
+        if json_str == str(NotAssigned()):
+            return NotAssigned()
         try:
             _dict = jloads(json_str)
         except EncodingException as e:
@@ -145,7 +145,7 @@ class LUserInfoUnix(LUserInfo):
         if platform != cls.platform:
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
-        status, uid = toInt(suid)
+        status, uid = to_int(suid)
         if status is False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 
@@ -185,7 +185,7 @@ class LUserInfoLinux(LUserInfo):
         if platform != cls.platform:
             raise ValueError("platform must be {}".format(cls.platform))
         suid = _dict["info"]["uid"]
-        status, uid = toInt(suid)
+        status, uid = to_int(suid)
         if status is False:
             raise ValueError("uid int coercion failed: {}".format(suid))
 

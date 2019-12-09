@@ -2,7 +2,7 @@ import types
 
 from pvHelpers.crypto.user_key import UserKeyBase
 from pvHelpers.user import LocalDevice
-from pvHelpers.utils import params, toInt
+from pvHelpers.utils import params, to_int
 
 
 class PublicV4(object):

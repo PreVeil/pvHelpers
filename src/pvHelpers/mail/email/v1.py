@@ -4,8 +4,8 @@ import types
 from flanker import addresslib, mime
 from pvHelpers.crypto.utils import hex_encode, sha_256_sum
 from pvHelpers.logger import g_log
-from pvHelpers.utils import (b64enc, encodeContentIfUnicode,
-                             EncodingException, NOT_ASSIGNED, params)
+from pvHelpers.utils import (b64enc, encode_content_if_unicode,
+                             EncodingException, NotAssigned, params)
 
 from .attachment import Attachment, AttachmentMetadata
 from .base import EmailBase
@@ -83,7 +83,7 @@ class EmailV1(EmailHelpers, EmailBase):
             raise EmailException(e)
 
         return cls(
-            NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs,
+            NotAssigned(), flags, named_tos, named_ccs, named_bccs,
             named_sender, named_reply_tos, subject, body, attachments,
             references, in_reply_to, message_id, snippet)
 
@@ -218,7 +218,7 @@ class EmailV1(EmailHelpers, EmailBase):
             # Reporting the server reception time,
             # 1) similar to what we report to browser,
             # 2) Dates added by MUAs can be incorrect
-            if not isinstance(self.server_attr, NOT_ASSIGNED) and self.server_attr.server_time is not None:
+            if not isinstance(self.server_attr, NotAssigned) and self.server_attr.server_time is not None:
                 date = (u"%s" + u"\r\n") % email.utils.formatdate(self.server_attr.server_time)
                 message.headers["Date"] = date
 
@@ -229,7 +229,7 @@ class EmailV1(EmailHelpers, EmailBase):
 
     def to_browser(self, with_body=False):
         o = {}
-        if not isinstance(self.server_attr, NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NotAssigned):
             o["unique_id"] = self.server_attr.server_id
             o["uid"] = self.server_attr.uid
             o["thread_id"] = self.server_attr.thread_id
@@ -281,7 +281,7 @@ class EmailV1(EmailHelpers, EmailBase):
                 content_id = att_mime.headers.get("Content-Id", None)
 
                 try:
-                    encoded = encodeContentIfUnicode(part_content)
+                    encoded = encode_content_if_unicode(part_content)
                     b64encoded = b64enc(encoded)
                 except EncodingException as e:
                     g_log.exception(e)

@@ -2,7 +2,7 @@ import email.utils
 
 from flanker import addresslib, mime
 from pvHelpers.logger import g_log
-from pvHelpers.utils import b64enc, EncodingException, NOT_ASSIGNED, params
+from pvHelpers.utils import b64enc, EncodingException, NotAssigned, params
 
 from .base import EmailBase
 from .content import Content
@@ -52,7 +52,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
         body = EmailHelpers.deserialize_body(self.body.content)
         time = None
-        if not isinstance(self.server_attr, NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NotAssigned):
             time = self.server_attr.server_time
 
         raw_mime = create_mime(
@@ -67,7 +67,7 @@ class EmailV2(EmailHelpers, EmailBase):
     # is only to conform with browser expectations and can be removed
     def to_browser(self, with_body=False):
         o = {}
-        if not isinstance(self.server_attr, NOT_ASSIGNED):
+        if not isinstance(self.server_attr, NotAssigned):
             o["unique_id"] = self.server_attr.server_id
             o["uid"] = self.server_attr.uid
             o["thread_id"] = self.server_attr.thread_id
@@ -190,6 +190,6 @@ class EmailV2(EmailHelpers, EmailBase):
         body = EmailHelpers.serialize_body({"text": text, "html": html})
         body = Content(body)
 
-        return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs,
+        return cls(NotAssigned(), flags, named_tos, named_ccs, named_bccs,
                    named_sender, named_reply_tos, subject, body, attachments,
                    references, in_reply_to, message_id, other_headers=other_headers)

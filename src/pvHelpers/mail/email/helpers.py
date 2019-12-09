@@ -1,7 +1,7 @@
 import uuid
 
-from pvHelpers.utils import (encodeContentIfUnicode, EncodingException,
-                             jdumps, jloads, params, utf8Decode, WrapExceptions)
+from pvHelpers.utils import (encode_content_if_unicode, EncodingException,
+                             jdumps, jloads, params, utf8_decode, WrapExceptions)
 
 
 DUMMY_DISPOSITION = u"dummy"
@@ -58,13 +58,13 @@ class EmailHelpers(object):
     @WrapExceptions(EmailException, [EncodingException])
     @params(dict)
     def serialize_body(body):
-        return encodeContentIfUnicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
+        return encode_content_if_unicode(jdumps({"text": body.get("text"), "html": body.get("html")}))
 
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
     @params(bytes)
     def deserialize_body(body):
-        body = jloads(utf8Decode(body))
+        body = jloads(utf8_decode(body))
         return body
 
     @staticmethod

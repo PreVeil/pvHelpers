@@ -1,25 +1,25 @@
 from random import randint
 
-from pvHelpers.utils import randUnicode
+from pvHelpers.utils import rand_unicode
 
 
 def recipient():
-    return {"user_id": randUnicode(5), "key_version": randint(0, 100)}
+    return {"user_id": rand_unicode(5), "key_version": randint(0, 100)}
 
 
 class MockServerMessageBase(object):
     def __init__(self, protocol_version, private_metadata):
         self.protocol_version = protocol_version
         self.private_metadata = private_metadata
-        self.id = randUnicode(5)
-        self.version = randUnicode(5)
-        self.thread_id = randUnicode(5)
-        self.mailbox_id = randUnicode(5)
+        self.id = rand_unicode(5)
+        self.version = rand_unicode(5)
+        self.thread_id = rand_unicode(5)
+        self.mailbox_id = rand_unicode(5)
 
         self.uid = 0
-        self.message_id = randUnicode(5)
+        self.message_id = rand_unicode(5)
 
-        self.in_reply_to = randUnicode(5)
+        self.in_reply_to = rand_unicode(5)
         self.rev_id = 0
         self.is_deleted = False
         self.references = []

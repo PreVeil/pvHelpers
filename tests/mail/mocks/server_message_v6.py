@@ -1,7 +1,7 @@
 from random import randint
 
 from pvHelpers.crypto import PVKeyFactory
-from pvHelpers.utils import MergeDicts, randUnicode
+from pvHelpers.utils import merge_dicts, rand_unicode
 
 from . import MockPrivateMetadataV5, MockServerMessageV5, recipient
 
@@ -9,7 +9,7 @@ from . import MockPrivateMetadataV5, MockServerMessageV5, recipient
 def make_group_recipients(counts=2):
     groups = {}
     for _ in range(counts):
-        alias = randUnicode(5)
+        alias = rand_unicode(5)
         members = [recipient() for _ in range(randint(1, 4))]
         groups[alias] = {"alias": "{}@alias.test.preveil.com".format(alias), "users": members}
     return groups
@@ -38,7 +38,7 @@ class MockPrivateMetadataV6(MockPrivateMetadataV5):
 
     def to_dict(self):
         shares = super(MockPrivateMetadataV6, self).to_dict()
-        return MergeDicts({
+        return merge_dicts({
             "ccs_groups": self.ccs_groups,
             "tos_groups": self.tos_groups
         }, shares)

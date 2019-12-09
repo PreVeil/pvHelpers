@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from pvHelpers.utils import (CaseInsensitiveDict, getdir, parse_file_uri,
-                             randUnicode)
+from pvHelpers.utils import (CaseInsensitiveDict, get_dir, parse_file_uri,
+                             rand_unicode)
 
 
 def randomize_casing(key):
@@ -19,12 +19,12 @@ def randomize_casing(key):
 
 def test_case_insensitive_dict():
     # test initialization
-    k = randUnicode()
+    k = rand_unicode()
     sensitive_dict = {
-      1: randUnicode(),
-      k: randUnicode(),
-      randomize_casing(k): randUnicode(),
-      (1, randUnicode(), randUnicode()): randUnicode()
+      1: rand_unicode(),
+      k: rand_unicode(),
+      randomize_casing(k): rand_unicode(),
+      (1, rand_unicode(), rand_unicode()): rand_unicode()
     }
     insensitive_dict = CaseInsensitiveDict(sensitive_dict)
     assert len(sensitive_dict) == 4
@@ -33,7 +33,7 @@ def test_case_insensitive_dict():
     # test addition
     for k in insensitive_dict.keys():
         for i in xrange(20):
-            insensitive_dict[randomize_casing(k)] = randUnicode()
+            insensitive_dict[randomize_casing(k)] = rand_unicode()
 
         assert len(insensitive_dict) == 3
 
@@ -79,7 +79,7 @@ def test_parse_file_uri_scheme():
         # e.g: file://hostname/path/to/the%20file.txt
 
     # no scheme
-    valid_file = os.path.join(getdir(__file__), "misc_test.py")
+    valid_file = os.path.join(get_dir(__file__), "misc_test.py")
     required_download, uri = parse_file_uri(valid_file)
     assert not required_download
     assert uri == valid_file

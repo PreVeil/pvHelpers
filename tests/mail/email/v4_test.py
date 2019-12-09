@@ -5,19 +5,19 @@ import StringIO
 from pvHelpers.mail import EmailFactory
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata,
                                   AttachmentType, Content, EmailHelpers, PROTOCOL_VERSION)
-from pvHelpers.utils import NOT_ASSIGNED, randUnicode
+from pvHelpers.utils import NotAssigned, rand_unicode
 from werkzeug.datastructures import FileStorage
 
 
 class User():
     def __init__(self):
-        self.user_id = randUnicode()
-        self.display_name = randUnicode()
+        self.user_id = rand_unicode()
+        self.display_name = rand_unicode()
 
 
 def create_email_v4(sender, tos, ccs, bccs, subject, text, html, attachments,
                     in_reply_to, references, reply_tos=[], flags=[],
-                    server_attr=NOT_ASSIGNED(), message_id=None):
+                    server_attr=NotAssigned(), message_id=None):
     if message_id is None:
         message_id = u"<{}>".format(EmailHelpers.new_message_id())
     body = EmailHelpers.serialize_body({"text": text, "html": html})
@@ -62,13 +62,13 @@ def test_to_mime():
     # with multiple atts
     attachments = [
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="image/png"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode(), content_type="image/png"),
         FileStorage(
-            stream=StringIO.StringIO(os.urandom(1024)), filename=randUnicode(), content_type="video/mp4"),
+            stream=StringIO.StringIO(os.urandom(1024)), filename=rand_unicode(), content_type="video/mp4"),
         FileStorage(
             stream=StringIO.StringIO(os.urandom(1024)),
-            filename=randUnicode(), content_type="application/octet-stream"),
-        FileStorage(stream=StringIO.StringIO(randUnicode()), filename=randUnicode(), content_type="text/html"),
+            filename=rand_unicode(), content_type="application/octet-stream"),
+        FileStorage(stream=StringIO.StringIO(rand_unicode()), filename=rand_unicode(), content_type="text/html"),
     ]
     email = create_email_v4(from_account, [to_account], [], [], u"subject", u"a", u"b", attachments, None, [])
     raw_mime = email.to_mime()

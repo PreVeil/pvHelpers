@@ -6,7 +6,7 @@ import random
 from pvHelpers.mail.email import (Attachment, AttachmentMetadata,
                                   AttachmentType, Content, EmailException,
                                   EmailV1)
-from pvHelpers.utils import getdir, randStr, randStream, randUnicode
+from pvHelpers.utils import get_dir, rand_str, rand_stream, rand_unicode
 import simplejson
 from werkzeug.datastructures import FileStorage
 
@@ -44,10 +44,10 @@ mime_tests = {
 
 
 def test_attachment_metadata():
-    filename = randUnicode()
-    content_type = randUnicode()
-    content_disposition = randUnicode()
-    content_id = randUnicode()
+    filename = rand_unicode()
+    content_type = rand_unicode()
+    content_disposition = rand_unicode()
+    content_id = rand_unicode()
     size = random.randint(0, 1000000000)
     metadata = AttachmentMetadata(filename, content_type, content_disposition, content_id, size)
     assert metadata.to_dict() == {
@@ -68,8 +68,8 @@ def test_attachment_metadata():
 
 
 def test_attachment_from_file_storage():
-    blob = randStream()
-    filename = randUnicode()
+    blob = rand_stream()
+    filename = rand_unicode()
     content_type = "y/x"
     metadata = AttachmentMetadata(filename, content_type)
     _file = FileStorage(stream=blob, filename=filename, content_type=content_type)
@@ -81,8 +81,8 @@ def test_attachment_from_file_storage():
     assert attachment.metadata.content_disposition == AttachmentType.ATTACHMENT
 
     # test content_type correction
-    blob = randStream()
-    filename = randUnicode()
+    blob = rand_stream()
+    filename = rand_unicode()
     content_type = "badcontenttype"
     metadata = AttachmentMetadata(filename, content_type)
     _file = FileStorage(stream=blob, filename=filename, content_type=content_type)
@@ -95,12 +95,12 @@ def test_attachment_from_file_storage():
 
 
 def test_attachment_to_mime():
-    filename = randUnicode()
+    filename = rand_unicode()
     content_type = "image/png"
-    content_disposition = randUnicode()
-    content_id = randUnicode()
+    content_disposition = rand_unicode()
+    content_id = rand_unicode()
     metadata = AttachmentMetadata(filename, content_type, content_disposition, content_id)
-    blob = randStr(size=1024)
+    blob = rand_str(size=1024)
 
     attachement = Attachment(metadata, Content(blob))
     att_mime = attachement.to_mime()
@@ -120,7 +120,7 @@ def test_attachment_from_mime():
     # Action 1
     test_cases = mime_tests["mime_to_preveil_entity"]["test_cases"]
     for test_case in test_cases:
-        with open(os.path.join(getdir(__file__), "test_cases", test_case["mime"]), "r") as f:
+        with open(os.path.join(get_dir(__file__), "test_cases", test_case["mime"]), "r") as f:
             raw_msg = f.read()
         try:
             email = EmailV1.from_mime(raw_msg, [], {"user_id": u"xxx@gmail.com", "display_name": u"XX FF"})
@@ -129,7 +129,7 @@ def test_attachment_from_mime():
             raise
 
         res = email.to_browser(with_body=True)
-        with open(os.path.join(getdir(__file__), "test_cases", test_case["expected_json"])) as f:
+        with open(os.path.join(get_dir(__file__), "test_cases", test_case["expected_json"])) as f:
             obj = simplejson.load(f)
 
         expected_atts = obj.get("attachments", [])

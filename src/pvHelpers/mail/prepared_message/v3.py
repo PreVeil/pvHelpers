@@ -1,6 +1,6 @@
 
 from pvHelpers.mail.email import PROTOCOL_VERSION
-from pvHelpers.utils import b64enc, utf8Encode
+from pvHelpers.utils import b64enc, utf8_encode
 
 from .v1 import PreparedMessageV1
 
@@ -14,7 +14,7 @@ class PreparedMessageV3(PreparedMessageV1):
 
     def _sign(self):
         canonical_msg_str = PreparedMessageV3.canonical_encrypted_string(self.uploads)
-        signature = b64enc(self.sender.user_key.signing_key.sign(utf8Encode(canonical_msg_str)))
+        signature = b64enc(self.sender.user_key.signing_key.sign(utf8_encode(canonical_msg_str)))
         return True, signature
 
     @staticmethod
