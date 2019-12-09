@@ -2,8 +2,6 @@ import os
 import random
 import sys
 
-import pytest
-
 from pvHelpers.utils import (CaseInsensitiveDict, get_dir, parse_file_uri,
                              rand_unicode)
 

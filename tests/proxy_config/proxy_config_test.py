@@ -1,12 +1,9 @@
 import os
 
-import pytest
-import requests
-from requests.auth import HTTPProxyAuth
-
-from pvHelpers.proxy_config import (Pac, ProxyConfig, ProxyKey, ProxyPac,
-                                    process_os_proxies)
+from pvHelpers.proxy_config import Pac, process_os_proxies, ProxyConfig, ProxyKey, ProxyPac
 from pvHelpers.utils import get_dir
+import pytest
+from requests.auth import HTTPProxyAuth
 
 # mimic proxy config dictionary from win32 and osx
 win_no_proxy = """DisableCachingOfSSLPages : 0
@@ -26,7 +23,7 @@ win_no_proxy = """DisableCachingOfSSLPages : 0
         PSChildName              : Internet Settings
         PSDrive                  : HKCU
         PSProvider               : Microsoft.PowerShell.Core\Registry
-    """
+    """  # noqa
 
 win_proxy_str_inenable = """DisableCachingOfSSLPages : 0
         IE5_UA_Backup_Flag       : 5.0
@@ -47,7 +44,7 @@ win_proxy_str_inenable = """DisableCachingOfSSLPages : 0
         PSChildName              : Internet Settings
         PSDrive                  : HKCU
         PSProvider               : Microsoft.PowerShell.Core\Registry
-    """
+    """  # noqa
 
 win_proxy_str_pac = """DisableCachingOfSSLPages : 0
         IE5_UA_Backup_Flag       : 5.0
@@ -69,7 +66,7 @@ win_proxy_str_pac = """DisableCachingOfSSLPages : 0
         PSChildName              : Internet Settings
         PSDrive                  : HKCU
         PSProvider               : Microsoft.PowerShell.Core\Registry
-    """
+    """  # noqa
 
 win_proxy_str = """DisableCachingOfSSLPages : 0
         IE5_UA_Backup_Flag       : 5.0
@@ -90,7 +87,7 @@ win_proxy_str = """DisableCachingOfSSLPages : 0
         PSChildName              : Internet Settings
         PSDrive                  : HKCU
         PSProvider               : Microsoft.PowerShell.Core\Registry
-    """
+    """  # noqa
 
 win_proxy_str_one_ip_port_for_all = """DisableCachingOfSSLPages : 0
         IE5_UA_Backup_Flag       : 5.0
@@ -111,7 +108,7 @@ win_proxy_str_one_ip_port_for_all = """DisableCachingOfSSLPages : 0
         PSChildName              : Internet Settings
         PSDrive                  : HKCU
         PSProvider               : Microsoft.PowerShell.Core\Registry
-    """
+    """  # noqa
 
 scutil_no_proxy = """<dictionary > {
             HTTPEnable: 0
@@ -147,7 +144,7 @@ Proxy_Dicts = [
 ]
 
 
-def test_OS_proxy_processer():
+def test_os_proxy_processer():
     # win32
     assert process_os_proxies(win_no_proxy, "win32") is None
     assert process_os_proxies(win_proxy_str_inenable, "win32") is None
@@ -196,12 +193,13 @@ def test_bad_pacfile():
         pac = Pac(test_pac_file)
 
         assert pac.get_proxies("https://collections.preveil.com") == \
-            [
-                {"https": "http://199.168.151.10:10975",
-                "http": "http://199.168.151.10:10975"},
-                {"https": "http://104.129.194.41:10975",
-                "http": "http://104.129.194.41:10975"}
-        ]
+            [{
+                "https": "http://199.168.151.10:10975",
+                "http": "http://199.168.151.10:10975"
+            }, {
+                "https": "http://104.129.194.41:10975",
+                "http": "http://104.129.194.41:10975"
+            }]
 
         assert pac.get_proxies("adsfads") is None
 

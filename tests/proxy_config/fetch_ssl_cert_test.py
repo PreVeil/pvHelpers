@@ -5,18 +5,16 @@ import sys
 import time
 
 import certifi
-import pem
-import pytest
 from certifi_win32 import generate_pem
-
+import pem
 from pvHelpers.utils import get_dir
+import pytest
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="win specific test")
 def test_fetch_cert_from_trust_root_cert_ca():
     # get the self-signed cert
-    proxy_cert = pem.parse_file(os.path.join(
-        H.get_dir(__file__), "insecure.pem"))[-1]
+    proxy_cert = pem.parse_file(os.path.join(get_dir(__file__), "insecure.pem"))[-1]
 
     original_where = certifi.where()
     assert original_where == os.path.join(
@@ -45,7 +43,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
         return _subprocess_run(cmd)
 
     def patch_certifi():
-        from certifi_win32.wrapt_certifi import apply_patches
+        from certifi_win32.wrapt_certifi import apply_patches  # noqa: F401
         from certifi_win32.wincerts import where
         assert certifi.where() != original_where
         assert certifi.where() == where()

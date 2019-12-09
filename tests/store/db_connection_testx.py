@@ -1,4 +1,4 @@
-from multiprocessing import Array, current_process, Process, Value
+from multiprocessing import Array, current_process, Value
 import random
 import time
 
@@ -130,7 +130,7 @@ def test_journal_mode(tmp_factory):
         assert session.execute("PRAGMA journal_mode").fetchone()[0] == u"wal"
 
     with GetDBSession() as session:
-        assert session.execute("PRAGMA journal_mode").fetchone()[0], == u"wal"
+        assert session.execute("PRAGMA journal_mode").fetchone()[0] == u"wal"
 
 
 def test_multiple_writer(tmp_factory, create_process):
@@ -138,13 +138,13 @@ def test_multiple_writer(tmp_factory, create_process):
     writer_1_result = Value("i")
     writer_1_wd = Array("c", str(misc.Config.WORKING_DIR))
     writer_1_process = create_process(
-        name="writer_1_process", target=DBWriter, args=(writer_1_flag, writer_1_result, writer_1_wd))
+        name="writer_1_process", target=db_writer, args=(writer_1_flag, writer_1_result, writer_1_wd))
 
     # writer 2
     writer_2_flag = Value("i", 1)
     writer_2_result = Value("i")
     writer_2_process = create_process(
-        name="writer_2_process", target=DBWriter, args=(writer_2_flag, writer_2_result, writer_1_wd))
+        name="writer_2_process", target=db_writer, args=(writer_2_flag, writer_2_result, writer_1_wd))
 
     writer_1_process.start()
     # process scheduling is up to operating system, wait so to be certain process_1 starts first
@@ -167,7 +167,7 @@ def test_single_writer_multiple_reader(create_process, tmp_factory):
     writer_1_result = Value("i")
     writer_1_wd = Array("c", str(misc.Config.WORKING_DIR))
     writer_1_process = create_process(
-        name="writer_1_process", target=DBWriter, args=(writer_1_flag, writer_1_result, writer_1_wd))
+        name="writer_1_process", target=db_writer, args=(writer_1_flag, writer_1_result, writer_1_wd))
     writer_1_process.start()
 
     # let wrtier start fisrt
@@ -181,7 +181,7 @@ def test_single_writer_multiple_reader(create_process, tmp_factory):
         name = "reader_{}_process".format(i)
         reader_processes[i] = {
             "process": create_process(
-                name=name, target=DBReader, args=(reader_flag, reader_result, reader_wd)),
+                name=name, target=db_reader, args=(reader_flag, reader_result, reader_wd)),
             "flag": reader_flag,
             "result": reader_result,
             "name": name

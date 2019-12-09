@@ -26,7 +26,7 @@ def test_user_key_creation(protocol_version):
         assert k == PVKeyFactory.deserialize_user_key(k.serialize())
 
     # unknown protocol_version
-    with pytest.raises(CryptoException) as ex:
+    with pytest.raises(CryptoException):
         PVKeyFactory.new_user_key(0, protocol_version=9999)
 
 
@@ -45,7 +45,7 @@ def test_encryption_key_creation(protocol_version):
     assert k == PVKeyFactory.deserialize_asymm_key(k.serialize())
 
     # unknown protocol_version
-    with pytest.raises(CryptoException) as ex:
+    with pytest.raises(CryptoException):
         PVKeyFactory.new_asymm_key(protocol_version=9999)
 
 
@@ -67,7 +67,7 @@ def test_sign_key_creation(protocol_version):
     assert vk2.serialize() == PVKeyFactory.deserialize_verify_key(vk.serialize()).serialize()
 
     # unknown protocol_version
-    with pytest.raises(CryptoException) as ex:
+    with pytest.raises(CryptoException):
         PVKeyFactory.new_sign_key(protocol_version=9999)
 
 
@@ -83,5 +83,5 @@ def test_symm_key_creation(protocol_version):
     assert k == PVKeyFactory.deserialize_symm_key(k2.serialize())
 
     # unknown protocol_version
-    with pytest.raises(CryptoException) as ex:
+    with pytest.raises(CryptoException):
         PVKeyFactory.new_symm_key(protocol_version=9999)

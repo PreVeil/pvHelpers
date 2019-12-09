@@ -288,7 +288,8 @@ def test_parse_mime_inline_attachment():
     root_mime.append(html_1)
 
     for _ in range(6):
-        root_mime.append(mime.create.attachment(u"image/png", rand_str(size=235), rand_unicode(), AttachmentType.INLINE))
+        root_mime.append(
+            mime.create.attachment(u"image/png", rand_str(size=235), rand_unicode(), AttachmentType.INLINE))
 
     text, html, attachments = parse_mime(root_mime)
 

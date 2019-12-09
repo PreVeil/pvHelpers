@@ -1,7 +1,7 @@
 import os
 import random
 
-from pvHelpers.crypto import PVKeyFactory, ASYMM_KEY_PROTOCOL_VERSION
+from pvHelpers.crypto import ASYMM_KEY_PROTOCOL_VERSION, PVKeyFactory
 import pytest
 
 

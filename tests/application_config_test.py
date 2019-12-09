@@ -2,13 +2,13 @@ import os
 import re
 import sys
 
+from pvHelpers.application_config import ApplicationConfig
+from pvHelpers.utils import rand_unicode, read_yaml_config
 import pytest
 import requests
 
-from pvHelpers.application_config import ApplicationConfig
-from pvHelpers.utils import rand_unicode, read_yaml_config
-
 TEST_CONFIG_PATH = unicode(os.path.join(os.path.dirname(__file__), "test_config.yaml"))
+
 
 class MasterConfig(ApplicationConfig):
     def __init__(self):
@@ -23,6 +23,7 @@ class MasterConfig(ApplicationConfig):
             "filesync-port", "root-dir", "working-dir", "feature-flags-enabled"
         ]
 
+
 class ReplicaConfig(ApplicationConfig):
     def __init__(self):
         super(ReplicaConfig, self).__init__()
@@ -36,9 +37,10 @@ class ReplicaConfig(ApplicationConfig):
             "filesync-port", "root-dir", "working-dir", "feature-flags-enabled"
         ]
 
+
 def test_master_init_config():
     master = MasterConfig()
-    assert master.initialized == False
+    assert master.initialized is False
 
     # should raise KeyError for missing enviroment variables
     org_env, mocked_vars = os.environ, []
@@ -46,14 +48,15 @@ def test_master_init_config():
         with pytest.raises(KeyError):
             master.initConfig()
         mocked_vars.append(master.config_keys[len(mocked_vars)])
-        os.environ.update({k.replace("-", "_").upper() if k != "mode" else "PREVEIL_MODE": str(rand_unicode(5)) for k in mocked_vars})
+        os.environ.update(
+            {k.replace("-", "_").upper() if k != "mode" else "PREVEIL_MODE": str(rand_unicode(5)) for k in mocked_vars})
 
     # should just go through when all the required keys are in env
     master.initConfig()
     os.environ = org_env
 
     master = MasterConfig()
-    assert master.initialized == False
+    assert master.initialized is False
     # should raise for not having `config_file`
     with pytest.raises(ValueError):
         master.initConfig(mode=u"dev")
@@ -72,17 +75,17 @@ def test_master_init_config():
         assert confs[k] == master.getConfigByKey(k)
 
     assert master.getConfigByKey("mode") == "test"
-    expected_root = unicode(os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")) \
-                    if sys.platform == "win32" \
-                    else unicode(os.path.join("/", "var", "preveil"))
-    assert master.getConfigByKey("root-dir") ==  expected_root
+    expected_root = unicode(os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData")) if \
+        sys.platform == "win32" else \
+        unicode(os.path.join("/", "var", "preveil"))
+    assert master.getConfigByKey("root-dir") == expected_root
     assert master.getConfigByKey("working-dir") == os.path.join(expected_root, "daemon", "modes", "test")
 
 
 def test_replica_init_config(requests_mock):
     master_port = 1234
     replica = ReplicaConfig()
-    assert replica.initialized == False
+    assert replica.initialized is False
 
     # mock requests
     requests_mock.register_uri(
@@ -106,6 +109,7 @@ def test_replica_init_config(requests_mock):
     replica.MAX_ATTEMPT_COUNT = 2
     with pytest.raises(ValueError):
         replica.initConfig(master_port=master_port)
+
 
 @pytest.mark.skip(reason="TODO")
 def test_master_replicas_integration():
