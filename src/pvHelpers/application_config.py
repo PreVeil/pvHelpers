@@ -5,7 +5,7 @@ import sys
 import time
 import types
 
-from pvHelpers.api_client import HTTP_TIMEOUT
+from pvHelpers.http_client import HTTP_TIMEOUT
 from pvHelpers.logger import g_log
 from pvHelpers.utils import get_mode_dir, params, read_yaml_config
 import requests

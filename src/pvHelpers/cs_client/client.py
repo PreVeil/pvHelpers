@@ -1,6 +1,7 @@
 import datetime
 import inspect
 
+from pvHelpers.http_client import SessionPool
 from pvHelpers.logger import g_log
 from pvHelpers.user import LocalUser
 import requests
@@ -13,7 +14,7 @@ from .v6 import APIClientV6
 from .v7 import APIClientV7
 
 
-class BackendClient(object):
+class CSClient(object):
     __api_versions__ = [
         (APIClientV5.__api_version__, APIClientV5),
         (APIClientV4.__api_version__, APIClientV4),
@@ -113,14 +114,18 @@ class BackendClient(object):
         v = self.client_versions
         return self._clients[v[len(v) - 1][0]]._prepare_public_request(*a, **kw)
 
-    def init(self, backend):
+    def init(self, url, session_pool=None, proxy_config=None, cert_bundler=None):
+        self.url = url
+        self.session_pool = session_pool or SessionPool()
+        self.proxy_config = proxy_config
+        self.cert_bundler = cert_bundler
+
         this = self
 
         class _ClientWrapper(object):
             def __init__(self, instance, wrapper):
                 self._c_instance = instance
-                self._c_methods = inspect.getmembers(
-                    self._c_instance, predicate=inspect.ismethod)
+                self._c_methods = inspect.getmembers(self._c_instance, predicate=inspect.ismethod)
 
                 # do not wrap `APIClient` inheritted internal methods, for `BACKED_CLIENT.Vx`
                 resource_methods = set(
@@ -142,7 +147,10 @@ class BackendClient(object):
         self._clients = {}
         methods = []
         for (version, klass) in self.client_versions:
-            self._clients[version] = klass(backend)
+            self._clients[version] = klass(
+                self.url, proxy_config=self.proxy_config,
+                cert_bundler=self.cert_bundler, session_pool=self.session_pool)
+
             c = _ClientWrapper(self._clients[version], self._handlers_wrapper)
             setattr(self, "V{}".format(version), c)
             methods = methods + c._c_methods
@@ -160,6 +168,3 @@ class BackendClient(object):
         if not self._current_client:
             raise RuntimeError(u"init not called")
         return self._current_client
-
-
-BACKEND_CLIENT = BackendClient()

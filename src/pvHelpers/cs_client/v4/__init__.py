@@ -1,4 +1,4 @@
-from pvHelpers.api_client import APIClient
+from pvHelpers.http_client import HTTPClient
 from pvHelpers.utils import b64enc, jdumps, utf8_encode
 
 from .admin import PVAdminV4
@@ -13,11 +13,8 @@ from .test import TestV4
 from .user import UserV4
 
 
-class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEventsV4, GroupV4, StorageV4, TestV4, APIClient):
+class APIClientV4(PublicV4, UserV4, MailV4, MailboxV4, OrgV4, PVAdminV4, UserEventsV4, GroupV4, StorageV4, TestV4, HTTPClient):
     __api_version__ = 4
-
-    def __init__(self, backend):
-        super(APIClientV4, self).__init__(backend)
 
     def _prepare_public_request(self, resource, method, body):
         url = self.url + resource

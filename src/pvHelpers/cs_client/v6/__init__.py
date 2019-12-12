@@ -4,6 +4,3 @@ from .admin import PVAdminV6
 
 class APIClientV6(PVAdminV6, APIClientV5):
     __api_version__ = 6
-
-    def __init__(self, backend):
-        super(APIClientV6, self).__init__(backend)
