@@ -5,5 +5,4 @@ dist/
 **/*.egg-info
 **/__pycache__
 **/*.pyc
-.vscode
 .DS_Store
