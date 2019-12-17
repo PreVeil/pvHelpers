@@ -3,7 +3,7 @@ import re
 import sys
 
 from pvHelpers.application_config import ApplicationConfig
-from pvHelpers.utils import rand_unicode, read_yaml_config
+from pvHelpers.utils import rand_unicode, read_yaml_file
 import pytest
 import requests
 
@@ -69,7 +69,7 @@ def test_master_init_config():
 
     assert master.initialized
 
-    confs = read_yaml_config(TEST_CONFIG_PATH)
+    confs = read_yaml_file(TEST_CONFIG_PATH)
     confs = confs["test"]
     for k in set(master.config_keys) - set(["mode", "working-dir", "root-dir"]):
         assert confs[k] == master.get_config_by_key(k)

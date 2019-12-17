@@ -64,7 +64,7 @@ def resolve_preveil_mode(mode_file_path):
     return True, u"dev"
 
 
-def read_yaml_config(path):
+def read_yaml_file(path):
     with open(path, u"r") as f:
         y = yaml.load(f.read())
     return y
@@ -155,17 +155,6 @@ def jdumps(data, ensure_ascii=False):
 @params(unicode)
 def jloads(data):
     return simplejson.loads(data)
-
-
-def jload(fp):
-    if not isinstance(fp, file):
-        return False, None
-
-    try:
-        return True, simplejson.load(fp)
-    except (simplejson.JSONDecodeError, UnicodeDecodeError, UnicodeEncodeError,
-            ValueError):
-        return False, None
 
 
 def get_temp_file_path(mode_dir):
@@ -300,11 +289,11 @@ def temp_dir(mode_dir):
 # owner:group
 #
 # This function tries to provide the following guarentee, if a process returns
-# successfully from init_daemon_data_dirs(), /var/preveil/* is available to it with the
+# successfully from init_daemons_data_dirs(), /var/preveil/* is available to it with the
 # correct owner:group.  This guarentee is easier to provide if all processes
 # only create these directories (or change their permissions) with this
 # function.
-def init_daemon_data_dirs(wd, mode, is_test=False):
+def init_daemons_data_dirs(wd, mode, is_test=False):
     if sys.platform in ["darwin", "linux2"]:
         mask = os.umask(0o777)
         os.umask(mask)

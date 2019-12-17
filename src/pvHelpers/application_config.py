@@ -7,7 +7,7 @@ import types
 
 from pvHelpers.http_client import HTTP_TIMEOUT
 from pvHelpers.logger import g_log
-from pvHelpers.utils import get_mode_dir, params, read_yaml_config
+from pvHelpers.utils import get_mode_dir, params, read_yaml_file
 import requests
 from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
 
@@ -49,7 +49,7 @@ class ApplicationConfig(object):
         if mode:
             if not config_file:
                 raise ValueError(u"missing config file")
-            confs = read_yaml_config(config_file)
+            confs = read_yaml_file(config_file)
 
             if mode not in confs:
                 raise ValueError("config file missing mode {}".format(mode))
