@@ -1,14 +1,18 @@
-
 import os
 import sys
 import re
 import subprocess
+import ssl           
+import certifi
+import codecs
 
 class CertificateBundle(object):
+    def __init__(self, path): 
+        self.path = path
+    
     def get_pems_win(store_names=None):
         certs = []
         try:
-            import ssl
             ssl_context = ssl.create_default_context()
             ssl_context.load_default_certs()
             for der_cert in ssl_context.get_ca_certs(binary_form=True):
@@ -32,11 +36,9 @@ class CertificateBundle(object):
                             certs.append(pem_entry)
         return certs
 
-
     def get_pems_osx(self):
         certs = []
         try:
-            import ssl
             ssl_context = ssl.create_default_context()
             ssl_context.load_default_certs()
             for der_cert in ssl_context.get_ca_certs(binary_form=True):
@@ -44,20 +46,18 @@ class CertificateBundle(object):
             process = subprocess.Popen(["/usr/bin/security", "find-certificate", "-ap"], stdout=subprocess.PIPE)
             stdoutdata, stderrdata = process.communicate()
             certs.append(stdoutdata)
-        except:
-            pass
+        except Exception as e:
+            raise e
         return certs
             
-    def add_certifi_pem(self, path):
-        import certifi
-        certifi_pem = os.path.join(os.path.split(certifi.__file__)[0], 'cacert.pem')
-        if not os.path.exists(certifi_pem):
+    def get_certifi_pem(self):
+        certifi_pem_path = os.path.join(os.path.split(certifi.__file__)[0], 'cacert.pem')
+        if not os.path.exists(certifi_pem_path):
             raise ValueError('Cannot find certifi cacert.pem')
-        import shutil
-        shutil.copy(certifi_pem, path)
+        with open(certifi_pem_path) as f: 
+            return f.read()
 
-
-    def create_pem_path(self, path):
+    def create_pem_path(self):
         if sys.platform == 'win32':
             import ctypes
             from ctypes import wintypes
@@ -84,44 +84,43 @@ class CertificateBundle(object):
             handle = _CreateMutex(None, False, b'global_certifi_win32')
             _WaitForSingleObject(handle, INFINITE)
 
-        if not os.path.exists(path):
-            os.makedirs(os.path.dirname(path))
+        if not os.path.exists(self.path):
+            os.makedirs(os.path.dirname(self.path))
             if sys.platform == 'win32':
                 # For each directory in the path (except the root), make sure it is traversable
                 # by any local user. Otherwise the PEM file cannot be read.
-                p = os.path.abspath(os.path.dirname(path))
+                p = os.path.abspath(os.path.dirname(self.path))
                 while not re.compile("^\w:\\\\$").match(p):
                     make_world_readable(p, True)
                     p, _ = os.path.split(p)
             elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
                 # be careful not change anything else beyond the ancestors of cacert.pem
-                pem_path_splits = path.split(os.sep)
+                pem_path_splits = self.path.split(os.sep)
                 for i in range(len(pem_path_splits)-2):
                     p = os.sep.join(pem_path_splits[0:len(pem_path_splits)-i])
                     os.chmod(p, 0755)
 
-    def generate_pem(self, path):
-        self.create_pem_path(path)
-        self.add_certifi_pem(path)
+    def generate_pem(self):
         certs = []
+        self.create_pem_path()
+        certs.append(self.get_certifi_pem())
         if sys.platform == 'win32':
-            certs = self.add_pems_win()
+            certs += self.add_pems_win()
         else: 
-            certs = self.get_pems_osx()    
-        self.save(certs, path)
-
-        
+            certs += self.get_pems_osx()
+        self.save(certs, self.path)
+     
     def save(self, certs, path):
-        import codecs
         with codecs.open(path, 'a', 'utf-8') as f:
             for pem in certs:
                 f.write(pem)
-           
         if sys.platform == 'win32':
             _ReleaseMutex(handle)
             _CloseHandle(handle)
             make_world_readable(path, False)
 
+    def where(self): 
+        return self.path
 
     def make_world_readable(fs_object, is_dir):
         try:
@@ -142,15 +141,4 @@ class CertificateBundle(object):
             sd.SetSecurityDescriptorDacl(1, dacl, 0)
             win32security.SetFileSecurity(fs_object, win32security.DACL_SECURITY_INFORMATION, sd)
         except Exception as e:
-            print(sys.stderr, 'Failed to set permissions on %s: %s', fs_object, e)
-
-PEMPATH = ""
-if sys.platform == 'win32':
-    PEM_PATH = unicode(os.path.join(os.getenv('SystemDrive') + '\\', 'PreVeilData', 'daemon', 'certifi', 'cacert.pem'))
-elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-    PEM_PATH = unicode(os.path.join('/var', 'preveil',
-                                'daemon', 'certifi', 'cacert.pem'))
-
-  
-a = CertificateBundle()
-CertificateBundle.generate_pem(a,PEM_PATH)
+            raise e
