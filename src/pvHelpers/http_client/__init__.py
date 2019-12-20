@@ -12,11 +12,11 @@ HTTP_TIMEOUT = 60
 
 
 class HTTPClient(object):
-    def __init__(self, url, default_headers=None, proxy_config=None, cert_bundler=None, session_pool=None):
+    def __init__(self, url, default_headers=None, proxy_config=None, cert_bundle=None, session_pool=None):
         self.url = url
         self.default_headers = default_headers or {}
         self.proxy_config = proxy_config
-        self.cert_bundler = cert_bundler
+        self.cert_bundle = cert_bundle
         self.session_pool = session_pool or SessionPool()
 
     @property
@@ -35,14 +35,14 @@ class HTTPClient(object):
             try:
                 return self.session.request(
                     method, url, headers=_headers, allow_redirects=False,
-                    verify=self.cert_bundler.where() if self.cert_bundler else None,
+                    verify=self.cert_bundle.where() if self.cert_bundle else None,
                     proxies=proxies[0], **kwargs)
             except (requests.exceptions.SSLError, requests.exceptions.InvalidProxyURL) as e:
                 g_log.info("Using proxies {}".format(proxies[0]))
                 g_log.exception(e)
                 # refresh the cert bundle for possible addition of new certs
-                if isinstance(e, requests.exceptions.SSLError) and self.cert_bundler:
-                    self.cert_bundler.generate_pem()
+                if isinstance(e, requests.exceptions.SSLError) and self.cert_bundle:
+                    self.cert_bundle.generate_and_write_pem()
 
                 proxies = proxies[1:]
 
@@ -52,7 +52,7 @@ class HTTPClient(object):
 
         return self.session.request(
             method, url, headers=_headers, allow_redirects=False,
-            verify=self.cert_bundler.where() if self.cert_bundler else None,
+            verify=self.cert_bundle.where() if self.cert_bundle else None,
             **kwargs)
 
     def get(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):

@@ -664,3 +664,20 @@ def run_windows_process_as_current_user(command):
         win32api.CloseHandle(thread_handle)
         win32api.CloseHandle(process_handle)
         win32api.CloseHandle(user_token)
+
+def make_world_readable(fs_object, is_dir):
+    import ntsecuritycon as ntfs
+
+    # Standard Python functions like os.chmod() don't really work with Windows. So if we want
+    # files or directories to be accessible for all users, we need to explicitly add an ACL
+    # for the "Users" group.
+    users, _, _ = ws.LookupAccountName('', 'USERS')
+    sd = ws.GetFileSecurity(fs_object, ws.DACL_SECURITY_INFORMATION)
+    dacl = sd.GetSecurityDescriptorDacl()
+    if is_dir:
+        perms = ntfs.FILE_TRAVERSE | ntfs.FILE_LIST_DIRECTORY
+    else:
+        perms = ntfs.FILE_GENERIC_READ
+    dacl.AddAccessAllowedAce(ws.ACL_REVISION, perms, users)
+    sd.SetSecurityDescriptorDacl(1, dacl, 0)
+    ws.SetFileSecurity(fs_object, ws.DACL_SECURITY_INFORMATION, sd)

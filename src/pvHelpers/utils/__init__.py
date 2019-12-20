@@ -1,4 +1,4 @@
-from .cert_bundler import CertBundler
+from .certificate_bundle import CertificateBundle
 from .hook_decorators import DoAfter, DoBefore, WrapExceptions
 from .misc import *
 from .params import params

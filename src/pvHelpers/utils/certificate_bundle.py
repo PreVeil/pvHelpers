@@ -6,8 +6,7 @@ import subprocess
 import sys
 
 import certifi
-
-from .misc import g_log
+from pvHelpers.logger import g_log
 
 
 class CertificateBundle(object):

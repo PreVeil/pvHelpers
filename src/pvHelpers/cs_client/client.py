@@ -114,11 +114,11 @@ class CSClient(object):
         v = self.client_versions
         return self._clients[v[len(v) - 1][0]]._prepare_public_request(*a, **kw)
 
-    def init(self, url, session_pool=None, proxy_config=None, cert_bundler=None):
+    def init(self, url, session_pool=None, proxy_config=None, cert_bundle=None):
         self.url = url
         self.session_pool = session_pool or SessionPool()
         self.proxy_config = proxy_config
-        self.cert_bundler = cert_bundler
+        self.cert_bundle = cert_bundle
 
         this = self
 
@@ -149,7 +149,7 @@ class CSClient(object):
         for (version, klass) in self.client_versions:
             self._clients[version] = klass(
                 self.url, proxy_config=self.proxy_config,
-                cert_bundler=self.cert_bundler, session_pool=self.session_pool)
+                cert_bundle=self.cert_bundle, session_pool=self.session_pool)
 
             c = _ClientWrapper(self._clients[version], self._handlers_wrapper)
             setattr(self, "V{}".format(version), c)
