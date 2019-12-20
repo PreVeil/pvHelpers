@@ -597,9 +597,9 @@ class WinPopen(subprocess.Popen):
 
 
 def list_active_sessions():
-    # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation. 
+    # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation.
     return filter(
-        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0, 
+        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0,
         win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
     )
 
@@ -617,7 +617,7 @@ def runWindowsProcessAsCurrentUser(command):
             console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
             # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
             session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
-        
+
         user_token = win32ts.WTSQueryUserToken(session_id)
 
         startupinfo = win32process.STARTUPINFO()
@@ -667,3 +667,22 @@ def runWindowsProcessAsCurrentUser(command):
         win32api.CloseHandle(thread_handle)
         win32api.CloseHandle(process_handle)
         win32api.CloseHandle(user_token)
+
+
+def make_world_readable(fs_object, is_dir):
+    import win32security
+    import ntsecuritycon as ntfs
+
+    # Standard Python functions like os.chmod() don't really work with Windows. So if we want
+    # files or directories to be accessible for all users, we need to explicitly add an ACL
+    # for the "Users" group.
+    users, _, _ = win32security.LookupAccountName('', 'USERS')
+    sd = win32security.GetFileSecurity(fs_object, win32security.DACL_SECURITY_INFORMATION)
+    dacl = sd.GetSecurityDescriptorDacl()
+    if is_dir:
+        perms = ntfs.FILE_TRAVERSE | ntfs.FILE_LIST_DIRECTORY
+    else:
+        perms = ntfs.FILE_GENERIC_READ
+    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, perms, users)
+    sd.SetSecurityDescriptorDacl(1, dacl, 0)
+    win32security.SetFileSecurity(fs_object, win32security.DACL_SECURITY_INFORMATION, sd)
