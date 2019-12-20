@@ -1,1 +1,1 @@
-from .session import GetDBSession, DBRetryableErrors
+from .session import GetDBSession, DBRetryableErrors, DBException
