@@ -1,5 +1,7 @@
+import types
+
 from pvHelpers.mail.email import EmailHelpers
-from pvHelpers.utils import b64enc, jdumps, NotAssigned
+from pvHelpers.utils import b64enc, jdumps, NotAssigned, params
 
 
 class EmailFetch(object):
@@ -15,7 +17,6 @@ class EmailFetch(object):
         return emails_with_content["messages"]
 
     def fetch_paginated_threads(self, user_id, mailbox_id, limit, offset):
-        self.doUpdate([user_id])
         resp = self.put(
             u"{}/mail/{}".format(self.url, user_id), headers=self.__headers__,
             raw_body=jdumps([{"id": mailbox_id, "offset": offset, "limit": limit}])
@@ -38,7 +39,6 @@ class EmailFetch(object):
         assert all([id_ in data.keys() for id_ in server_ids])
         if trash_src:
             assert all("email_update" in i for i in data.values())
-        self.doUpdate([user_id])
         return data
 
 
@@ -51,16 +51,15 @@ class EmailSend(object):
         resp.raise_for_status()
         data = resp.json()
         assert server_id in data.keys()
-        self.doUpdate([user_id])
         return data
 
-    def send_smtp_email(self, protocol_version, sender_id, tos, raw_msg):
+    @params(object, unicode, [unicode], str, {types.NoneType, int})
+    def send_smtp_email(self, sender_id, tos, raw_msg, protocol_version=None):
         resp = self.put(
             u"{}/put/account/{}/message/smtp".format(self.url, sender_id), headers=self.__headers__,
             raw_body=jdumps({"tos": tos, "raw_msg": b64enc(raw_msg), "protocol_version": protocol_version})
         )
         resp.raise_for_status()
-        self.doUpdate([sender_id] + tos)
         return resp.json()
 
     def append_imap_email(self, protocol_version, user_id, mailbox_id, flags, raw_msg):
@@ -72,7 +71,6 @@ class EmailSend(object):
             })
         )
         resp.raise_for_status()
-        self.doUpdate([user_id])
         return resp.json()
 
     def send_email(self, protocol_version, sender, tos, ccs, bccs,

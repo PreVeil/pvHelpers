@@ -6,7 +6,7 @@ import requests
 # the user's netrc file. The netrc file overrides raw HTTP authentication
 # headers set with headers=.
 # Use NOOPAuth to avoid the slow read from the netrc file.
-class _NOOPAuth(requests.auth.AuthBase):
+class NOOPAuth(requests.auth.AuthBase):
     def __call__(self, r):
         return r
 
@@ -21,5 +21,5 @@ class SessionPool(object):
             if len(session_cache) > 1000:
                 session_cache.clear()
             session_cache[backend] = requests.Session()
-            session_cache[backend].auth = _NOOPAuth()
+            session_cache[backend].auth = NOOPAuth()
         return session_cache[backend]

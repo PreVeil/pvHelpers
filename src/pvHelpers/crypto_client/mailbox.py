@@ -11,7 +11,6 @@ class Mailbox(object):
         data = resp.json()
         assert len(data) == 1
         m = data.values()[0]
-        self.doUpdate([user_id])
         return m["server_id"]
 
     def delete_mailbox(self, user_id, server_id):

@@ -37,3 +37,11 @@ class Device(object):
         )
         resp.raise_for_status()
         return resp.json()
+
+    def refresh_user_device_key(self, user_id):
+        resp = self.put(
+            u"{}/user/{}/device/refresh".format(self.url, user_id),
+            headers=self.__headers__)
+
+        resp.raise_for_status()
+        return resp.json()

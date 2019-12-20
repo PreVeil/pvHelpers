@@ -52,7 +52,8 @@ class OrgV4(object):
         resp.raise_for_status()
         return resp.json()
 
-    @params(object, LocalUser, unicode, list)
+    @params(object, LocalUser, unicode,
+            [{"department": unicode, "role": unicode, "display_name": unicode, "user_id": unicode}])
     def add_org_members(self, user, org_id, new_members):
         url, raw_body, headers = self.prepare_signed_request(
             user, u"/users/orgs/{}/members".format(org_id), "POST", {

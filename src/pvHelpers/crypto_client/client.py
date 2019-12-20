@@ -11,5 +11,5 @@ from .user import User
 class CryptoClient(Test, User, EmailSend, EmailFetch, Device, Organization, Mailbox, HTTPClient):
     __headers__ = {"Content-Type": "application/json"}
 
-    def __init__(self, url):
-        super(CryptoClient, self).__init__(url)
+    def __init__(self, url, session_pool=None):
+        super(CryptoClient, self).__init__(url, session_pool=session_pool)

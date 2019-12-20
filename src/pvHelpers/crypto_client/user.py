@@ -188,3 +188,15 @@ class User(object):
         )
         resp.raise_for_status()
         return resp.json()
+
+    def handle_user_event(self, user_id, event_id, requester_id, requester_key_version, signature, payload):
+        resp = self.put(
+            u"{}/put/crypto/user/{}/event/{}".format(self.url, user_id, event_id),
+            headers=self.__headers__, raw_body=jdumps({
+                "requester_id": requester_id,
+                "requester_key_version": requester_key_version,
+                "signature": signature,
+                "payload": payload
+            }))
+        resp.raise_for_status()
+        return resp.json()

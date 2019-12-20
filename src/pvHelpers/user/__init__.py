@@ -1,4 +1,4 @@
-from .device import Device, DeviceStatus
+from .device import Device, DeviceStatus, CURRENT_PLATFORM
 from .local_device import LocalDevice
 from .local_user import LocalUser, OrganizationInfo
 from .luser_info import *

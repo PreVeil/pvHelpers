@@ -160,7 +160,7 @@ class UserV4(object):
 
     @params(object, LocalUser, unicode, PublicUserKeyBase, unicode, str, int)
     def grant_group_key_to_user(self, user, recipient_id, recipient_public_key, group_id, group_key, group_key_version):
-        g_log.info("grantGroupKeyToUser: {} granting to {} ".format(user.user_id, recipient_id))
+        g_log.info("{} granting to {} ".format(user.user_id, recipient_id))
         wrapped_group_key = b64enc(recipient_public_key.public_key.seal(group_key))
 
         to_hash_group_key = b64dec(wrapped_group_key)
@@ -192,7 +192,7 @@ class UserV4(object):
     @params(object, LocalUser, unicode, unicode, int, unicode, unicode, int)
     def grant_wrapped_key_to_group(self, user, collection_id, wrapped_key,
                                    key_version, role, group_id, group_key_version):
-        g_log.info("grantWrappedKeyToGroup: {} granting to {}".format(user.user_id, group_id))
+        g_log.info("{} granting to {}".format(user.user_id, group_id))
         to_hash_key_for_group = b64dec(wrapped_key)
         hashed_wrapped_key = sha_256_sum(to_hash_key_for_group)
 
