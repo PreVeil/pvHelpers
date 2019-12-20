@@ -12,7 +12,7 @@ from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
 if "win32" == sys.platform:
     import io
     import tempfile
-    from pvHelpers.win_helpers import runWindowsProcessAsCurrentUser
+    from pvHelpers.utils.win_helpers import runWindowsProcessAsCurrentUser
 
 
 def parse_os_proxy_config(scutil_proxy_conf):

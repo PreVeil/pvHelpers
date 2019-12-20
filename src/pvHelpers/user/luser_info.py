@@ -5,7 +5,7 @@ from pvHelpers.utils import (EncodingException, jdumps, jloads,
                              NotAssigned, to_int)
 
 if sys.platform in ["win32"]:
-    from pvHelpers.win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
+    from pvHelpers.utils.win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
 
 
 class LUserInfo(object):
