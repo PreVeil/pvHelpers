@@ -54,4 +54,6 @@ def test_generate_pem():
     with open(cert_path) as f:
         assert f.read() == certifi_pem + os_pem
 
-    # TODO: assert proper file permissions
+    assert os.access(cert_path, os.R_OK) == True
+    assert os.access(cert_path, os.X_OK) == True
+    assert os.access(cert_path, os.W_OK) == True

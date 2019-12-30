@@ -94,7 +94,7 @@ class CertificateBundle(object):
     def generate_and_write_pem(self):
         if not os.path.exists(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))
-
+        f = open(self.path,"w+")
         certs = [self.get_certifi_pem()]
         if sys.platform == 'win32':
             certs += CertificateBundle.get_pems_win()
