@@ -11,7 +11,9 @@ from .misc import g_log
 
 
 class CertificateBundle(object):
-    def __init__(self, path):
+    path = None
+
+    def __init__(self, path=None):
         self.path = path
 
     @staticmethod
@@ -89,23 +91,24 @@ class CertificateBundle(object):
                 p = os.sep.join(pem_path_splits[0:len(pem_path_splits)-i])
                 os.chmod(p, 0755)
 
-            # need to make proper perms for self.path ?
-
     def generate_and_write_pem(self):
         if not os.path.exists(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))
         f = open(self.path,"w+")
         certs = [self.get_certifi_pem()]
         if sys.platform == 'win32':
-            certs += CertificateBundle.get_pems_win()
+            certs += self.get_pems_win()
         else:
-            certs += CertificateBundle.get_pems_darwin()
+            certs += self.get_pems_darwin()
 
         with codecs.open(self.path, 'w', 'utf-8') as f:
             for pem in certs:
                 f.write(pem)
 
         self.set_permissions()
+
+    def set_path(self, value) :
+        self.path = value
 
     def where(self):
         return self.path
