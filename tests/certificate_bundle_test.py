@@ -1,6 +1,6 @@
 import os
 import sys
-
+import stat
 import mock
 from pvHelpers import CertificateBundle
 
@@ -57,3 +57,6 @@ def test_generate_pem():
     assert os.access(cert_path, os.R_OK) == True
     assert os.access(cert_path, os.X_OK) == True
     assert os.access(cert_path, os.W_OK) == True
+
+    expected_mode = int("755", 8)
+    assert stat.S_IMODE(os.stat(cert_path).st_mode) == expected_mode
