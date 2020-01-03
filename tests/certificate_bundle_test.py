@@ -3,7 +3,24 @@ import sys
 import stat
 import mock
 from pvHelpers import CertificateBundle
+import wmi
 
+#https://stackoverflow.com/questions/34698927/python-get-windows-folder-acl-permissions
+def check_user_read_permission(path):
+    WQL_LFSS = 'SELECT * FROM Win32_LogicalFileSecuritySetting WHERE path="%s"'
+    wmi_ns = wmi.WMI()
+    lfss = wmi_ns.query(WQL_LFSS % (path,))[0]
+    sd = lfss.GetSecurityDescriptor()[0]
+    for entry in sd.DACL:
+        trustee = entry.Trustee.Name
+        if trustee and entry.Trustee.Domain and trustee == 'Users':
+            mask = entry.AccessMask
+            if mask < 0:
+                mask += 2 ** 32
+            # Permissions are recorded in the ACE as numbers, Read = 1179785
+            if mask == 1179785:
+                return True
+    return False
 
 def test_generate_pem():
     cert_path = os.path.join(os.environ['TMPDIR'], 'cacert.pem')
@@ -58,5 +75,8 @@ def test_generate_pem():
     assert os.access(cert_path, os.X_OK) == True
     assert os.access(cert_path, os.W_OK) == True
 
-    expected_mode = int("755", 8)
-    assert stat.S_IMODE(os.stat(cert_path).st_mode) == expected_mode
+    if sys.platform == 'win32':
+        assert check_user_read_permission(cert_path) == True
+    else:
+        expected_mode = int("755", 8)
+        assert stat.S_IMODE(os.stat(cert_path).st_mode) == expected_mode
