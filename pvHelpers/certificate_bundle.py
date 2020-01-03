@@ -11,9 +11,7 @@ from .misc import g_log
 
 
 class CertificateBundle(object):
-    path = None
-
-    def __init__(self, path=None):
+    def __init__(self, path):
         self.path = path
 
     @staticmethod
@@ -55,6 +53,8 @@ class CertificateBundle(object):
             g_log.exception(e)
 
         try:
+            # /usr/bin/security is owned by root. We use that to make sure find-certificate command is not a tampered version.
+            # '/usr/bin/security default-keychain' shows keychains that find-certificate. This should include login and System Keychains.
             process = subprocess.Popen(['/usr/bin/security', 'find-certificate', '-ap'], stdout=subprocess.PIPE)
             stdoutdata, _ = process.communicate()
         except Exception as e:
@@ -106,9 +106,6 @@ class CertificateBundle(object):
                 f.write(pem)
 
         self.set_permissions()
-
-    def set_path(self, value) :
-        self.path = value
 
     def where(self):
         return self.path
