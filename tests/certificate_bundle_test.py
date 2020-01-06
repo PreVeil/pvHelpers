@@ -3,10 +3,10 @@ import sys
 import stat
 import mock
 from pvHelpers import CertificateBundle
-import wmi
 
 #https://stackoverflow.com/questions/34698927/python-get-windows-folder-acl-permissions
 def check_user_read_permission(path):
+    import wmi
     WQL_LFSS = 'SELECT * FROM Win32_LogicalFileSecuritySetting WHERE path="%s"'
     wmi_ns = wmi.WMI()
     lfss = wmi_ns.query(WQL_LFSS % (path,))[0]
