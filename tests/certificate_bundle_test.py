@@ -55,14 +55,14 @@ def test_generate_pem():
         -----END CERTIFICATE-----
     '''
 
-    CertificateBundle.get_certifi_pem = mock.Mock(return_value=certifi_pem)
+    crt_bundle = CertificateBundle(cert_path) 
+    crt_bundle.get_certifi_pem = mock.Mock(return_value=certifi_pem)
 
     if sys.platform == 'win32':
-        CertificateBundle.get_pems_win = mock.Mock(return_value=os_pem)
+        crt_bundle.get_pems_win = mock.Mock(return_value=os_pem)
     else:
-        CertificateBundle.get_pems_darwin = mock.Mock(return_value=os_pem)
+        crt_bundle.get_pems_darwin = mock.Mock(return_value=os_pem)
 
-    crt_bundle = CertificateBundle(cert_path)
     assert crt_bundle.where() == cert_path
 
     crt_bundle.generate_and_write_pem()
