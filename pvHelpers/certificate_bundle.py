@@ -15,43 +15,29 @@ class CertificateBundle(object):
         self.path = path
 
     @staticmethod
-    def get_pems_win(store_names=('CA', 'ROOT')):
+    def get_pems_win(store_names=['CA']):
         certs = []
-        try:
-            ssl_context = ssl.create_default_context()
-            ssl_context.load_default_certs()
-            for der_cert in ssl_context.get_ca_certs(binary_form=True):
-                certs.append(ssl.DER_cert_to_PEM_cert(der_cert))
-        except AttributeError:
-            import wincertstore
-            for store_name in store_names:
-                with wincertstore.CertSystemStore(store_name) as store:
-                    for cert in store.itercerts(usage=wincertstore.SERVER_AUTH):
-                        try:
-                            pem = cert.get_pem()
-                            pem_entry = '# Label: \'{name}\'\n{pem}'.format(
-                                name=cert.get_name(),
-                                pem=pem.decode('ascii') if isinstance(pem, bytes) else pem
-                            )
-                        except UnicodeEncodeError as e:
-                            g_log.exception(e)
-                            pem_entry = ''
+        import wincertstore
+        for store_name in store_names:
+            with wincertstore.CertSystemStore(store_name) as store:
+                for cert in store.itercerts(usage=wincertstore.SERVER_AUTH):
+                    try:
+                        pem = cert.get_pem()
+                        pem_entry = '# Label: \'{name}\'\n{pem}'.format(
+                            name=cert.get_name(),
+                            pem=pem.decode('ascii') if isinstance(pem, bytes) else pem
+                        )
+                    except UnicodeEncodeError as e:
+                        g_log.exception(e)
+                        pem_entry = ''
 
-                        certs.append(pem_entry)
+                    certs.append(pem_entry)
 
         return certs
 
     @staticmethod
     def get_pems_darwin():
         certs = []
-        try:
-            ssl_context = ssl.create_default_context()
-            ssl_context.load_default_certs()
-            for der_cert in ssl_context.get_ca_certs(binary_form=True):
-                certs.append(ssl.DER_cert_to_PEM_cert(der_cert))
-        except Exception as e:
-            g_log.exception(e)
-
         try:
             # /usr/bin/security is owned by root. We use that to make sure find-certificate command is not a tampered version.
             # '/usr/bin/security default-keychain' shows keychains that find-certificate. This should include login and System Keychains.
@@ -65,7 +51,7 @@ class CertificateBundle(object):
         return certs
 
     def get_certifi_pem(self):
-        certifi_pem_path = os.path.join(os.path.split(certifi.__file__)[0], 'cacert.pem')
+        certifi_pem_path = certifi.where()
         if not os.path.exists(certifi_pem_path):
             raise ValueError('Cannot find certifi cacert.pem')
         with open(certifi_pem_path) as f:

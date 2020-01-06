@@ -71,12 +71,28 @@ def test_generate_pem():
     with open(cert_path) as f:
         assert f.read() == certifi_pem + os_pem
 
-    assert os.access(cert_path, os.R_OK) == True
-    assert os.access(cert_path, os.X_OK) == True
-    assert os.access(cert_path, os.W_OK) == True
+
+def test_set_permissions():
+    path = os.path.join(os.environ['TMPDIR'], 'cacert.pem')
+    if os.path.exists(path):
+        os.remove(path)
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path))
+    f = open(path,"w+")
+    expected_mode = int("755", 8)
+    if sys.platform == 'win32':
+        assert check_user_read_permission(path) == False
+    else: 
+        assert stat.S_IMODE(os.stat(path).st_mode) != expected_mode
+
+    crt_bundle = CertificateBundle(path) 
+    crt_bundle.set_permissions()
 
     if sys.platform == 'win32':
-        assert check_user_read_permission(cert_path) == True
+        assert check_user_read_permission(path) == True
     else:
-        expected_mode = int("755", 8)
-        assert stat.S_IMODE(os.stat(cert_path).st_mode) == expected_mode
+        assert stat.S_IMODE(os.stat(path).st_mode) == expected_mode
+
+    assert os.access(path, os.R_OK) == True
+    assert os.access(path, os.X_OK) == True
+    assert os.access(path, os.W_OK) == True
