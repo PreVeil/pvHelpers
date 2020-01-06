@@ -9,7 +9,7 @@ install_requires = [
 ]
 
 if sys.platform == "win32":
-    install_requires += ["pywin32==220"]
+    install_requires += ["pywin32==220", "wincertstore=0.2"]
 
 setup(
     name="pvHelpers",

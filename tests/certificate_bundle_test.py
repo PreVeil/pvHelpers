@@ -68,11 +68,7 @@ def test_generate_pem():
 
 
 def test_set_permissions():
-    path = os.path.join(os.environ['TMPDIR'], 'cacert.pem')
-    if os.path.exists(path):
-        os.remove(path)
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    path = os.path.join(os.environ['TMPDIR'], 'test', 'test.pem')
     f = open(path,"w+")
     expected_mode = int("755", 8)
     if sys.platform == 'win32':
@@ -88,7 +84,3 @@ def test_set_permissions():
     else:
         assert stat.S_IMODE(os.stat(path).st_mode) == expected_mode
 
-    assert os.access(path, os.R_OK) == True
-    assert os.access(path, os.X_OK) == True
-    assert os.access(path, os.W_OK) == True
-test_set_permissions()
