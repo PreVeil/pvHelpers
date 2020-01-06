@@ -6,19 +6,14 @@ from pvHelpers import CertificateBundle
 
 #https://stackoverflow.com/questions/34698927/python-get-windows-folder-acl-permissions
 def check_user_read_permission(path):
-    import wmi
-    WQL_LFSS = 'SELECT * FROM Win32_LogicalFileSecuritySetting WHERE path="%s"'
-    wmi_ns = wmi.WMI()
-    lfss = wmi_ns.query(WQL_LFSS % (path,))[0]
-    sd = lfss.GetSecurityDescriptor()[0]
-    for entry in sd.DACL:
-        trustee = entry.Trustee.Name
-        if trustee and entry.Trustee.Domain and trustee == 'Users':
-            mask = entry.AccessMask
-            if mask < 0:
-                mask += 2 ** 32
-            # Permissions are recorded in the ACE as numbers, Read = 1179785
-            if mask == 1179785:
+    import ntsecuritycon
+    import win32security
+    users, _, _ = win32security.LookupAccountName('', 'USERS')
+    sd = win32security.GetFileSecurity(path, win32security.DACL_SECURITY_INFORMATION)
+    dacl = sd.GetSecurityDescriptorDacl()
+    for entry in dacl.GetExplicitEntriesFromAcl():
+        if entry["Trustee"]["Identifier"] == users:
+            if entry["AccessPermissions"] == ntsecuritycon.FILE_GENERIC_READ:
                 return True
     return False
 
@@ -96,3 +91,4 @@ def test_set_permissions():
     assert os.access(path, os.R_OK) == True
     assert os.access(path, os.X_OK) == True
     assert os.access(path, os.W_OK) == True
+test_set_permissions()
