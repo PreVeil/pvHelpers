@@ -6,9 +6,7 @@ import subprocess
 import certifi
 import pem
 import pytest
-
-from certifi_win32 import generate_pem
-
+from pvHelpers import CertificateBundle
 
 @pytest.mark.skipif(sys.platform != "win32", reason="win specific test")
 def test_fetch_cert_from_trust_root_cert_ca():
@@ -30,7 +28,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
         # import the self signed cert
         # to window's Trusted Root Certification Authorities
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-        cmd = "{} import-certificate -Filepath {} -CertStoreLocation cert:/LocalMachine/Root".format(
+        cmd = "{} import-certificate -Filepath {} -CertStoreLocation cert:/LocalMachine/CA".format(
             ps, capath)
 
         return _subprocess_run(cmd)
@@ -42,14 +40,8 @@ def test_fetch_cert_from_trust_root_cert_ca():
 
         return _subprocess_run(cmd)
 
-    def patch_certifi():
-        from certifi_win32.wrapt_certifi import apply_patches
-        from certifi_win32.wincerts import where
-        assert certifi.where() != original_where
-        assert certifi.where() == where()
-        assert certifi.where() == os.path.join(os.path.split(
-            certifi.__file__)[0], ".certifi", "cacert.pem")
-        patched_certs = pem.parse_file(certifi.where())
+    def patch_certifi(path):
+        patched_certs = pem.parse_file(path)
         assert len(patched_certs) > len(original_certs)
 
         # look for the self-signed cert
@@ -68,11 +60,14 @@ def test_fetch_cert_from_trust_root_cert_ca():
         H.getdir(__file__), "insecure.crt"))
 
     # 60 seconds timeout for cert to be found
+    path = os.path.join(os.environ['TMPDIR'], 'cacert2.pem')
+    crt = CertificateBundle(path)
+    crt.generate_and_write_pem()
     t = time.time()
     while time.time() - t < 60:
-        if patch_certifi():
+        if patch_certifi(crt.where()):
             remove_cert_root_store()
             return
         time.sleep(1)
-        generate_pem()
+        crt.generate_and_write_pem()
     pytest.fail("cert not found!")
