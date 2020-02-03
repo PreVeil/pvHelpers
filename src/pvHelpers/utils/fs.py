@@ -1,3 +1,4 @@
+import errno
 import os
 import random
 import sys
@@ -74,6 +75,14 @@ def quiet_mkdir(path):
         os.mkdir(path)
     except OSError:
         if not os.path.isdir(path):
+            raise
+
+
+def quiet_remove(path):
+    try:
+        os.remove(path)
+    except OSError, e:
+        if e.errno != errno.ENOENT:
             raise
 
 

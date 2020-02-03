@@ -4,7 +4,7 @@
 
 Recommended to install your dev environment within a fresh virtual environment.
 ```
-${envpip} install --no-cache-dir --no-index  --force-reinstall -r requirements.txt -r requirements_${osx/linux/win}.txt
+${envpip} install --no-cache-dir --no-index  --force-reinstall -r requirements.txt -r requirements_${darwin/linux/win}.txt
 ${envpip} install --no-index .
 ```
 

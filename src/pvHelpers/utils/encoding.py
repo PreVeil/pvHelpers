@@ -86,8 +86,9 @@ def to_int(data):
 
 
 @WrapExceptions(EncodingException, [UnicodeDecodeError, UnicodeEncodeError])
-def jdumps(data, ensure_ascii=False):
-    return simplejson.dumps(data, ensure_ascii=ensure_ascii)
+def jdumps(data, **kwargs):
+    kwargs.update({'ensure_ascii': kwargs.get('ensure_ascii', False)})
+    return simplejson.dumps(data, **kwargs)
 
 
 @WrapExceptions(EncodingException, [

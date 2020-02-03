@@ -21,13 +21,13 @@ class HTTPClient(object):
 
     @property
     def session(self):
-        return self.session_pool.get(self.backend)
+        return self.session_pool.get(self.url)
 
     def accept_version(self):
         return u"v{}".format(self.__api_version__)
 
-    def _request_common(self, method, url, headers, **kwargs):
-        _headers = merge_dicts(self.session.heaeders, headers)
+    def _request_common(self, method, url, **kwargs):
+        _headers = merge_dicts(self.default_headers, kwargs.get('headers', {}))
         proxies = self.proxy_config.get_proxies(url) if self.proxy_config is not None else []
 
         # Attempt relay through proxy
@@ -55,20 +55,20 @@ class HTTPClient(object):
             verify=self.cert_bundle.where() if self.cert_bundle else None,
             **kwargs)
 
-    def get(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
-        return self._request_common("GET", url, headers, data=raw_body, params=params, timeout=timeout, **kwargs)
+    def get(self, url, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("GET", url, data=raw_body, params=params, timeout=timeout, **kwargs)
 
-    def put(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
-        return self._request_common("PUT", url, headers, data=raw_body, params=params, timeout=timeout, **kwargs)
+    def put(self, url, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("PUT", url, data=raw_body, params=params, timeout=timeout, **kwargs)
 
-    def post(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
-        return self._request_common("POST", url, headers, data=raw_body, params=params, timeout=timeout, **kwargs)
+    def post(self, url, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("POST", url, data=raw_body, params=params, timeout=timeout, **kwargs)
 
-    def delete(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
-        return self._request_common("DELETE", url, headers, data=raw_body, params=params, timeout=timeout, **kwargs)
+    def delete(self, url, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("DELETE", url, data=raw_body, params=params, timeout=timeout, **kwargs)
 
-    def patch(self, url, headers, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
-        return self._request_common("PATCH", url, headers, data=raw_body, params=params, timeout=timeout, **kwargs)
+    def patch(self, url, raw_body=None, params=None, timeout=HTTP_TIMEOUT, **kwargs):
+        return self._request_common("PATCH", url, data=raw_body, params=params, timeout=timeout, **kwargs)
 
     def prepare_signed_request(self):
         raise NotImplementedError()

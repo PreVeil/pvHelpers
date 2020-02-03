@@ -8,7 +8,6 @@ class EmailFetch(object):
     def fetch_emails_with_content(self, user_id, server_ids, inlines_only=False):
         resp = self.put(
             u"{}/mail/thread/{}".format(self.url, user_id),
-            headers=self.__headers__,
             raw_body=jdumps({"unique_ids": server_ids, "inlines_only": False})
         )
         resp.raise_for_status()
@@ -18,7 +17,7 @@ class EmailFetch(object):
 
     def fetch_paginated_threads(self, user_id, mailbox_id, limit, offset):
         resp = self.put(
-            u"{}/mail/{}".format(self.url, user_id), headers=self.__headers__,
+            u"{}/mail/{}".format(self.url, user_id),
             raw_body=jdumps([{"id": mailbox_id, "offset": offset, "limit": limit}])
         )
         resp.raise_for_status()
@@ -28,7 +27,7 @@ class EmailFetch(object):
 
     def copy_emails(self, user_id, src_mid, dest_mid, server_ids, trash_src):
         resp = self.put(
-            u"{}/post/account/{}/copy".format(self.url, user_id), headers=self.__headers__,
+            u"{}/post/account/{}/copy".format(self.url, user_id),
             raw_body=jdumps({
                 "email_ids": server_ids, "src_mailbox_id": src_mid,
                 "dest_mailbox_id": dest_mid, "trash_source": trash_src
@@ -45,7 +44,7 @@ class EmailFetch(object):
 class EmailSend(object):
     def delete_email(self, user_id, server_id):
         resp = self.put(
-            u"{}/delete/account/{}/emails/".format(self.url, user_id), headers=self.__headers__,
+            u"{}/delete/account/{}/emails/".format(self.url, user_id),
             raw_body=jdumps({"emails": [server_id]})
         )
         resp.raise_for_status()
@@ -56,7 +55,7 @@ class EmailSend(object):
     @params(object, unicode, [unicode], str, {types.NoneType, int})
     def send_smtp_email(self, sender_id, tos, raw_msg, protocol_version=None):
         resp = self.put(
-            u"{}/put/account/{}/message/smtp".format(self.url, sender_id), headers=self.__headers__,
+            u"{}/put/account/{}/message/smtp".format(self.url, sender_id),
             raw_body=jdumps({"tos": tos, "raw_msg": b64enc(raw_msg), "protocol_version": protocol_version})
         )
         resp.raise_for_status()
@@ -64,7 +63,7 @@ class EmailSend(object):
 
     def append_imap_email(self, protocol_version, user_id, mailbox_id, flags, raw_msg):
         resp = self.put(
-            u"{}/put/account/{}/message/imap".format(self.url, user_id), headers=self.__headers__,
+            u"{}/put/account/{}/message/imap".format(self.url, user_id),
             raw_body=jdumps({
                 "mailbox_id":  mailbox_id,
                 "flags": flags, "raw_msg": b64enc(raw_msg), "protocol_version": protocol_version
