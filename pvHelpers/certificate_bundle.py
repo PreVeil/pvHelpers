@@ -50,6 +50,14 @@ class CertificateBundle(object):
 
         return certs
 
+    @staticmethod
+    def get_pems_legacy():
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_default_certs()
+        for der_cert in ssl_context.get_ca_certs(binary_form=True):
+            yield(ssl.DER_cert_to_PEM_cert(der_cert))
+
     def get_certifi_pem(self):
         certifi_pem_path = certifi.where()
         if not os.path.exists(certifi_pem_path):
@@ -86,6 +94,9 @@ class CertificateBundle(object):
             certs += self.get_pems_win()
         else:
             certs += self.get_pems_darwin()
+
+        # For now we need to support some potentially incompatible network configurations
+        certs += self.get_pems_legacy()
 
         with codecs.open(self.path, 'w', 'utf-8') as f:
             for pem in certs:
