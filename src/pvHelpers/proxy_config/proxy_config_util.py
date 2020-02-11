@@ -12,7 +12,7 @@ from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
 if "win32" == sys.platform:
     import io
     import tempfile
-    from pvHelpers.utils.win_helpers import runWindowsProcessAsCurrentUser
+    from pvHelpers.utils.win_helpers import run_windows_process_as_current_user
 
 
 def parse_os_proxy_config(scutil_proxy_conf):
@@ -136,7 +136,7 @@ def get_os_proxies():
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
             ps, reg_internet_setting, temp_path)
 
-        status = runWindowsProcessAsCurrentUser(cmd.split(" "))
+        status = run_windows_process_as_current_user(cmd.split(" "))
         if not status:
             g_log.warn(u"Failed to fetch os proxy settings.")
             return False, None

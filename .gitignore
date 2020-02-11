@@ -1,6 +1,7 @@
 MANIFEST
 dist/
 .tox/
+.venv/
 .pytest_cache/
 **/*.egg-info
 **/__pycache__

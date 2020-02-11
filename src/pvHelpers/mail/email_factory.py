@@ -42,13 +42,15 @@ class EmailFactory(object):
         if server_id is None:  # An email not having server_id means it's a local email
             server_info = NotAssigned()
         else:
-            # NOTEX: fix collection nullable in daemon
+            # collection_id is only added later for single send
+            # therefore, for legacy email protocol version, it could be None.
+            collection_id = None if EmailHelpers.isLocalEmail(
+                server_id) else metadata.get("collection_id", None)
             server_info = ServerAttributes(
                 server_id, collection_id, revision_id, mailbox_server_id,
                 mailbox_name, version, uid, thread_id, server_time, expunged)
 
         flags = jloads(flags)
-        metadata = jloads(metadata)
         status, v = to_int(metadata.get("protocol_version"))
         if not status:
             raise EmailException(u"protocol_version must coerce to int")
