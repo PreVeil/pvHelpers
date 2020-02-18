@@ -38,10 +38,11 @@ sense:
 	@make
 
 clean:
-	rm -rf ./dist
-	rm -rf ./build
-	rm -rf ./.tox
-	rm -rf $(VENV)
+	@pwsh -Command "if(Test-Path ./dist){Remove-Item -Recurse -Force ./dist}"
+	@pwsh -Command "if(Test-Path ./build){Remove-Item -Recurse -Force ./build}"
+	@pwsh -Command "if(Test-Path ./.tox){Remove-Item -Recurse -Force ./.tox}"
+	@pwsh -Command "if(Test-Path $(VENV)){Remove-Item -Recurse -Force  $(VENV)}"
+
 
 $(VENV):
 	pip install virtualenv
