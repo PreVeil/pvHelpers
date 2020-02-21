@@ -64,7 +64,7 @@ def test_utf8_encoding():
     stdout_ = sys.stdout
     stream = cStringIO.StringIO()
     sys.stdout = stream
-    g_log.debug('Τη γλώσσα μου έδωσαν ελληνική')
+    g_log.debug("Τη γλώσσα μου έδωσαν ελληνική")
     sys.stdout = stdout_  # restore the previous stdout.
     msg = stream.getvalue()
 

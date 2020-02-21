@@ -16,7 +16,7 @@ class VerifyKeyV3(VerifyKeyBase):
     def __init__(self, key):
         super(VerifyKeyV3, self).__init__(self.protocol_version)
         if len(key) != CURVE25519_PUB_KEY_LENGTH + NISTP256_PUB_KEY_LENGTH:
-            raise CryptoException('invalid public `key` length {}'.format(len(key)))
+            raise CryptoException("invalid public `key` length {}".format(len(key)))
 
         self.curve25519_pub = key[:CURVE25519_PUB_KEY_LENGTH]
         self.p256_pub = key[CURVE25519_PUB_KEY_LENGTH:]
@@ -57,7 +57,7 @@ class SignKeyV3(SignKeyBase):
 
         else:
             if len(key) != 2 * EC_SECRET_LENGTH:
-                raise CryptoException('invalid `key` length {}'.format(len(key)))
+                raise CryptoException("invalid `key` length {}".format(len(key)))
 
             self._curve25519_secret = key[:EC_SECRET_LENGTH]
             curve25519_pub = FC.ec_key_to_public(

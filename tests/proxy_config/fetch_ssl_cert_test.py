@@ -27,7 +27,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
 
     def import_cert_root_store(capath):
         # import the self signed cert
-        # to window's Trusted Root Certification Authorities
+        # to window"s Trusted Root Certification Authorities
         ps = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
         cmd = "{} import-certificate -Filepath {} -CertStoreLocation cert:/LocalMachine/CA".format(
             ps, capath)
@@ -61,7 +61,7 @@ def test_fetch_cert_from_trust_root_cert_ca():
         get_dir(__file__), "insecure.crt"))
 
     # 60 seconds timeout for cert to be found
-    path = os.path.join(os.environ['TMPDIR'], 'cacert2.pem')
+    path = os.path.join(os.environ["TMPDIR"], "cacert2.pem")
     crt = CertificateBundle(path)
     crt.generate_and_write_pem()
     t = time.time()

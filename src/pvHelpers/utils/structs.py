@@ -91,7 +91,8 @@ class CaseInsensitiveDict(dict):
 
 # https://docs.python.org/dev/library/itertools.html#itertools-recipes
 def partition(pred, iterable):
-    'Use a predicate to partition entries into false entries and true entries'
+    """ Use a predicate to partition entries into false entries and true entries """
+
     # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
     t1, t2 = itertools.tee(iterable)
     return filter(pred, t2), filter(lambda x: not pred(x), t1)

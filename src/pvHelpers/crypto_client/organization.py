@@ -65,7 +65,7 @@ class Organization(object):
             raw_body=jdumps({
                 "name": group_name, "optionals_required": optionals_required,
                 "approvers": map(lambda a: {
-                    "user_id": a['user_id'],
+                    "user_id": a["user_id"],
                     "account_version": 0,  # this needs fixing!
                     "required": False
                 }, approvers)

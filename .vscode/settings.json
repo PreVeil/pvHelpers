@@ -3,6 +3,7 @@
     "editor.wordWrapColumn": 120,
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Path": "./.tox/flake8/bin/flake8",
-    "python.linting.pylintEnabled": false
+    "python.linting.flake8Path": ".tox/flake8/bin/flake8",
+    "python.linting.pylintEnabled": false,
+    "python.pythonPath": ".venv/bin/python2.7"
 }

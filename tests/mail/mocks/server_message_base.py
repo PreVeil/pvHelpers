@@ -24,7 +24,7 @@ class MockServerMessageBase(object):
         self.is_deleted = False
         self.references = []
         self.flags = []
-        self.timestamp = '2019-08-16T16:14:48'
+        self.timestamp = "2019-08-16T16:14:48"
 
     def to_dict(self):
         return {

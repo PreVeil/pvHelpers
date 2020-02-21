@@ -23,11 +23,11 @@ REPO := preveil/pvHelpers
 
 VENV = .venv
 PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
+PIP = $(VENV)/bin/python -m pip
 
 ifeq ($(OS), Windows_NT)
 PYTHON = $(VENV)/Scripts/python
-PIP = $(VENV)/Scripts/pip
+PIP = $(VENV)/Scripts/python -m pip
 endif
 
 

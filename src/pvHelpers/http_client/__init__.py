@@ -28,7 +28,9 @@ class HTTPClient(object):
 
     def _request_common(self, method, url, **kwargs):
         _headers = merge_dicts(self.default_headers, kwargs.get('headers', {}))
-        proxies = self.proxy_config.get_proxies(url) if self.proxy_config is not None else []
+        proxies = []
+        if self.proxy_config:
+            proxies = self.proxy_config.get_proxies(url) or []
 
         # Attempt relay through proxy
         while len(proxies) > 0:
