@@ -130,7 +130,7 @@ def get_os_proxies():
         # the current logic of running the process as current user
         # does not give us access to the process's stdout.
         # so need to write to a temp file first then read from it. :(
-        temp_path = os.path.join(tempfile.gettemp_dir(),
+        temp_path = os.path.join(tempfile.gettempdir(),
                                  rand_unicode(5) + ".txt")
 
         cmd = "{} Get-ItemProperty -Path '{}' >> {}".format(
