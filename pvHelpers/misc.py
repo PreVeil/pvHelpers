@@ -87,7 +87,7 @@ def readYAMLConfig(path):
 
     try:
         with open(path, u"r") as f:
-            c = yaml.load(f.read())
+            c = yaml.load(f.read(), Loader=yaml.FullLoader)
             return True, c
     except IOError:
         return False, None
