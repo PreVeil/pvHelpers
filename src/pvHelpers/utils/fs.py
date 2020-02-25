@@ -18,7 +18,7 @@ DATA_DIR_MODE = 0o750
 
 def read_yaml_file(path):
     with open(path, u"r") as f:
-        y = yaml.load(f.read())
+        y = yaml.load(f.read(), Loader=yaml.FullLoader)
     return y
 
 

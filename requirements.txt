@@ -1,6 +1,6 @@
 https://github.com/PreVeil/vendor/raw/master/python/six-1.10.0-py2.py3-none-any.whl
 https://github.com/PreVeil/vendor/raw/master/python/setuptools-40.8.0-py2.py3-none-any.whl
-https://github.com/PreVeil/vendor/raw/master/python/PyYAML-3.11.tar.gz
+https://github.com/PreVeil/vendor/raw/master/python/PyYAML-5.3.tar.gz
 https://github.com/PreVeil/vendor/raw/master/python/requests-2.20.1-py2.py3-none-any.whl
 https://github.com/PreVeil/vendor/raw/master/python/urllib3-1.24.1-py2.py3-none-any.whl
 https://github.com/PreVeil/vendor/raw/master/python/idna-2.7-py2.py3-none-any.whl
