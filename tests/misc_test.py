@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri, getdir
+from pvHelpers import CaseInsensitiveDict, randUnicode, parse_file_uri, getdir, print_wrapper
 
 
 def randomize_casing(key):
@@ -93,3 +93,24 @@ def test_parse_file_uri_scheme():
         required_download, uri = parse_file_uri(u)
         assert required_download
         assert uri == u
+
+
+def test_print_wrapper():
+    """
+        we mock a bad file descriptor by try printing to a readonly file.
+    """
+    temp = sys.stdout
+    f = open("log.txt", "a+")
+    f.close()
+
+    sys.stdout = open("log.txt", "r")
+
+    # no IOError exception raised
+    print_wrapper("testing123")
+    print_wrapper("another line")
+
+    with pytest.raises(IOError):
+        print "expect to failed"
+
+    sys.stdout.close()
+    sys.stdout = temp

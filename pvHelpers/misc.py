@@ -93,6 +93,13 @@ def readYAMLConfig(path):
         return False, None
 
 
+def print_wrapper(msg):
+    try:
+        print msg
+    except IOError:
+        return
+
+
 class _LogWrapper(object):
     def __init__(self):
         self.logobj = None
@@ -109,8 +116,7 @@ class _LogWrapper(object):
             if self.logobj is not None:
                 self.logobj.debug(" ".join([caller_info, "%s" % string]))
             else:
-                print "{} DEBUG: {} {}".format(self.__now(), caller_info,
-                                               string)
+                print_wrapper("{} DEBUG: {} {}".format(self.__now(), caller_info, string))
         finally:
             del curframe
             del calframe
@@ -124,8 +130,7 @@ class _LogWrapper(object):
             if self.logobj is not None:
                 self.logobj.info(" ".join([caller_info, "%s" % string]))
             else:
-                print "{} INFO: {} {}".format(self.__now(), caller_info,
-                                              string)
+                print_wrapper("{} INFO: {} {}".format(self.__now(), caller_info, string))
         finally:
             del curframe
             del calframe
@@ -139,8 +144,7 @@ class _LogWrapper(object):
             if self.logobj is not None:
                 self.logobj.warning(" ".join([caller_info, "%s" % string]))
             else:
-                print "{} WARN: {} {}".format(self.__now(), caller_info,
-                                              string)
+                print_wrapper("{} WARN: {} {}".format(self.__now(), caller_info, string))
         finally:
             del curframe
             del calframe
@@ -156,8 +160,7 @@ class _LogWrapper(object):
             if self.logobj is not None:
                 self.logobj.error(" ".join([caller_info, "%s" % string]))
             else:
-                print "{} ERROR: {} {}".format(self.__now(), caller_info,
-                                               string)
+                print_wrapper("{} ERROR: {} {}".format(self.__now(), caller_info, string))
         finally:
             del curframe
             del calframe
@@ -172,8 +175,7 @@ class _LogWrapper(object):
                 self.logobj.exception(" ".join([caller_info,
                                                 "%s" % exception]))
             else:
-                print "{} EXCEPTION: {} {}".format(self.__now(), caller_info,
-                                                   exception)
+                print_wrapper("{} EXCEPTION: {} {}".format(self.__now(), caller_info, exception))
         finally:
             del curframe
             del calframe
