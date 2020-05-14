@@ -6,11 +6,12 @@ from .params import params
 
 
 class OrganizationInfo(object):
-    def __init__(self, organiztion_id, organiztion_name, department_name, role):
-        self.org_id = organiztion_id
-        self.org_name = organiztion_name
+    def __init__(self, organization_id, organization_name, department_name, role, show_mua_prompt):
+        self.org_id = organization_id
+        self.org_name = organization_name
         self.dept_name = department_name
         self.role = role
+        self.show_mua_prompt = show_mua_prompt
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -25,7 +26,8 @@ class OrganizationInfo(object):
             "org_id": self.org_id,
             "org_name": self.org_name,
             "dept_name": self.dept_name,
-            "role": self.role
+            "role": self.role,
+            "show_mua_prompt": self.show_mua_prompt
         }
 
 
@@ -68,12 +70,12 @@ class UserDBNode(object):
 
 
 class UserData(object):
-    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organiztion_info):
+    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organization_info):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.public_user_keys = public_user_keys
-        self.org_info = organiztion_info
+        self.org_info = organization_info
 
     @property
     def public_user_key(self):
