@@ -23,5 +23,11 @@ ${envpip} install --no-index .
 
 ## How to create a new version of pvHelpers for daemon
 
-Everytime, we want to make changes to pvHelpers and use it in core, we need to do the following:
-1.
+1. Make the code changes to pvHelpers.
+2. Bump the semantic version of pvHelpers in setup.py appropriately according to the scope of the change from step 1.
+3. Compile the new pvHelpers using ```python setup.py sdist --format=gztar```
+4. Copy <path_to_pvHelpers_repo>/dist/pvHelpers-<major.minor.patch>.tar.gz to the python's folder of the vendor repo.
+5. Make use of the vendor's branch in daemon.
+6. Repeat step 1-5 if there are more changes.
+
+Note: for a quick dev work, we can also use ```pip install -e <path_to_pvHelpers_repo>``` to use a local version of pvHelpers.
