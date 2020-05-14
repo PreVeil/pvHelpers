@@ -6,7 +6,7 @@ from .params import params
 
 
 class OrganizationInfo(object):
-    def __init__(self, organization_id, organization_name, department_name, role, show_mua_prompt):
+    def __init__(self, organization_id, organization_name, department_name, role, show_mua_prompt = true):
         self.org_id = organization_id
         self.org_name = organization_name
         self.dept_name = department_name
