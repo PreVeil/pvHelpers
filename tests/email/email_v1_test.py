@@ -28,7 +28,7 @@ def create_email_v1(sender, tos, ccs, bccs, subject, text, html, attachments, in
             Attachment.fromFileStorage(_file, AttachmentMetadata(_file.filename, _file.content_type))
             for _file in attachments
         ], message_id, time, subject, tos, ccs, bccs, reply_tos, sender, in_reply_to, references)
-    return EmailV1.fromMime(raw_mime.to_string(), flags, sender)
+    return EmailV1.fromMime(raw_mime.to_string(), flags, overwrite_sender=sender)
 
 
 def test_from_mime():
@@ -51,7 +51,7 @@ def test_from_mime():
         a.to_string()
         root_mime.append(a)
     root_mime.headers["Message-Id"] = u"<{}>".format(EmailHelpers.newMessageId())
-    email = EmailV1.fromMime(root_mime.to_string(), [], {"user_id": u"s@b.com", "display_name": u"S B"})
+    email = EmailV1.fromMime(root_mime.to_string(), [], overwrite_sender={"user_id": u"s@b.com", "display_name": u"S B"})
 
     # check if the attachments have been all separated properly
     body_mime = mime.from_string(email.body.content)
