@@ -1,8 +1,10 @@
 # vim: set fileencoding=utf-8 :
 import os
 import StringIO
-from pvHelpers import EmailFactory, EmailHelpers, NOT_ASSIGNED, Content, Attachment, randUnicode, \
+from pvHelpers import EmailFactory, EmailHelpers, EmailException, EmailV4, NOT_ASSIGNED, Content, Attachment, randUnicode, \
     AttachmentType, PROTOCOL_VERSION, AttachmentMetadata
+import pytest
+from flanker import mime
 from werkzeug.datastructures import FileStorage
 
 
@@ -114,3 +116,52 @@ def test_to_mime():
     assert parts[6].content_type == "video/mp4"
     assert parts[7].content_type == "application/octet-stream"
     assert parts[8].content_type == "text/html"
+
+
+def test_from_header_overwrite():
+    raw_message = """Received: ConsoleMessageDelivery
+From: Original From <from@preveil.com>
+Content-Type: multipart/related; boundary="Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6"; type="text/plain"
+Subject: Test From Header
+Message-Id: <0A83DC22-971B-418B-BEBF-BA0046C34868@preveil.com>
+Date: Mon, 27 Jun 2016 10:43:03 -0400
+To: iOS Dev <ios@preveil.com>
+
+--Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6
+Content-Transfer-Encoding: base64
+Content-Disposition: dummy; filename="handle"
+Content-Type: dummy/dummy; name="handle"
+
+cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
+"""
+    message = mime.from_string(raw_message)
+
+    email = EmailV4.fromMime(message.to_string(), [])
+    assert email.sender["user_id"] == "from@preveil.com"
+    assert email.sender["display_name"] == "Original From"
+
+    email = EmailV4.fromMime(
+        message.to_string(), [], overwrite_sender={"user_id": u"ofrom@preveil.com", "display_name": u"Overwritten From"})
+    assert email.sender["user_id"] == "ofrom@preveil.com"
+    assert email.sender["display_name"] == "Overwritten From"
+
+    # Missing from should raise in instantiation
+    raw_message = """Received: ConsoleMessageDelivery
+Content-Type: multipart/related; boundary="Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6"; type="text/plain"
+Subject: Test From Header
+Message-Id: <0A83DC22-971B-418B-BEBF-BA0046C34868@preveil.com>
+Date: Mon, 27 Jun 2016 10:43:03 -0400
+To: iOS Dev <ios@preveil.com>
+
+--Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6
+Content-Transfer-Encoding: base64
+Content-Disposition: dummy; filename="handle"
+Content-Type: dummy/dummy; name="handle"
+
+cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
+"""
+    message = mime.from_string(raw_message)
+
+    with pytest.raises(EmailException):
+        email = EmailV4.fromMime(message.to_string(), [])
+    email = EmailV4.fromMime(message.to_string(), [], overwrite_sender={"user_id": u"xx", "display_name": u"xx"})

@@ -51,7 +51,7 @@ class EmailV1(EmailHelpers, EmailBase):
     def fromMime(cls, mime_string, flags, overwrite_sender=None):
         if not isinstance(mime_string, (str, bytes)):
             raise EmailException(u"mime_string must be of type str/bytes")
-        
+
         if overwrite_sender is not None:
             if not isinstance(overwrite_sender, dict):
                 raise EmailException(u"overwrite_sender must be of type dict")
@@ -62,9 +62,12 @@ class EmailV1(EmailHelpers, EmailBase):
             raw_mime = mime.create.from_string(mime_string)
 
             message_id = raw_mime.headers.get("Message-Id")
-            
+
             from_ = raw_mime.headers.get("From")
-            from_ = addresslib.address.parse_list(from_)
+            from_ = addresslib.address.parse(from_)
+            if (from_, overwrite_sender) == (None, None):
+                raise EmailException("either From header or overwrite_sender is expected")
+
             named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
             tos = raw_mime.headers.get("To")
             tos = addresslib.address.parse_list(tos)
