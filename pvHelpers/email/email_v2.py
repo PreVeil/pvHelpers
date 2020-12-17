@@ -6,6 +6,7 @@ from .parsers import createMime, parseMime
 from flanker import mime, addresslib
 from .content import Content
 
+ORIGINAL_DATE_HEADER_KEY = "X-PV-MIME-DATE"
 
 class EmailV2(EmailHelpers, EmailBase):
     """Production version: Protocol version 2 is json based email entity"""
@@ -70,6 +71,9 @@ class EmailV2(EmailHelpers, EmailBase):
         for key, value in self.other_headers.iteritems():
             raw_mime.headers[key] = value
 
+        if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
+            raw_mime.headers["Date"] = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
+
         return mime.from_string(raw_mime.to_string())
 
     # toBrowser is only to conform with browser expectations and can be removed
@@ -82,6 +86,7 @@ class EmailV2(EmailHelpers, EmailBase):
             o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
             o["mailbox_id"] = self.server_attr.mailbox_server_id
             o["date"] = email.utils.formatdate(self.server_attr.server_time)
+            # NEED TO overwrite DATE Header from X-PV-MIME-DATE VALUE HERE FOR LOCAL WEBPREVEIL
             o["rev_id"] = self.server_attr.revision_id
             o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["snippet"] = self.snippet()
@@ -200,11 +205,16 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
+
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
             if key.startswith("X-"):
                 # str(value)?
                 other_headers[key] = value
+
+        mime_date = raw_mime.headers.get("Date")
+        if mime_date:
+            other_headers[ORIGINAL_DATE_HEADER_KEY] = mime_date
 
         text, html, attachments = parseMime(raw_mime)
 

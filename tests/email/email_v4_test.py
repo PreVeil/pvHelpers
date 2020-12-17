@@ -118,7 +118,7 @@ def test_to_mime():
     assert parts[8].content_type == "text/html"
 
 
-def test_from_header_overwrite():
+def test_from_date_headers():
     raw_message = """Received: ConsoleMessageDelivery
 From: Original From <from@preveil.com>
 Content-Type: multipart/related; boundary="Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6"; type="text/plain"
@@ -145,12 +145,13 @@ cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
     assert email.sender["user_id"] == "ofrom@preveil.com"
     assert email.sender["display_name"] == "Overwritten From"
 
+    assert email.other_headers["X-PV-MIME-DATE"] == "Mon, 27 Jun 2016 10:43:03 -0400"
+
     # Missing from should raise in instantiation
     raw_message = """Received: ConsoleMessageDelivery
 Content-Type: multipart/related; boundary="Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6"; type="text/plain"
 Subject: Test From Header
 Message-Id: <0A83DC22-971B-418B-BEBF-BA0046C34868@preveil.com>
-Date: Mon, 27 Jun 2016 10:43:03 -0400
 To: iOS Dev <ios@preveil.com>
 
 --Apple-Mail=_B3D4A2AE-CBE5-47E8-86E4-5052190755A6
@@ -165,3 +166,4 @@ cGxhY2Vob2xkZXIgZm9yIGFuIGF0dGFjaG1lbnQ=
     with pytest.raises(EmailException):
         email = EmailV4.fromMime(message.to_string(), [])
     email = EmailV4.fromMime(message.to_string(), [], overwrite_sender={"user_id": u"xx", "display_name": u"xx"})
+    assert email.other_headers.get("X-PV-MIME-DATE") is None
