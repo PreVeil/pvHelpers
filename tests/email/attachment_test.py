@@ -117,7 +117,7 @@ def test_attachment_from_mime():
         with open(os.path.join(getdir(__file__), "test_cases", test_case["mime"]), "r") as f:
             raw_msg = f.read()
         try:
-            email = EmailV1.fromMime(raw_msg, [], {"user_id": u"xxx@gmail.com", "display_name": u"XX FF"})
+            email = EmailV1.fromMime(raw_msg, [], overwrite_sender={"user_id": u"xxx@gmail.com", "display_name": u"XX FF"})
         except EmailException as e:
             print e
             raise

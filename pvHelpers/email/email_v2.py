@@ -6,6 +6,7 @@ from .parsers import createMime, parseMime
 from flanker import mime, addresslib
 from .content import Content
 
+ORIGINAL_DATE_HEADER_KEY = "X-PV-MIME-DATE"
 
 class EmailV2(EmailHelpers, EmailBase):
     """Production version: Protocol version 2 is json based email entity"""
@@ -70,6 +71,9 @@ class EmailV2(EmailHelpers, EmailBase):
         for key, value in self.other_headers.iteritems():
             raw_mime.headers[key] = value
 
+        if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
+            raw_mime.headers["Date"] = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
+
         return mime.from_string(raw_mime.to_string())
 
     # toBrowser is only to conform with browser expectations and can be removed
@@ -81,7 +85,10 @@ class EmailV2(EmailHelpers, EmailBase):
             o["thread_id"] = self.server_attr.thread_id
             o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
             o["mailbox_id"] = self.server_attr.mailbox_server_id
-            o["date"] = email.utils.formatdate(self.server_attr.server_time)
+            t = email.utils.formatdate(self.server_attr.server_time)
+            if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
+                t = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
+            o["date"] = t
             o["rev_id"] = self.server_attr.revision_id
             o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["snippet"] = self.snippet()
@@ -160,24 +167,29 @@ class EmailV2(EmailHelpers, EmailBase):
 
     # TODO: get tos ccs and ...
     @classmethod
-    def fromMime(cls, mime_string, flags, sender):
+    def fromMime(cls, mime_string, flags, overwrite_sender=None):
         if not isinstance(mime_string, (str, bytes)):
-            raise EmailException(u"EmailV1.fromMime: mime_string must be of type str/bytes")
+            raise EmailException(u"mime_string must be of type str/bytes")
 
-        if not isinstance(sender, dict):
-            raise EmailException(u"EmailV1.fromMime: sender must be of type dict")
-        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
-            raise EmailException(u"EmailV1.fromMime: sender['user_id']/sender['display_name'] must exist and be of type unicode")
-
-        named_sender = sender
+        if overwrite_sender is not None:
+            if not isinstance(overwrite_sender, dict):
+                raise EmailException(u"overwrite_sender must be of type dict")
+            if not isinstance(overwrite_sender.get("user_id"), unicode) or not isinstance(overwrite_sender.get("display_name"), unicode):
+                raise EmailException(u"overwrite_sender['user_id']/overwrite_sender['display_name'] must exist and be of type unicode")
 
         try:
             raw_mime = mime.create.from_string(mime_string)
         except mime.MimeError as e:
-            raise EmailException(u"EmailV1.fromMime: flanker exception {}".format(e))
+            raise EmailException(u"flanker exception {}".format(e))
 
         message_id = raw_mime.headers.get("Message-Id")
 
+        from_ = raw_mime.headers.get("From")
+        from_ = addresslib.address.parse(from_)
+        if (from_, overwrite_sender) == (None, None):
+            raise EmailException("either From header or overwrite_sender is expected")
+
+        named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
         tos = raw_mime.headers.get("To")
         tos = addresslib.address.parse_list(tos)
         named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
@@ -195,11 +207,16 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
+
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
             if key.startswith("X-"):
                 # str(value)?
                 other_headers[key] = value
+
+        mime_date = raw_mime.headers.get("Date")
+        if mime_date:
+            other_headers[ORIGINAL_DATE_HEADER_KEY] = mime_date
 
         text, html, attachments = parseMime(raw_mime)
 
