@@ -85,8 +85,10 @@ class EmailV2(EmailHelpers, EmailBase):
             o["thread_id"] = self.server_attr.thread_id
             o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
             o["mailbox_id"] = self.server_attr.mailbox_server_id
-            o["date"] = email.utils.formatdate(self.server_attr.server_time)
-            # NEED TO overwrite DATE Header from X-PV-MIME-DATE VALUE HERE FOR LOCAL WEBPREVEIL
+            t = email.utils.formatdate(self.server_attr.server_time)
+            if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
+                t = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
+            o["date"] = t
             o["rev_id"] = self.server_attr.revision_id
             o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["snippet"] = self.snippet()
