@@ -7,6 +7,7 @@ from flanker import mime, addresslib
 from .content import Content
 
 ORIGINAL_DATE_HEADER_KEY = "X-PV-MIME-DATE"
+ORIGINAL_SENDER_HEADER_KEY = "X-PV-MIME-SENDER"
 
 class EmailV2(EmailHelpers, EmailBase):
     """Production version: Protocol version 2 is json based email entity"""
@@ -69,10 +70,14 @@ class EmailV2(EmailHelpers, EmailBase):
         raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
 
         for key, value in self.other_headers.iteritems():
-            raw_mime.headers[key] = value
+            if isinstance(value, str) or isinstance(value, unicode):
+                raw_mime.headers[key] = value
 
         if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
             raw_mime.headers["Date"] = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
+
+        if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
+            raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
 
         return mime.from_string(raw_mime.to_string())
 
@@ -85,10 +90,7 @@ class EmailV2(EmailHelpers, EmailBase):
             o["thread_id"] = self.server_attr.thread_id
             o["mailbox_name"] = EmailHelpers.getMailboxAlias(self.server_attr.mailbox_name)
             o["mailbox_id"] = self.server_attr.mailbox_server_id
-            t = email.utils.formatdate(self.server_attr.server_time)
-            if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
-                t = self.other_headers[ORIGINAL_DATE_HEADER_KEY]
-            o["date"] = t
+            o["date"] = email.utils.formatdate(self.server_attr.server_time)
             o["rev_id"] = self.server_attr.revision_id
             o["is_local"] = EmailHelpers.isLocalEmail(self.server_attr.server_id)
         o["snippet"] = self.snippet()
@@ -103,6 +105,7 @@ class EmailV2(EmailHelpers, EmailBase):
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
         o["message_id"] = self.message_id
+        o["other_headers"] = self.other_headers
 
         if with_body:
             if not self.body.isLoaded():
@@ -217,6 +220,9 @@ class EmailV2(EmailHelpers, EmailBase):
         mime_date = raw_mime.headers.get("Date")
         if mime_date:
             other_headers[ORIGINAL_DATE_HEADER_KEY] = mime_date
+
+        if from_:
+            other_headers[ORIGINAL_SENDER_HEADER_KEY] = {"user_id": from_.address, "display_name": from_.display_name}
 
         text, html, attachments = parseMime(raw_mime)
 
