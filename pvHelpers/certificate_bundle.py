@@ -67,17 +67,16 @@ class CertificateBundle(object):
 
     def set_permissions(self):
         if sys.platform == 'win32':
-            pass
-            # from .win_helpers import make_world_readable
+            from .win_helpers import make_world_readable
 
-            # # For each directory in the path (except the root), make sure it is traversable
-            # # by any local user. Otherwise the PEM file cannot be read.
-            # p = os.path.abspath(os.path.dirname(self.path))
-            # while not re.compile('^\w:\\\\$').match(p):  # noqa: W605
-            #     make_world_readable(p, True)
-            #     p, _ = os.path.split(p)
+            # For each directory in the path (except the root), make sure it is traversable
+            # by any local user. Otherwise the PEM file cannot be read.
+            p = os.path.abspath(os.path.dirname(self.path))
+            while not re.compile('^\w:\\\\$').match(p):  # noqa: W605
+                make_world_readable(p, True)
+                p, _ = os.path.split(p)
 
-            # make_world_readable(self.path, False)
+            make_world_readable(self.path, False)
 
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             # be careful not change anything else beyond the ancestors of cacert.pem
