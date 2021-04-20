@@ -676,13 +676,16 @@ def make_world_readable(fs_object, is_dir):
     # Standard Python functions like os.chmod() don't really work with Windows. So if we want
     # files or directories to be accessible for all users, we need to explicitly add an ACL
     # for the "Users" group.
-    users, _, _ = win32security.LookupAccountName('', 'USERS')
+
+    # LookupAccountName() can be unreliable on some customer systems, and the BUILTIN\USERS
+    # group has a defined value in the Windows documentation, so it's safe to hard-code it.
+    builtin_users_group = win32security.GetBinarySid("S-1-5-32-545")
     sd = win32security.GetFileSecurity(fs_object, win32security.DACL_SECURITY_INFORMATION)
     dacl = sd.GetSecurityDescriptorDacl()
     if is_dir:
         perms = ntfs.FILE_TRAVERSE | ntfs.FILE_LIST_DIRECTORY
     else:
         perms = ntfs.FILE_GENERIC_READ
-    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, perms, users)
+    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, perms, builtin_users_group)
     sd.SetSecurityDescriptorDacl(1, dacl, 0)
     win32security.SetFileSecurity(fs_object, win32security.DACL_SECURITY_INFORMATION, sd)
