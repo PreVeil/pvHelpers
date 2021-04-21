@@ -76,7 +76,7 @@ class EmailHelpers(object):
             return {
                 "user_id": recip["user_id"],
                 "display_name": recip["user_id"],
-                "external_email": recip["external_email"],
+                "external_email": None,
                 "members": recip["members"]
             }
         return {
