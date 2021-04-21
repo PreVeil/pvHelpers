@@ -19,7 +19,8 @@ class PROTOCOL_VERSION(object):
     V4 = 4
     V5 = 5
     V6 = 6
-    Latest = 6
+    V7 = 7
+    Latest = 7
 
 
 class EmailRecipients():
@@ -75,9 +76,11 @@ class EmailHelpers(object):
             return {
                 "user_id": recip["user_id"],
                 "display_name": recip["user_id"],
+                "external_email": recip["external_email"],
                 "members": recip["members"]
             }
         return {
             "user_id": recip["user_id"],
             "display_name": recip["user_id"],
+            "external_email": recip["external_email"]
         }
