@@ -6,6 +6,7 @@ from .email_v3 import EmailV3
 from .email_v4 import EmailV4
 from .email_v5 import EmailV5
 from .email_v6 import EmailV6
+from .email_v7 import EmailV7
 from .content import Content
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .server_attributes import ServerAttributes
