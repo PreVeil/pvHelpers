@@ -14,7 +14,7 @@ class EmailBase(object):
     __initialized = False
 
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,
-                 sender, external_sender, reply_tos, subject, body, attachments, references,
+                 sender, external_sender=None, reply_tos, subject, body, attachments, references,
                  in_reply_to, message_id, snippet):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
