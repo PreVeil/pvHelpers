@@ -160,7 +160,11 @@ class EmailFactory(object):
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
             if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower():
-                bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u["external_email"]},
+                if decrypted_msg["protocol_version"] < 7:
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+                           decrypted_msg["private_metadata"].get("bccs", []))
+                else:
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u["external_email"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
             elif lfor_user_id not in [
                     recip["user_id"].lower()
@@ -169,15 +173,20 @@ class EmailFactory(object):
                     decrypted_msg["private_metadata"]["tos_groups"] +
                     decrypted_msg["private_metadata"]["ccs_groups"]
             ]:
-                bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": u["external_email"]}]
+                if decrypted_msg["protocol_version"] < 7:
+                    bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
+                else:
+                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": u["external_email"]}]
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
+
 
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
             "attachments": attachments,
+            "external_sender":external_sender,
             "tos": tos,
             "ccs": ccs,
             "bccs": bccs,

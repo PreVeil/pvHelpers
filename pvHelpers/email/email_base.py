@@ -14,8 +14,8 @@ class EmailBase(object):
     __initialized = False
 
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,
-                 sender, external_sender=None, reply_tos, subject, body, attachments, references,
-                 in_reply_to, message_id, snippet):
+                 sender, reply_tos, subject, body, attachments, references,
+                 in_reply_to, message_id, snippet, external_sender=None):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
         self.server_attr = server_attr
@@ -29,10 +29,6 @@ class EmailBase(object):
         if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
             raise EmailException(u"EmailV1.__init__: sender['user_id']/sender['display_name'] must exist and be of type unicode")
         self.sender = sender
-
-        if not isinstance(external_sender, str):
-            raise EmailException(u"EmailBase.__init__: external_sender must be of type str")
-        self.external_sender = external_sender
 
         if not isinstance(tos, list):
             raise EmailException(u"EmailV1.__init__: tos must be of type list")
@@ -114,6 +110,13 @@ class EmailBase(object):
         if not isinstance(snippet, (unicode, types.NoneType)):
             raise EmailException(u"EmailBase.__init__: snippet must be of type unicode")
         self._snippet = snippet
+
+        if not isinstance(external_sender, str):
+            if external_sender is not None:
+                raise EmailException(u"EmailBase.__init__: external_sender must be of type str")
+        self.external_sender = external_sender
+
+
 
     def __setattr__(self, key, value):
         if self.__initialized and not hasattr(self, key):
