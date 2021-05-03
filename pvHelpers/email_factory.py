@@ -105,8 +105,7 @@ class EmailFactory(object):
             ),
             "flags": decrypted_msg["flags"],
             "sender": {"user_id": decrypted_msg["private_metadata"]["sender"],
-                       "display_name": decrypted_msg["private_metadata"]["sender"],
-                       "external_email": decrypted_msg["private_metadata"]["external_sender"]},
+                       "display_name": decrypted_msg["private_metadata"]["sender"]},
             "subject": decrypted_msg["private_metadata"]["subject"],
             "message_id": decrypted_msg["message_id"],
             "in_reply_to": decrypted_msg["in_reply_to"],
@@ -151,6 +150,8 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
+            external_sender = decrypted_msg.get("external_sender", [])
+
             tos = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"]["tos"])
             ccs = map(lambda r: EmailHelpers.format_recip(r),
@@ -164,7 +165,7 @@ class EmailFactory(object):
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
                 else:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u["external_email"]},
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u.get("external_email", None)},
                            decrypted_msg["private_metadata"].get("bccs", []))
             elif lfor_user_id not in [
                     recip["user_id"].lower()
@@ -176,7 +177,7 @@ class EmailFactory(object):
                 if decrypted_msg["protocol_version"] < 7:
                     bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
                 else:
-                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": u["external_email"]}]
+                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": u.get("external_email", None)}]
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
@@ -186,7 +187,7 @@ class EmailFactory(object):
             "body": body,
             "snippet": snippet,
             "attachments": attachments,
-            "external_sender":external_sender,
+            "external_sender": external_sender,
             "tos": tos,
             "ccs": ccs,
             "bccs": bccs,
