@@ -150,7 +150,10 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
-            external_sender = decrypted_msg.get("external_sender", [])
+            if decrypted_msg.has_key(u"external_sender"):
+                external_sender = decrypted_msg.get(u"external_sender")
+            else:
+                external_sender = None
 
             tos = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"]["tos"])
