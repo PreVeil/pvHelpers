@@ -76,11 +76,17 @@ class EmailHelpers(object):
             return {
                 "user_id": recip["user_id"],
                 "display_name": recip["user_id"],
-                "external_email": None,
+                "external_email": recip.get(u"external_email", None),
                 "members": recip["members"]
             }
-        return {
-            "user_id": recip["user_id"],
-            "display_name": recip["user_id"],
-            "external_email": recip.get("external_email", None)
-        }
+        if recip.get(u"external_email", None) is None:
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["user_id"]
+            }
+        else:
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["user_id"],
+                "external_email": "[External] " + recip["external_email"]
+            }
