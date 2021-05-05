@@ -150,7 +150,6 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
-            
             tos = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"]["tos"])
             ccs = map(lambda r: EmailHelpers.format_recip(r),
@@ -176,12 +175,11 @@ class EmailFactory(object):
                 if decrypted_msg["protocol_version"] < 7:
                     bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
                 else:
-                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": u.get(u"external_email", None)}]
+                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": recip.get(u"external_email", None)}]
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
-
-
+      
         if decrypted_msg.has_key(u"external_sender"):
             external_sender = decrypted_msg.get(u"external_sender")
         else:
