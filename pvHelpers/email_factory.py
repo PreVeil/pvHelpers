@@ -41,7 +41,7 @@ class EmailFactory(object):
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
     def fromDB(revision_id, version, server_id, metadata, server_time, flags,
-               uid, mailbox_server_id, thread_id, mailbox_name, expunged):
+               uid, mailbox_server_id, thread_id, mailbox_name, expunged, external_sender=None):
 
         metadata = jloads(metadata)
         if server_id is None:  # An email not having server_id means it's a local email
@@ -114,7 +114,7 @@ class EmailFactory(object):
             "protocol_version": decrypted_msg["protocol_version"],
             "other_headers": decrypted_msg["private_metadata"].get("other_headers")
         }
-
+        
         # protocol < 5
         protocol_dependent_props = {}
         if decrypted_msg["protocol_version"] <= PROTOCOL_VERSION.V4:
