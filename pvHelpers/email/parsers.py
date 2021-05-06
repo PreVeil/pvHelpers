@@ -7,7 +7,7 @@ from flanker import mime, addresslib
 
 # Builder creates a simplified mime message that follows the following hierarchy
 # https://msdn.microsoft.com/en-us/library/office/aa563064(v=exchg.140).aspx
-def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None):
+def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, external_sender=None):
     if not isinstance(text, unicode):
         raise EmailException(u"createMime: text must be of type unicode")
     if not isinstance(html, unicode):
@@ -56,7 +56,7 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
         if ccs:
             message.headers["Cc"] = u"{}".format(", ".join([u"{} <{}>".format(cc["display_name"], cc["user_id"]) for cc in ccs]))
         if tos:
-            message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], to["user_id"]) for to in tos]))
+            message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], (to["user_id"] if (to.get("external_email", None)) is None else to["external_email"])) for to in tos]))
         if bccs:
             message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
         if reply_tos:
@@ -73,6 +73,8 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
         if time:
             date = (u"%s" + u"\r\n") % email.utils.formatdate(time)
             message.headers["Date"] = date
+        if external_sender:
+            message.headers["X-External-Sender"] = external_sender
 
     except mime.EncodingError as e:
         raise EmailException(u"createMime: exception, {}".format(e))

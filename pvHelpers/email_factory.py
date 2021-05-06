@@ -163,7 +163,7 @@ class EmailFactory(object):
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
                 else:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u.get("external_email", None)},
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u.get("display_name", u["user_id"]), "external_email": u.get("external_email", None)},
                            decrypted_msg["private_metadata"].get("bccs", []))
             elif lfor_user_id not in [
                     recip["user_id"].lower()
@@ -172,7 +172,7 @@ class EmailFactory(object):
                     decrypted_msg["private_metadata"]["tos_groups"] +
                     decrypted_msg["private_metadata"]["ccs_groups"]
             ]:
-                if decrypted_msg["protocol_version"] < 7:
+                if decrypted_msg["protocol_version"] <= 6:
                     bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
                 else:
                     bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": recip.get(u"external_email", None)}]
