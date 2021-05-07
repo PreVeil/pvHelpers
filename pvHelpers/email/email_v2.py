@@ -217,6 +217,10 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
+        # update gateway 
+        external_sender = raw_mime.headers.get("X-External-Sender", None)
+        external_recipients = raw_mime.headers.get("X-External-Recipients", []])
+        external_bccs = raw_mime.headers.get("X-External-BCCs", []])
 
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
