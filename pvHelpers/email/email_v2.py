@@ -36,7 +36,7 @@ class EmailV2(EmailHelpers, EmailBase):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
-            in_reply_to, message_id, snippet, external_sender, external_recipients)
+            in_reply_to, message_id, snippet, external_sender, external_recipients, external_bccs)
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
@@ -221,9 +221,11 @@ class EmailV2(EmailHelpers, EmailBase):
         external_sender = raw_mime.headers.get("X-External-Sender", None)
         external_sender = addresslib.address.parse("X-External-Sender")
         external_recipients = raw_mime.headers.get("X-External-Recipients", [])
-        external_recipients = addresslib.address.parse_list(external_recipients)
+        if external_recipients != []:
+            external_recipients = addresslib.address.parse_list(external_recipients)
         external_bccs = raw_mime.headers.get("X-External-BCCs", [])
-        external_bccs = addresslib.address.parse_list(external_bccs)
+        if external_bccs !=[]:
+            external_bccs = addresslib.address.parse_list(external_bccs)
 
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
