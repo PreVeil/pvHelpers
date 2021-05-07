@@ -219,8 +219,11 @@ class EmailV2(EmailHelpers, EmailBase):
 
         # update gateway 
         external_sender = raw_mime.headers.get("X-External-Sender", None)
+        external_sender = addresslib.address.parse("X-External-Sender")
         external_recipients = raw_mime.headers.get("X-External-Recipients", [])
+        external_recipients = addresslib.address.parse_list(external_recipients)
         external_bccs = raw_mime.headers.get("X-External-BCCs", [])
+        external_bccs = addreslib.addres.parse_list(external_bccs)
 
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
