@@ -179,12 +179,15 @@ class EmailFactory(object):
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
-      
+              
         if decrypted_msg.has_key(u"external_sender"):
             external_sender = decrypted_msg.get(u"external_sender")
         else:
             external_sender = None
 
+        external_recipients = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_recipients", []))
+        external_bccs = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_bccs", []))
+                
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
@@ -193,6 +196,8 @@ class EmailFactory(object):
             "tos": tos,
             "ccs": ccs,
             "bccs": bccs,
+            "external_recipients": external_recipients,
+            "external_bccs": external_bccs
         }
 
         email_dict = MergeDicts(common_props, protocol_dependent_props)

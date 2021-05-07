@@ -29,6 +29,9 @@ class EmailV2(EmailHelpers, EmailBase):
                  message_id,
                  snippet=None,
                  other_headers=None,
+                 external_sender=None,
+                 external_recipients=[],
+                 external_bccs=[],
                  **kwargs):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
@@ -67,7 +70,7 @@ class EmailV2(EmailHelpers, EmailBase):
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
 
-        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
+        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references, self.external_sender, self.external_recipients, self.external_bccs)
 
         for key, value in self.other_headers.iteritems():
             if isinstance(value, str) or isinstance(value, unicode):
@@ -78,6 +81,7 @@ class EmailV2(EmailHelpers, EmailBase):
 
         if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
             raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
+        print(raw_mime)
 
         return mime.from_string(raw_mime.to_string())
 
@@ -165,7 +169,10 @@ class EmailV2(EmailHelpers, EmailBase):
             "body": self.body,
             "message_id": self.message_id,
             "server_attr": self.server_attr,
-            "other_headers": self.other_headers
+            "other_headers": self.other_headers,
+            "external_sender": self.external_sender,
+            "external_bccs": self.external_bccs,
+            "external_recipients": self.external_recipients,
         }
 
     # TODO: get tos ccs and ...
