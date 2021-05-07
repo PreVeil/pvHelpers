@@ -36,7 +36,7 @@ class EmailV2(EmailHelpers, EmailBase):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
-            in_reply_to, message_id, snippet)
+            in_reply_to, message_id, snippet, external_sender, external_recipients)
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
@@ -219,8 +219,8 @@ class EmailV2(EmailHelpers, EmailBase):
 
         # update gateway 
         external_sender = raw_mime.headers.get("X-External-Sender", None)
-        external_recipients = raw_mime.headers.get("X-External-Recipients", []])
-        external_bccs = raw_mime.headers.get("X-External-BCCs", []])
+        external_recipients = raw_mime.headers.get("X-External-Recipients", [])
+        external_bccs = raw_mime.headers.get("X-External-BCCs", [])
 
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
@@ -241,4 +241,5 @@ class EmailV2(EmailHelpers, EmailBase):
         body = Content(body)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, \
+                   None, other_headers, external_sender, external_recipients, external_bccs)

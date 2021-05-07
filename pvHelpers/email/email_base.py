@@ -111,9 +111,9 @@ class EmailBase(object):
             raise EmailException(u"EmailBase.__init__: snippet must be of type unicode")
         self._snippet = snippet
 
-        if not isinstance(external_sender, str):
+        if not isinstance(external_sender, unicode):
             if external_sender is not None:
-                raise EmailException(u"EmailBase.__init__: external_sender must be of type str")
+                raise EmailException(u"EmailBase.__init__: external_sender must be of type unicode")
         self.external_sender = external_sender
 
         if not isinstance(external_recipients, list):
