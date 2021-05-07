@@ -15,7 +15,7 @@ class EmailBase(object):
 
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,
                  sender, reply_tos, subject, body, attachments, references,
-                 in_reply_to, message_id, snippet, external_sender=None):
+                 in_reply_to, message_id, snippet, external_sender=None, external_recipients=[], external_bccs=[]):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
         self.server_attr = server_attr
@@ -115,6 +115,16 @@ class EmailBase(object):
             if external_sender is not None:
                 raise EmailException(u"EmailBase.__init__: external_sender must be of type str")
         self.external_sender = external_sender
+
+        if not isinstance(external_recipients, list):
+            if external_recipients is not None:
+                raise EmailException(u"EmailBase.__init__: external_recipients must be of type list")
+        self.external_recipients = external_recipients
+
+        if not isinstance(external_bccs, list):
+            if external_bccs is not None:
+                raise EmailException(u"EmailBase.__init__: external_bccs must be of type list")
+        self.external_bccs = external_bccs
 
 
 

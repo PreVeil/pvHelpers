@@ -7,7 +7,7 @@ from flanker import mime, addresslib
 
 # Builder creates a simplified mime message that follows the following hierarchy
 # https://msdn.microsoft.com/en-us/library/office/aa563064(v=exchg.140).aspx
-def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, external_sender=None):
+def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, external_sender=None, external_recipients=[], external_bccs=[]):
     if not isinstance(text, unicode):
         raise EmailException(u"createMime: text must be of type unicode")
     if not isinstance(html, unicode):
@@ -75,6 +75,10 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             message.headers["Date"] = date
         if external_sender:
             message.headers["X-External-Sender"] = external_sender
+        if external_recipients:
+            message.headers["X-External-Recipients"] = external_recipients
+        if external_bccs:
+            message.headers["X-External-BCCs"] = external_bccs
 
     except mime.EncodingError as e:
         raise EmailException(u"createMime: exception, {}".format(e))
