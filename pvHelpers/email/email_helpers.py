@@ -87,6 +87,6 @@ class EmailHelpers(object):
         else:
             return {
                 "user_id": recip["user_id"],
-                "display_name": "[External] " + recip["external_email"],
+                "display_name": recip["external_email"],
                 "external_email": recip["external_email"]
             }
