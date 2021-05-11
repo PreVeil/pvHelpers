@@ -183,7 +183,7 @@ class EmailFactory(object):
 
         external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
         if external_sender is not None:
-            common_props["sender"] = {"user_id": external_sender, "display_name": "[External ] "+ external_sender}
+            common_props["sender"] = {"user_id": external_sender, "display_name": external_sender}
 
         external_recipients = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_recipients", []))
         external_bccs = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_bccs", []))
