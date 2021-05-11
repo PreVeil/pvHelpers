@@ -37,6 +37,7 @@ class EmailV2(EmailHelpers, EmailBase):
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
             in_reply_to, message_id, snippet, external_sender, external_recipients, external_bccs)
+
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
@@ -81,7 +82,6 @@ class EmailV2(EmailHelpers, EmailBase):
 
         if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
             raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
-        print(raw_mime)
 
         return mime.from_string(raw_mime.to_string())
 
@@ -198,8 +198,11 @@ class EmailV2(EmailHelpers, EmailBase):
         from_ = addresslib.address.parse(from_)
         if (from_, overwrite_sender) == (None, None):
             raise EmailException("either From header or overwrite_sender is expected")
-
-        named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
+        external_sender = raw_mime.headers.get("X-External-Sender", None)
+        if external_sender is not None:
+            named_sender = {"user_id": from_.address, "display_name": "[External] " + external_sender, "external_email": external_sender}
+        else:
+            named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
         tos = raw_mime.headers.get("To")
         tos = addresslib.address.parse_list(tos)
         named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
@@ -217,16 +220,14 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
-        # update gateway 
-        external_sender = raw_mime.headers.get("X-External-Sender", None)
-        external_sender = addresslib.address.parse("X-External-Sender")
         external_recipients = raw_mime.headers.get("X-External-Recipients", [])
-        if external_recipients != []:
-            external_recipients = addresslib.address.parse_list(external_recipients)
-        external_bccs = raw_mime.headers.get("X-External-BCCs", [])
-        if external_bccs !=[]:
-            external_bccs = addresslib.address.parse_list(external_bccs)
+        external_recipients = addresslib.address.parse_list(external_recipients)
+        named_external_recipients = [{"user_id":from_.address, "display_name": "[External] "+ e.display_name, "external_email": e.address} for e in external_recipients]
 
+        external_bccs = [raw_mime.headers.get("X-External-BCCs", [])]
+        external_bccs = addresslib.address.parse_list(external_bccs)
+        named_external_bccs = [{"user_id":from_.address, "display_name": "[External] "+ e.display_name, "external_email": e.address} for e in external_bccs]
+            
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
             if key.startswith("X-"):
@@ -247,4 +248,4 @@ class EmailV2(EmailHelpers, EmailBase):
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
                    named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, \
-                   None, other_headers, external_sender, external_recipients, external_bccs)
+                   None, other_headers, external_sender, named_external_recipients, named_external_bccs)
