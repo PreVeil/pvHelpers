@@ -102,14 +102,17 @@ class EmailV2(EmailHelpers, EmailBase):
         o["subject"] = self.subject
         # This needs fixing, should get the names from server
         o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
-        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
-        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.ccs]
-        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
+        o["tos"] = [{"address": to["user_id"], "name": to["display_name"], "external_email": to.get("external_email", None)} for to in self.tos]
+        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"], "external_email": cc.get("external_email", None)} for cc in self.ccs]
+        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"], "external_email": bcc.get("external_email", None)} for bcc in self.bccs]
         o["reply_to"] = [{"address": rpt["user_id"], "name": rpt["display_name"]} for rpt in self.reply_tos]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
         o["message_id"] = self.message_id
         o["other_headers"] = self.other_headers
+        o["external_sender"] = self.external_sender
+        o["external_recipients"] = self.external_recipients
+        o["external_bccs"] = self.external_bccs
 
         if with_body:
             if not self.body.isLoaded():
@@ -198,11 +201,7 @@ class EmailV2(EmailHelpers, EmailBase):
         from_ = addresslib.address.parse(from_)
         if (from_, overwrite_sender) == (None, None):
             raise EmailException("either From header or overwrite_sender is expected")
-        external_sender = raw_mime.headers.get("X-External-Sender", None)
-        if external_sender is not None:
-            named_sender = {"user_id": from_.address, "display_name": external_sender, "external_email": external_sender}
-        else:
-            named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
+        named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
         tos = raw_mime.headers.get("To")
         tos = addresslib.address.parse_list(tos)
         named_tos = [{"user_id": to.address, "display_name": to.display_name} for to in tos]
@@ -220,6 +219,7 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
+        external_sender = raw_mime.headers.get("X-External-Sender", None)
         external_recipients = raw_mime.headers.get("X-External-Recipients", [])
         external_recipients = addresslib.address.parse_list(external_recipients)
         named_external_recipients = [{"user_id":from_.address, "display_name": e.display_name, "external_email": e.address} for e in external_recipients]
