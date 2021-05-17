@@ -41,7 +41,7 @@ class EmailFactory(object):
     @staticmethod
     @WrapExceptions(EmailException, [EncodingException])
     def fromDB(revision_id, version, server_id, metadata, server_time, flags,
-               uid, mailbox_server_id, thread_id, mailbox_name, expunged, external_sender=None):
+               uid, mailbox_server_id, thread_id, mailbox_name, expunged):
 
         metadata = jloads(metadata)
         if server_id is None:  # An email not having server_id means it's a local email
@@ -105,7 +105,8 @@ class EmailFactory(object):
             ),
             "flags": decrypted_msg["flags"],
             "sender": {"user_id": decrypted_msg["private_metadata"]["sender"],
-                       "display_name": decrypted_msg["private_metadata"]["sender"]},
+                       "display_name": decrypted_msg["private_metadata"]["sender"],
+                       "external_email": decrypted_msg["private_metadata"].get("external_sender", None)},
             "subject": decrypted_msg["private_metadata"]["subject"],
             "message_id": decrypted_msg["message_id"],
             "in_reply_to": decrypted_msg["in_reply_to"],
@@ -155,6 +156,8 @@ class EmailFactory(object):
             ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
+            # Gateway testing GREEN: tos field retains external_email field at this point
+
             # if sender, we can see all bccs
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
@@ -163,39 +166,36 @@ class EmailFactory(object):
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
                 else:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u.get("display_name", u["user_id"]), "external_email": u.get("external_email", None)},
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u.get("external_email", None)},
                            decrypted_msg["private_metadata"].get("bccs", []))
             elif lfor_user_id not in [
                     recip["user_id"].lower()
                     for recip in decrypted_msg["private_metadata"]["tos"] +
                     decrypted_msg["private_metadata"]["ccs"] +
                     decrypted_msg["private_metadata"]["tos_groups"] +
-                    decrypted_msg["private_metadata"]["ccs_groups"]
+                    decrypted_msg["private_metadata"]["ccs_groups"] +
+                    decrypted_msg["private_metadata"].get("external_recipients", [])
             ]:
-                if decrypted_msg["protocol_version"] <= 6:
-                    bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
-                else:
-                    bccs = [{"user_id": for_user_id, "display_name": for_user_id, "external_email": recip.get(u"external_email", None)}]
+                bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
+                if decrypted_msg["protocol_version"] >= 7:
+                    bccs += decrypted_msg["private_metadata"].get("external_bccs", [])
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
-              
-
         external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
-        if external_sender is not None:
-            common_props["sender"] = {"user_id": external_sender, "display_name": external_sender}
+        external_recipients = map(lambda r: EmailHelpers.format_recip(r),
+                      decrypted_msg["private_metadata"].get("external_recipients", []))
+        external_bccs = map(lambda r: EmailHelpers.format_recip(r),
+                      decrypted_msg["private_metadata"].get("external_bccs", []))
 
-        external_recipients = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_recipients", []))
-        external_bccs = map(lambda r: EmailHelpers.format_recip(r), decrypted_msg.get("external_bccs", []))
-                
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
             "attachments": attachments,
-            "external_sender": external_sender,
             "tos": tos,
             "ccs": ccs,
             "bccs": bccs,
+            "external_sender": external_sender,
             "external_recipients": external_recipients,
             "external_bccs": external_bccs
         }
