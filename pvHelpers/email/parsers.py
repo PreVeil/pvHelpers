@@ -61,7 +61,6 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
         if reply_tos:
             message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in reply_tos]))
-
         if subject:
             message.headers["Subject"] = subject
         if message_id:
@@ -76,9 +75,9 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
         if external_sender:
             message.headers["X-External-Sender"] = external_sender
         if external_recipients:
-            message.headers["X-External-Recipients"] = external_recipients
+            message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"{} <{}>".format("[External] " + e["display_name"], e["external_email"]) for e in external_recipients]))
         if external_bccs:
-            message.headers["X-External-BCCs"] = external_bccs
+            message.headers["X-External-BCCs"] = u"{}".format(", ".join([u"{} <{}>".format("[External] " + b["display_name"], b["external_email"]) for b in external_bccs]))
 
     except mime.EncodingError as e:
         raise EmailException(u"createMime: exception, {}".format(e))

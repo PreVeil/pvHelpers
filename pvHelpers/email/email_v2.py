@@ -222,11 +222,10 @@ class EmailV2(EmailHelpers, EmailBase):
         external_sender = raw_mime.headers.get("X-External-Sender", None)
         external_recipients = raw_mime.headers.get("X-External-Recipients", [])
         external_recipients = addresslib.address.parse_list(external_recipients)
-        named_external_recipients = [{"user_id":from_.address, "display_name": e.display_name, "external_email": e.address} for e in external_recipients]
-
+        named_external_recipients = [{"user_id":e.address, "display_name": e.display_name, "external_email": e.address} for e in external_recipients]
         external_bccs = [raw_mime.headers.get("X-External-BCCs", [])]
         external_bccs = addresslib.address.parse_list(external_bccs)
-        named_external_bccs = [{"user_id":from_.address, "display_name": e.display_name, "external_email": e.address} for e in external_bccs]
+        named_external_bccs = [{"user_id":e.address, "display_name": e.display_name, "external_email": e.address} for e in external_bccs]
             
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
