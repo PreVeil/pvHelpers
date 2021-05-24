@@ -85,7 +85,6 @@ class EmailV2(EmailHelpers, EmailBase):
 
         return mime.from_string(raw_mime.to_string())
 
-    # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
         o = {}
         if not isinstance(self.server_attr, NOT_ASSIGNED):
@@ -101,7 +100,10 @@ class EmailV2(EmailHelpers, EmailBase):
         o["flags"] = self.flags
         o["subject"] = self.subject
         # This needs fixing, should get the names from server
-        o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
+        if self.sender.has_key("external_email"):
+            o["sender"] = {"address": self.sender["user_id"], "name": self.sender["external_email"], "external_email": self.sender["external_email"]}
+        else:
+            o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
         o["tos"] = [{"address": to["user_id"], "name": to["display_name"], "external_email": to.get("external_email", None)} for to in self.tos]
         o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"], "external_email": cc.get("external_email", None)} for cc in self.ccs]
         o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"], "external_email": bcc.get("external_email", None)} for bcc in self.bccs]
