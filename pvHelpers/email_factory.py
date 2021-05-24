@@ -192,12 +192,12 @@ class EmailFactory(object):
             "body": body,
             "snippet": snippet,
             "attachments": attachments,
+            "external_sender": external_sender,
             "tos": tos,
             "ccs": ccs,
             "bccs": bccs,
-            "external_sender": external_sender,
-            "external_recipients": external_recipients,
-            "external_bccs": external_bccs
+            "external_recipients": EmailFactory._extractExternalRecipients(tos),
+            "external_bccs": EmailFactory._extractExternalRecipients(bccs)
         }
 
         email_dict = MergeDicts(common_props, protocol_dependent_props)
@@ -217,3 +217,9 @@ class EmailFactory(object):
             return EmailV7(**email_dict)
 
         raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))
+
+    @staticmethod
+    def _extractExternalRecipients(all_recipients):
+        recipients = filter(lambda r: "external_email" in r, all_recipients)
+        return map(lambda r: {"display_name": r["external_email"], "external_email": r["external_email"]}, recipients)
+        
