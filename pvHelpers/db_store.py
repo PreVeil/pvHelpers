@@ -25,7 +25,7 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
         if path not in cls.__session_factory:
             # using SingltonThreadPool so to maintain the connection instead of recreating one per transaction
             # Explicitly using standalone pysqlite2 driver instead of the built-in pysqlite driver
-            engine = create_engine("sqlite+pysqlite:///{}".format(path), poolclass=SingletonThreadPool, module=cls.DRIVER)
+            engine = create_engine("sqlite+pysqlite://{}".format(path), poolclass=SingletonThreadPool, module=cls.DRIVER)
 
             # HACK: source, http://docs.sqlalchemy.org/en/latest/dialects/sqlite.html#pysqlite-serializable
             # Let's use use DDL queries in transactions.
