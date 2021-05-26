@@ -156,8 +156,6 @@ class EmailFactory(object):
             ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
-            # Gateway testing GREEN: tos field retains external_email field at this point
-
             # if sender, we can see all bccs
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
@@ -183,10 +181,6 @@ class EmailFactory(object):
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
         external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
-        external_recipients = map(lambda r: EmailHelpers.format_recip(r),
-                      decrypted_msg["private_metadata"].get("external_recipients", []))
-        external_bccs = map(lambda r: EmailHelpers.format_recip(r),
-                      decrypted_msg["private_metadata"].get("external_bccs", []))
 
         protocol_dependent_props = {
             "body": body,

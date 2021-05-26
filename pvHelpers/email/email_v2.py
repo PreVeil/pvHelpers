@@ -71,7 +71,12 @@ class EmailV2(EmailHelpers, EmailBase):
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
 
-        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references, self.external_sender, self.external_recipients, self.external_bccs)
+        sender = EmailHelpers.format_ext_disp(self.sender)
+        tos = map(lambda r: EmailHelpers.format_ext_disp(r), self.tos)
+        ccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.ccs)
+        bccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.bccs)
+
+        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, tos, ccs, bccs, self.reply_tos, sender, self.in_reply_to, self.references, self.external_sender, self.external_recipients, self.external_bccs)
 
         for key, value in self.other_headers.iteritems():
             if isinstance(value, str) or isinstance(value, unicode):

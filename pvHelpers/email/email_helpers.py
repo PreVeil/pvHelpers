@@ -90,3 +90,11 @@ class EmailHelpers(object):
                 "display_name": recip["external_email"],
                 "external_email": recip["external_email"]
             }
+
+    @staticmethod
+    @params(dict)
+    def format_ext_disp(recipient):
+        if "external_email" in recipient and recipient["external_email"] is not None:
+            return {"user_id": recipient["user_id"], "display_name": u"[External] " + recipient["display_name"], "external_email": recipient["external_email"]}
+        else:
+            return {"user_id": recipient["user_id"], "display_name": recipient["display_name"]}
