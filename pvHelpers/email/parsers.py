@@ -7,7 +7,7 @@ from flanker import mime, addresslib
 
 # Builder creates a simplified mime message that follows the following hierarchy
 # https://msdn.microsoft.com/en-us/library/office/aa563064(v=exchg.140).aspx
-def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, external_sender=None, external_recipients=[], external_bccs=[]):
+def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, other_headers=None, external_sender=None):
     if not isinstance(text, unicode):
         raise EmailException(u"createMime: text must be of type unicode")
     if not isinstance(html, unicode):
@@ -73,12 +73,12 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             date = (u"%s" + u"\r\n") % email.utils.formatdate(time)
             message.headers["Date"] = date
         if external_sender:
-            message.headers["X-External-Sender"] = external_sender
-        if external_recipients:
-            message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in external_recipients]))
-        if external_bccs:
-            message.headers["X-External-BCCs"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(b["display_name"], b["external_email"]) for b in external_bccs]))
-
+            message.headers["X-External-Sender"] = u"{} <{}>".format(external_sender["display_name"], external_sender["external_email"])
+        if other_headers:
+            if other_headers["X-External-Recipients"]:
+                message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in other_headers["X-External-Recipients"]]))
+            if other_headers["X-External-BCCs"]:
+                message.headers["X-External-BCCs"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(b["display_name"], b["external_email"]) for b in other_headers["X-External-BCCs"]]))
     except mime.EncodingError as e:
         raise EmailException(u"createMime: exception, {}".format(e))
 
