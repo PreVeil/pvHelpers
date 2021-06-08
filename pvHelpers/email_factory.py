@@ -171,17 +171,16 @@ class EmailFactory(object):
                     for recip in decrypted_msg["private_metadata"]["tos"] +
                     decrypted_msg["private_metadata"]["ccs"] +
                     decrypted_msg["private_metadata"]["tos_groups"] +
-                    decrypted_msg["private_metadata"]["ccs_groups"] +
-                    decrypted_msg["private_metadata"].get("external_recipients", [])
+                    decrypted_msg["private_metadata"]["ccs_groups"]
             ]:
                 bccs = [{"user_id": for_user_id, "display_name": for_user_id}]
-                if decrypted_msg["protocol_version"] >= 7:
-                    bccs += decrypted_msg["private_metadata"].get("external_bccs", [])
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
         external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
 
+        common_props["other_headers"]["X-External-Recipients"] = EmailFactory._extractExternalRecipients(tos) + EmailFactory._extractExternalRecipients(ccs)
+        common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(bccs)
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
@@ -189,9 +188,7 @@ class EmailFactory(object):
             "external_sender": external_sender,
             "tos": tos,
             "ccs": ccs,
-            "bccs": bccs,
-            "external_recipients": EmailFactory._extractExternalRecipients(tos),
-            "external_bccs": EmailFactory._extractExternalRecipients(bccs)
+            "bccs": bccs
         }
 
         email_dict = MergeDicts(common_props, protocol_dependent_props)

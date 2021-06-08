@@ -116,17 +116,6 @@ class EmailBase(object):
                 raise EmailException(u"EmailBase.__init__: external_sender must be of type unicode")
         self.external_sender = external_sender
 
-        if external_recipients != []:
-            if not isinstance(external_recipients, list):
-                raise EmailException(u"EmailBase.__init__: external_recipients must be of type list")
-        self.external_recipients = external_recipients
-
-        if external_bccs !=[]:
-            if not isinstance(external_bccs, list):
-                raise EmailException(u"EmailBase.__init__: external_bccs must be of type list")
-        self.external_bccs = external_bccs
-
-
 
     def __setattr__(self, key, value):
         if self.__initialized and not hasattr(self, key):
