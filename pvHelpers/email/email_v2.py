@@ -34,7 +34,7 @@ class EmailV2(EmailHelpers, EmailBase):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
-            in_reply_to, message_id, snippet, external_sender)
+            in_reply_to, message_id, snippet, other_headers, external_sender)
 
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
@@ -73,7 +73,7 @@ class EmailV2(EmailHelpers, EmailBase):
         tos = map(lambda r: EmailHelpers.format_ext_disp(r), self.tos)
         ccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.ccs)
         bccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.bccs)
-        
+
         raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, tos, ccs, bccs, self.reply_tos, sender, self.in_reply_to, self.references, self.other_headers, self.external_sender)
 
         for key, value in self.other_headers.iteritems():
@@ -85,12 +85,6 @@ class EmailV2(EmailHelpers, EmailBase):
 
         if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
             raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
-
-        if self.other_headers.get("X-External-Recipients"):
-            raw_mime.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in self.other_headers["X-External-Recipients"]]))
-
-        if self.other_headers.get("X-External-BCCs"):
-            raw_mime.headers["X-External-BCCs"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(b["display_name"], b["external_email"]) for b in self.other_headers["X-External-BCCs"]]))        
         return mime.from_string(raw_mime.to_string())
 
     def toBrowser(self, with_body=False):
