@@ -56,7 +56,7 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
         if ccs:
             message.headers["Cc"] = u"{}".format(", ".join([u"{} <{}>".format(cc["display_name"], cc["user_id"]) for cc in ccs]))
         if tos:
-            message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], (to["user_id"] if (to.get("external_email", None)) is None else to["external_email"])) for to in tos]))
+            message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], to["user_id"]) for to in tos]))
         if bccs:
             message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
         if reply_tos:
