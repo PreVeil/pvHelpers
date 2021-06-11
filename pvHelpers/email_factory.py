@@ -156,16 +156,18 @@ class EmailFactory(object):
             ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
-            # if sender, we can see all bccs
+            # if sender or gateway user, we can see all bccs;
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
-            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower():
+            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower() or (common_props.get("other_headers") and common_props["other_headers"].get("X-External-BCCs") and lfor_user_id == common_props["other_headers"]["X-External-BCCs"][0]["user_id"].lower()):
                 if decrypted_msg["protocol_version"] < 7:
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
                 else:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"], "external_email": u.get("external_email", None)},
-                           decrypted_msg["private_metadata"].get("bccs", []))
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, decrypted_msg["private_metadata"].get("bccs", []))
+                    external_bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, common_props["other_headers"]["X-External-BCCs"])
+                    common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(external_bccs)
+                    bccs += external_bccs
             elif lfor_user_id not in [
                     recip["user_id"].lower()
                     for recip in decrypted_msg["private_metadata"]["tos"] +
@@ -180,7 +182,6 @@ class EmailFactory(object):
         external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
 
         common_props["other_headers"]["X-External-Recipients"] = EmailFactory._extractExternalRecipients(tos) + EmailFactory._extractExternalRecipients(ccs)
-        common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(bccs)
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
@@ -213,4 +214,4 @@ class EmailFactory(object):
     def _extractExternalRecipients(all_recipients):
         recipients = filter(lambda r: "external_email" in r, all_recipients)
         return map(lambda r: {"display_name": r["external_email"], "external_email": r["external_email"]}, recipients)
-        
+
