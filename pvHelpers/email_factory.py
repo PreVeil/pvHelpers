@@ -165,7 +165,7 @@ class EmailFactory(object):
                            decrypted_msg["private_metadata"].get("bccs", []))
                 else:
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, decrypted_msg["private_metadata"].get("bccs", []))
-                    external_bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, common_props["other_headers"]["X-External-BCCs"])
+                    external_bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, common_props["other_headers"].get("X-External-BCCs", []))
                     common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(external_bccs)
                     bccs += external_bccs
             elif lfor_user_id not in [
