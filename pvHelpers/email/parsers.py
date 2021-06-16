@@ -75,9 +75,9 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
         if external_sender:
             message.headers["X-External-Sender"] = u"{} <{}>".format(external_sender["display_name"], external_sender["external_email"])
         if other_headers:
-            if other_headers["X-External-Recipients"]:
+            if other_headers.get("X-External-Recipients"):
                 message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in other_headers["X-External-Recipients"]]))
-            if other_headers["X-External-BCCs"]:
+            if other_headers.get("X-External-BCCs"):
                 message.headers["X-External-BCCs"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(b["display_name"], b["external_email"]) for b in other_headers["X-External-BCCs"]]))
     except mime.EncodingError as e:
         raise EmailException(u"createMime: exception, {}".format(e))
