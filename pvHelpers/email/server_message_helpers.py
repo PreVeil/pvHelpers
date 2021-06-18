@@ -71,17 +71,20 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             bccs = jloads(utf8Decode(user_encryption_key.unseal(
                 b64dec(message["wrapped_bccs"]))))
 
-        # verify the integrity of the wrapped_recipients against private metadata
+        # verify the integrity of the wrapped_recipients and (optional) external sender against private metadata
         tos_groups = decrypted_private_metadata.get("tos_groups", [])
         ccs_groups = decrypted_private_metadata.get("ccs_groups", [])
+        pvm_sender = decrypted_private_metadata["sender"]
+        if pvm_sender != getSender(message):
+            raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
 
         tos_groups_flatten = flatten_recipient_groups(tos_groups)
         ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
 
-        server_recips = CaseInsensitiveSet(map(lambda u: u["user_id"], recipients))
+        server_recips = CaseInsensitiveSet(map(lambda u: u["user_id"]: {"user_id": u["user_id"], "external_email": u["external_email"]}, recipients))
         pvm_recips = CaseInsensitiveSet(
                 map(
-                    lambda u: u["user_id"], decrypted_private_metadata["ccs"] +
+                    lambda u: u["user_id"]: {"user_id": u["user_id"], "external_email": u["external_email"]}, decrypted_private_metadata["ccs"] +
                     decrypted_private_metadata["tos"] + tos_groups_flatten +
                     ccs_groups_flatten
                 )
@@ -90,6 +93,9 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             g_log.debug("pvm recips={}".format(list(pvm_recips)))
             g_log.debug("decrypted server recips={}".format(list(server_recips)))
             raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
+
+
+
 
         # combine group alias into tos and ccs for display purpose
         for tos_group in tos_groups:
