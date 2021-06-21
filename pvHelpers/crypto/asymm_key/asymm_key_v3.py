@@ -1,5 +1,5 @@
 import types
-from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, CryptoException, \
+from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, CryptoException, SealedDataBuffer, ProtobufErrors, \
     CURVE25519_PUB_KEY_LENGTH, NISTP256_PUB_KEY_LENGTH, EC_SECRET_LENGTH
 from .asymm_key_base import PublicKeyBase, AsymmKeyBase
 import fipscrypto as FC
@@ -24,9 +24,18 @@ class PublicKeyV3(PublicKeyBase):
         return self.curve25519_pub + self.p256_pub
 
 
-    @params(object, bytes)
-    def seal(self, message):
-        return FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message)
+    @params(object, bytes, bool)
+    def seal(self, message, use_fips_derivation=False):
+        if not use_fips_derivation:
+            return FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message, False)
+
+        ciphertext = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message, True)
+        buffer = SealedDataBuffer(
+            protocol_version=1,
+            ciphertext=ciphertext,
+            proof=1
+        )
+        return buffer.SerializeToString()
 
 
     @property
@@ -83,7 +92,20 @@ class AsymmKeyV3(AsymmKeyBase):
 
     @params(object, bytes)
     def unseal(self, cipher):
-        return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher)
+        try:
+            buffer = SealedDataBuffer()
+            buffer.ParseFromString(cipher)
+
+            if buffer.proof != 1:
+                return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher, False)
+
+            if buffer.protocol_version == 1:
+                return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, buffer.ciphertext, True)
+            else:
+                raise CryptoException('Unsupported SealedData protocol version {}'.format(buffer.protocol_version))
+
+        except ProtobufErrors:
+            return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher, False)
 
 
     def __eq__(self, other):

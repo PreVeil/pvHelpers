@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='keys.proto',
   package='PVKeys',
   syntax='proto2',
-  serialized_pb=_b('\n\nkeys.proto\x12\x06PVKeys\",\n\x03Key\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x0b\n\x03key\x18\x02 \x01(\x0c\"|\n\x07UserKey\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x13\n\x0bkey_version\x18\x02 \x01(\x04\x12 \n\x0bprivate_key\x18\x03 \x01(\x0b\x32\x0b.PVKeys.Key\x12 \n\x0bsigning_key\x18\x04 \x01(\x0b\x32\x0b.PVKeys.Key\"\x80\x01\n\rPublicUserKey\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x13\n\x0bkey_version\x18\x02 \x01(\x04\x12\x1f\n\npublic_key\x18\x03 \x01(\x0b\x32\x0b.PVKeys.Key\x12\x1f\n\nverify_key\x18\x04 \x01(\x0b\x32\x0b.PVKeys.Key')
+  serialized_pb=_b('\n\nkeys.proto\x12\x06PVKeys\",\n\x03Key\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x0b\n\x03key\x18\x02 \x01(\x0c\"|\n\x07UserKey\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x13\n\x0bkey_version\x18\x02 \x01(\x04\x12 \n\x0bprivate_key\x18\x03 \x01(\x0b\x32\x0b.PVKeys.Key\x12 \n\x0bsigning_key\x18\x04 \x01(\x0b\x32\x0b.PVKeys.Key\"\x80\x01\n\rPublicUserKey\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x13\n\x0bkey_version\x18\x02 \x01(\x04\x12\x1f\n\npublic_key\x18\x03 \x01(\x0b\x32\x0b.PVKeys.Key\x12\x1f\n\nverify_key\x18\x04 \x01(\x0b\x32\x0b.PVKeys.Key\"I\n\nSealedData\x12\x18\n\x10protocol_version\x18\x01 \x01(\x04\x12\x12\n\nciphertext\x18\x02 \x01(\x0c\x12\r\n\x05proof\x18\x03 \x01(\x06')
 )
 
 
@@ -166,6 +166,51 @@ _PUBLICUSERKEY = _descriptor.Descriptor(
   serialized_end=323,
 )
 
+
+_SEALEDDATA = _descriptor.Descriptor(
+  name='SealedData',
+  full_name='PVKeys.SealedData',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='protocol_version', full_name='PVKeys.SealedData.protocol_version', index=0,
+      number=1, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ciphertext', full_name='PVKeys.SealedData.ciphertext', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='proof', full_name='PVKeys.SealedData.proof', index=2,
+      number=3, type=6, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=325,
+  serialized_end=398,
+)
+
 _USERKEY.fields_by_name['private_key'].message_type = _KEY
 _USERKEY.fields_by_name['signing_key'].message_type = _KEY
 _PUBLICUSERKEY.fields_by_name['public_key'].message_type = _KEY
@@ -173,6 +218,7 @@ _PUBLICUSERKEY.fields_by_name['verify_key'].message_type = _KEY
 DESCRIPTOR.message_types_by_name['Key'] = _KEY
 DESCRIPTOR.message_types_by_name['UserKey'] = _USERKEY
 DESCRIPTOR.message_types_by_name['PublicUserKey'] = _PUBLICUSERKEY
+DESCRIPTOR.message_types_by_name['SealedData'] = _SEALEDDATA
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Key = _reflection.GeneratedProtocolMessageType('Key', (_message.Message,), dict(
@@ -195,6 +241,13 @@ PublicUserKey = _reflection.GeneratedProtocolMessageType('PublicUserKey', (_mess
   # @@protoc_insertion_point(class_scope:PVKeys.PublicUserKey)
   ))
 _sym_db.RegisterMessage(PublicUserKey)
+
+SealedData = _reflection.GeneratedProtocolMessageType('SealedData', (_message.Message,), dict(
+  DESCRIPTOR = _SEALEDDATA,
+  __module__ = 'keys_pb2'
+  # @@protoc_insertion_point(class_scope:PVKeys.SealedData)
+  ))
+_sym_db.RegisterMessage(SealedData)
 
 
 # @@protoc_insertion_point(module_scope)
