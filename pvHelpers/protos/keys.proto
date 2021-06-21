@@ -20,3 +20,13 @@ message PublicUserKey {
   optional Key public_key = 3;
   optional Key verify_key = 4;
 }
+
+message SealedData {
+  optional uint64 protocol_version = 1;
+  optional bytes ciphertext = 2;
+  // This field protects against accidental deserialization of legacy (i.e. non-protobuf) ciphertexts.
+  // It's a fixed 64 bits, and should always be set to 1 when clients create SealedData.
+  // Conversely, clients need to check that this field is 1 when deserializing before branching away from the
+  // legacy decryption path.
+  optional fixed64 proof = 3;
+}

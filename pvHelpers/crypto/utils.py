@@ -1,7 +1,7 @@
 import libnacl
 from ..params import params
 from ..misc import jdumps, utf8Encode, b64enc, b64dec, jloads, utf8Decode, g_log
-from ..protos import UserKey as UserKeyBuffer, PublicUserKey as PublicUserKeyBuffer, Key as KeyBuffer, ProtobufErrors
+from ..protos import UserKey as UserKeyBuffer, PublicUserKey as PublicUserKeyBuffer, Key as KeyBuffer, SealedData as SealedDataBuffer, ProtobufErrors
 import fipscrypto as FC
 
 EC_SECRET_LENGTH  = FC.EC_PRIVATE_KEY_LENGTH

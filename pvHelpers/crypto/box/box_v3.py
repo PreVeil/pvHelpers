@@ -8,26 +8,29 @@ import fipscrypto as FC
 class AsymmBoxV3(object):
 
     @staticmethod
-    @params(AsymmKeyV3, PublicKeyV3)
-    def get_shared_key(private_key, public_key):
+    @params(AsymmKeyV3, PublicKeyV3, bool)
+    def get_shared_key(private_key, public_key, use_fips_derivation):
         return FC.get_ecdh_shared_key(
             (private_key._curve25519_secret, private_key._p256_secret),
-            (public_key.curve25519_pub, public_key.p256_pub))
+            (public_key.curve25519_pub, public_key.p256_pub),
+            use_fips_derivation)
 
 
     @staticmethod
-    @params(AsymmKeyV3, PublicKeyV3, bytes)
-    def encrypt(private_key, public_key, plaintext):
+    @params(AsymmKeyV3, PublicKeyV3, bytes, bool)
+    def encrypt(private_key, public_key, plaintext, use_fips_derivation):
         return FC.hybrid_box_encrypt(
             (private_key._curve25519_secret, private_key._p256_secret),
             (public_key.curve25519_pub, public_key.p256_pub),
-            plaintext)
+            plaintext,
+            use_fips_derivation)
 
 
     @staticmethod
-    @params(AsymmKeyV3, PublicKeyV3, bytes)
-    def decrypt(private_key, public_key, ciphertext):
+    @params(AsymmKeyV3, PublicKeyV3, bytes, bool)
+    def decrypt(private_key, public_key, ciphertext, use_fips_derivation):
         return FC.hybrid_box_decrypt(
-            (private_key._curve25519_secret, private_key._p256_secret),
-            (public_key.curve25519_pub, public_key.p256_pub),
-            ciphertext)
+             (private_key._curve25519_secret, private_key._p256_secret),
+             (public_key.curve25519_pub, public_key.p256_pub),
+            ciphertext,
+            use_fips_derivation)
