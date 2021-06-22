@@ -99,10 +99,9 @@ class AsymmKeyV3(AsymmKeyBase):
             if buffer.proof != 1:
                 return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher, False)
 
-            if buffer.protocol_version == 1:
-                return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, buffer.ciphertext, True)
-            else:
+            if buffer.protocol_version != 1:
                 raise CryptoException('Unsupported SealedData protocol version {}'.format(buffer.protocol_version))
+            return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, buffer.ciphertext, True)
 
         except ProtobufErrors:
             return FC.hybrid_unseal(self._curve25519_secret, self._p256_secret, cipher, False)
