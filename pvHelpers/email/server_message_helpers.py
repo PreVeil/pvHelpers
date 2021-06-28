@@ -92,13 +92,6 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             g_log.debug("decrypted server recips={}".format(list(server_recips)))
             raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
 
-        if message["wrapped_external_sender"] and message["wrapped_external_sender"] is not None:
-            external_sender = jloads(utf8Decode(user_encryption_key.unseal(b64dec(message["wrapped_external_sender"]))))
-            pvm_sender = decrypted_private_metadata["sender"]
-            if pvm_sender != external_sender["user_id"]:
-                raise EmailException(u"Server wrapped external sender does not match sender in private metadata")
-
-
         # combine group alias into tos and ccs for display purpose
         for tos_group in tos_groups:
             decrypted_private_metadata["tos"].append({
