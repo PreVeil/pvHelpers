@@ -206,7 +206,11 @@ class EmailFactory(object):
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V6:
             return EmailV6(**email_dict)
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V7:
-            return EmailV7(**email_dict)
+            if common_props["other_headers"]["X-External-Recipients"] == [] and common_props["other_headers"].get("X-External-BCCs", []) == []:
+                    decrypted_msg["protocol_version"] = PROTOCOL_VERSION.V6
+                    return EmailV6(**email_dict)
+            else:
+                return EmailV7(**email_dict)
 
         raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))
 
