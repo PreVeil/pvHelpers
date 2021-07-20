@@ -449,20 +449,25 @@ def recur_chown(path, uid, gid):
 
 
 def quiet_mkdir(path):
-    try:
-        if sys.platform == "win32":
-            import win32file
-            import win32security
+    if sys.platform == "win32":
+        import pywintypes
+        import win32file
+        import win32security
+        try:
             sddl = "D:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;;0x120000;;;BU)"
             sec_descriptor = win32security.ConvertStringSecurityDescriptorToSecurityDescriptor(sddl, win32security.SDDL_REVISION_1)
             sec_attributes = win32security.SECURITY_ATTRIBUTES()
             sec_attributes.SECURITY_DESCRIPTOR = sec_descriptor
             win32file.CreateDirectory(path, sec_attributes)
-        else:
+        except pywintypes.error:
+            if not os.path.isdir(path):
+                raise
+    else:
+        try:
             os.mkdir(path)
-    except OSError:
-        if not os.path.isdir(path):
-            raise
+        except OSError:
+            if not os.path.isdir(path):
+                raise
 
 
 def file_no_ext(path):
