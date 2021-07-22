@@ -449,12 +449,21 @@ def recur_chown(path, uid, gid):
 
 
 def quiet_mkdir(path):
+    # dropping to win32 for Windows
+    # python modifies the permissions on Windows folders being created to be too permissive so we manually specify security info
     if sys.platform == "win32":
         import pywintypes
         import win32file
         import win32security
         try:
-            sddl = "D:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;;0x120000;;;BU)"
+            """
+            Owner            :
+            Group            :
+            DiscretionaryAcl : {NT AUTHORITY\SYSTEM: AccessAllowed (GenericAll), BUILTIN\Administrators: AccessAllowed (GenericAll)}
+            SystemAcl        : {}
+            RawDescriptor    : System.Security.AccessControl.CommonSecurityDescriptor
+            """
+            sddl = "D:PAI(A;OICI;GA;;;SY)(A;OICI;GA;;;BA)"
             sec_descriptor = win32security.ConvertStringSecurityDescriptorToSecurityDescriptor(sddl, win32security.SDDL_REVISION_1)
             sec_attributes = win32security.SECURITY_ATTRIBUTES()
             sec_attributes.SECURITY_DESCRIPTOR = sec_descriptor
