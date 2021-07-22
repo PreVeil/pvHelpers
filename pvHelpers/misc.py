@@ -449,11 +449,34 @@ def recur_chown(path, uid, gid):
 
 
 def quiet_mkdir(path):
-    try:
-        os.mkdir(path)
-    except OSError:
-        if not os.path.isdir(path):
-            raise
+    # dropping to win32 for Windows
+    # python modifies the permissions on Windows folders being created to be too permissive so we manually specify security info
+    if sys.platform == "win32":
+        import pywintypes
+        import win32file
+        import win32security
+        try:
+            """
+            Owner            :
+            Group            :
+            DiscretionaryAcl : {NT AUTHORITY\SYSTEM: AccessAllowed (GenericAll), BUILTIN\Administrators: AccessAllowed (GenericAll)}
+            SystemAcl        : {}
+            RawDescriptor    : System.Security.AccessControl.CommonSecurityDescriptor
+            """
+            sddl = "D:PAI(A;OICI;GA;;;SY)(A;OICI;GA;;;BA)"
+            sec_descriptor = win32security.ConvertStringSecurityDescriptorToSecurityDescriptor(sddl, win32security.SDDL_REVISION_1)
+            sec_attributes = win32security.SECURITY_ATTRIBUTES()
+            sec_attributes.SECURITY_DESCRIPTOR = sec_descriptor
+            win32file.CreateDirectory(path, sec_attributes)
+        except pywintypes.error:
+            if not os.path.isdir(path):
+                raise
+    else:
+        try:
+            os.mkdir(path)
+        except OSError:
+            if not os.path.isdir(path):
+                raise
 
 
 def file_no_ext(path):
