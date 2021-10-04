@@ -73,7 +73,8 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             date = (u"%s" + u"\r\n") % email.utils.formatdate(time)
             message.headers["Date"] = date
         if external_sender:
-            message.headers["X-External-Sender"] = u"{} <{}>".format(external_sender["display_name"], external_sender["external_email"])
+            message.headers["X-External-Sender"] = u"{}".format(external_sender)
+            message.headers["From"] = u"[External] {} <{}>".format(external_sender, external_sender)
         if other_headers:
             if other_headers.get("X-External-Recipients"):
                 message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in other_headers["X-External-Recipients"]]))
