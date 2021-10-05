@@ -159,8 +159,8 @@ class EmailFactory(object):
             # if sender or gateway user, we can see all bccs;
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
-            gateway_id = common_props["other_headers"]["X-External-BCCs"][0]["user_id"].lower()
-            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower() or (common_props.get("other_headers") and common_props["other_headers"].get("X-External-BCCs") and lfor_user_id == gateway_id):
+            isGatewayUser = common_props.get("other_headers") and common_props["other_headers"].get("X-External-BCCs") and lfor_user_id == common_props["other_headers"]["X-External-BCCs"][0]["user_id"].lower()
+            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower() or isGatewayUser:
                 if decrypted_msg["protocol_version"] < 7:
                     bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
