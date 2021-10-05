@@ -78,7 +78,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         tos_groups_flatten = flatten_recipient_groups(tos_groups)
         ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
 
-        server_recips = CaseInsensitiveSet(map(lambda u: u["external_email"] if u.get("external_email") else u["user_id"], recipients))        
+        server_recips = CaseInsensitiveSet(map(lambda u: u.get("external_email", u["user_id"]), recipients))
         pvm_recips = CaseInsensitiveSet(
                 map(
                     lambda u: u["external_email"] if u.get("external_email") else u["user_id"], decrypted_private_metadata["ccs"] +

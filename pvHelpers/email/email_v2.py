@@ -102,7 +102,7 @@ class EmailV2(EmailHelpers, EmailBase):
         o["flags"] = self.flags
         o["subject"] = self.subject
         # This needs fixing, should get the names from server
-        if self.sender.has_key("external_email"):
+        if "external_email" in self.sender:
             o["sender"] = {"address": self.sender["user_id"], "name": self.sender["external_email"], "external_email": self.sender["external_email"]}
         else:
             o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}

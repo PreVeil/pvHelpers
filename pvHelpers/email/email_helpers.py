@@ -79,7 +79,7 @@ class EmailHelpers(object):
                 "external_email": recip.get(u"external_email", None),
                 "members": recip["members"]
             }
-        if recip.get(u"external_email", None) is None:
+        elif recip.get(u"external_email") is None:
             return {
                 "user_id": recip["user_id"],
                 "display_name": recip["user_id"]
