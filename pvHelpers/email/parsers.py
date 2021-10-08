@@ -52,15 +52,15 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             message = body_shell
 
         if sender:
-            message.headers["From"] = u"{} <{}>".format(sender["display_name"], sender["user_id"])
+            message.headers["From"] = u"\"{}\" <{}>".format(sender["display_name"], sender["user_id"])
         if ccs:
-            message.headers["Cc"] = u"{}".format(", ".join([u"{} <{}>".format(cc["display_name"], cc["user_id"]) for cc in ccs]))
+            message.headers["Cc"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(cc["display_name"], cc["user_id"]) for cc in ccs]))
         if tos:
-            message.headers["To"] = u"{}".format(", ".join([u"{} <{}>".format(to["display_name"], to["user_id"]) for to in tos]))
+            message.headers["To"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(to["display_name"], to["user_id"]) for to in tos]))
         if bccs:
-            message.headers["Bcc"] = u"{}".format(", ".join([u"{} <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
+            message.headers["Bcc"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(bcc["display_name"], bcc["user_id"]) for bcc in bccs]))
         if reply_tos:
-            message.headers["Reply-To"] = u"{}".format(", ".join([u"{} <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in reply_tos]))
+            message.headers["Reply-To"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(rpt["display_name"], rpt["user_id"]) for rpt in reply_tos]))
         if subject:
             message.headers["Subject"] = subject
         if message_id:
@@ -74,7 +74,7 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             message.headers["Date"] = date
         if external_sender:
             message.headers["X-External-Sender"] = u"{}".format(external_sender)
-            message.headers["From"] = u"[External] {} <{}>".format(external_sender, external_sender)
+            message.headers["From"] = u"\"[External] {}\" <{}>".format(external_sender, external_sender)
         if other_headers:
             if other_headers.get("X-External-Recipients"):
                 message.headers["X-External-Recipients"] = u"{}".format(", ".join([u"\"{}\" <{}>".format(e["display_name"], e["external_email"]) for e in other_headers["X-External-Recipients"]]))
