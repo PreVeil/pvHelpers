@@ -2,7 +2,7 @@ import calendar
 import time
 
 from ..misc import utf8Encode, utf8Decode, jloads, b64dec, \
-    MergeDicts, CaseInsensitiveSet, g_log
+    MergeDicts, CaseInsensitiveSet, CaseInsensitiveDict, g_log
 from ..crypto import Sha256Sum
 from . import PROTOCOL_VERSION, EmailException
 
@@ -71,21 +71,22 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             bccs = jloads(utf8Decode(user_encryption_key.unseal(
                 b64dec(message["wrapped_bccs"]))))
 
-        # verify the integrity of the wrapped_recipients against private metadata
+        # verify the integrity of the wrapped_recipients and (optional) external sender against private metadata
         tos_groups = decrypted_private_metadata.get("tos_groups", [])
         ccs_groups = decrypted_private_metadata.get("ccs_groups", [])
 
         tos_groups_flatten = flatten_recipient_groups(tos_groups)
         ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
 
-        server_recips = CaseInsensitiveSet(map(lambda u: u["user_id"], recipients))
+        server_recips = CaseInsensitiveSet(map(lambda u: u.get("external_email", u["user_id"]), recipients))
         pvm_recips = CaseInsensitiveSet(
                 map(
-                    lambda u: u["user_id"], decrypted_private_metadata["ccs"] +
+                    lambda u: u["external_email"] if u.get("external_email") else u["user_id"], decrypted_private_metadata["ccs"] +
                     decrypted_private_metadata["tos"] + tos_groups_flatten +
                     ccs_groups_flatten
                 )
             )
+
         if server_recips != pvm_recips:
             g_log.debug("pvm recips={}".format(list(pvm_recips)))
             g_log.debug("decrypted server recips={}".format(list(server_recips)))

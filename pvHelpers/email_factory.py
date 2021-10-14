@@ -4,7 +4,7 @@ import types
 from pvHelpers import EncodingException, WrapExceptions
 from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata,
                     EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment,
-                    EmailV5, EmailV6, EmailHelpers)
+                    EmailV5, EmailV6, EmailV7, EmailHelpers)
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt
 from .params import params
 
@@ -33,6 +33,8 @@ class EmailFactory(object):
             return EmailV5(*args, **kwargs)
         elif v is PROTOCOL_VERSION.V6:
             return EmailV6(*args, **kwargs)
+        elif v is PROTOCOL_VERSION.V7:
+            return EmailV7(*args, **kwargs)
 
         raise EmailException(u"EmailFactory.new: Unsupported protocol_version")
 
@@ -85,6 +87,8 @@ class EmailFactory(object):
             return EmailV5(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
         elif v is PROTOCOL_VERSION.V6:
             return EmailV6(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
+        elif v is PROTOCOL_VERSION.V7:
+            return EmailV7(**MergeDicts({"server_attr": server_info, "flags": flags}, metadata))
 
         raise EmailException(u"EmailFactory.fromDict: Unsupported protocol_version")
 
@@ -101,14 +105,15 @@ class EmailFactory(object):
             ),
             "flags": decrypted_msg["flags"],
             "sender": {"user_id": decrypted_msg["private_metadata"]["sender"],
-                       "display_name": decrypted_msg["private_metadata"]["sender"]},
+                       "display_name": decrypted_msg["private_metadata"]["sender"],
+                       "external_email": decrypted_msg["private_metadata"].get("external_sender", None)},
             "subject": decrypted_msg["private_metadata"]["subject"],
             "message_id": decrypted_msg["message_id"],
             "in_reply_to": decrypted_msg["in_reply_to"],
             "references": decrypted_msg["references"],
             "reply_tos": [],
             "protocol_version": decrypted_msg["protocol_version"],
-            "other_headers": decrypted_msg["private_metadata"].get("other_headers")
+            "other_headers": decrypted_msg["private_metadata"].get("other_headers", {})
         }
 
         # protocol < 5
@@ -151,12 +156,19 @@ class EmailFactory(object):
             ccs = map(lambda r: EmailHelpers.format_recip(r),
                       decrypted_msg["private_metadata"].get("ccs", []))
 
-            # if sender, we can see all bccs
+            # if sender or gateway user, we can see all bccs;
             # else figure out whether we are bcced.
             lfor_user_id = for_user_id.lower()
-            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower():
-                bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
+            isGatewayUser = common_props.get("other_headers") and common_props["other_headers"].get("X-External-BCCs") and lfor_user_id == common_props["other_headers"]["X-External-BCCs"][0]["user_id"].lower()
+            if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower() or isGatewayUser:
+                if decrypted_msg["protocol_version"] < 7:
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
                            decrypted_msg["private_metadata"].get("bccs", []))
+                else:
+                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, decrypted_msg["private_metadata"].get("bccs", []))
+                    external_bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, common_props["other_headers"].get("X-External-BCCs", []))
+                    common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(external_bccs)
+                    bccs += external_bccs
             elif lfor_user_id not in [
                     recip["user_id"].lower()
                     for recip in decrypted_msg["private_metadata"]["tos"] +
@@ -168,14 +180,17 @@ class EmailFactory(object):
             else:
                 # neither the sender or bcced, so cannot see the bccs
                 bccs = []
+        external_sender = decrypted_msg["private_metadata"].get("external_sender", None)
 
+        common_props["other_headers"]["X-External-Recipients"] = EmailFactory._extractExternalRecipients(tos) + EmailFactory._extractExternalRecipients(ccs)
         protocol_dependent_props = {
             "body": body,
             "snippet": snippet,
             "attachments": attachments,
+            "external_sender": external_sender,
             "tos": tos,
             "ccs": ccs,
-            "bccs": bccs,
+            "bccs": bccs
         }
 
         email_dict = MergeDicts(common_props, protocol_dependent_props)
@@ -191,5 +206,17 @@ class EmailFactory(object):
             return EmailV5(**email_dict)
         elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V6:
             return EmailV6(**email_dict)
+        elif decrypted_msg["protocol_version"] is PROTOCOL_VERSION.V7:
+            if common_props["other_headers"]["X-External-Recipients"] == [] and common_props["other_headers"].get("X-External-BCCs", []) == []:
+                    decrypted_msg["protocol_version"] = PROTOCOL_VERSION.V6
+                    return EmailV6(**email_dict)
+            else:
+                return EmailV7(**email_dict)
 
         raise EmailException("Unsupported protocol version {}".format(decrypted_msg["protocol_version"]))
+
+    @staticmethod
+    def _extractExternalRecipients(all_recipients):
+        recipients = filter(lambda r: "external_email" in r, all_recipients)
+        return map(lambda r: {"display_name": r["external_email"], "external_email": r["external_email"]}, recipients)
+

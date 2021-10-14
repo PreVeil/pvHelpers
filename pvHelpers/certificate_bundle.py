@@ -92,7 +92,7 @@ class CertificateBundle(object):
         certs = [self.get_certifi_pem()]
         if sys.platform == 'win32':
             certs += self.get_pems_win()
-        else:
+        elif sys.platform == 'darwin':
             certs += self.get_pems_darwin()
 
         # For now we need to support some potentially incompatible network configurations

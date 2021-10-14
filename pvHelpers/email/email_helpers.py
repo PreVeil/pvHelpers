@@ -19,7 +19,8 @@ class PROTOCOL_VERSION(object):
     V4 = 4
     V5 = 5
     V6 = 6
-    Latest = 6
+    V7 = 7
+    Latest = 7
 
 
 class EmailRecipients():
@@ -75,9 +76,25 @@ class EmailHelpers(object):
             return {
                 "user_id": recip["user_id"],
                 "display_name": recip["user_id"],
+                "external_email": recip.get(u"external_email", None),
                 "members": recip["members"]
             }
-        return {
-            "user_id": recip["user_id"],
-            "display_name": recip["user_id"],
-        }
+        elif recip.get(u"external_email") is None:
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["user_id"]
+            }
+        else:
+            return {
+                "user_id": recip["user_id"],
+                "display_name": recip["external_email"],
+                "external_email": recip["external_email"]
+            }
+
+    @staticmethod
+    @params(dict)
+    def format_ext_disp(recipient):
+        if "external_email" in recipient and recipient["external_email"] is not None:
+            return {"user_id": recipient["user_id"], "display_name": u"[External] " + recipient["display_name"], "external_email": recipient["external_email"]}
+        else:
+            return {"user_id": recipient["user_id"], "display_name": recipient["display_name"]}

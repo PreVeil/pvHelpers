@@ -29,11 +29,13 @@ class EmailV2(EmailHelpers, EmailBase):
                  message_id,
                  snippet=None,
                  other_headers=None,
+                 external_sender=None,
                  **kwargs):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
-            in_reply_to, message_id, snippet)
+            in_reply_to, message_id, snippet, other_headers, external_sender)
+
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
@@ -67,7 +69,12 @@ class EmailV2(EmailHelpers, EmailBase):
         if not isinstance(self.server_attr, NOT_ASSIGNED):
             time = self.server_attr.server_time
 
-        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, self.tos, self.ccs, self.bccs, self.reply_tos, self.sender, self.in_reply_to, self.references)
+        sender = EmailHelpers.format_ext_disp(self.sender)
+        tos = map(lambda r: EmailHelpers.format_ext_disp(r), self.tos)
+        ccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.ccs)
+        bccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.bccs)
+
+        raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, tos, ccs, bccs, self.reply_tos, sender, self.in_reply_to, self.references, self.other_headers, self.external_sender)
 
         for key, value in self.other_headers.iteritems():
             if isinstance(value, str) or isinstance(value, unicode):
@@ -78,10 +85,8 @@ class EmailV2(EmailHelpers, EmailBase):
 
         if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
             raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
-
         return mime.from_string(raw_mime.to_string())
 
-    # toBrowser is only to conform with browser expectations and can be removed
     def toBrowser(self, with_body=False):
         o = {}
         if not isinstance(self.server_attr, NOT_ASSIGNED):
@@ -97,15 +102,19 @@ class EmailV2(EmailHelpers, EmailBase):
         o["flags"] = self.flags
         o["subject"] = self.subject
         # This needs fixing, should get the names from server
-        o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
-        o["tos"] = [{"address": to["user_id"], "name": to["display_name"]} for to in self.tos]
-        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"]} for cc in self.ccs]
-        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"]} for bcc in self.bccs]
+        if "external_email" in self.sender:
+            o["sender"] = {"address": self.sender["user_id"], "name": self.sender["external_email"], "external_email": self.sender["external_email"]}
+        else:
+            o["sender"] = {"address": self.sender["user_id"], "name": self.sender["display_name"]}
+        o["tos"] = [{"address": to["user_id"], "name": to["display_name"], "external_email": to.get("external_email", None)} for to in self.tos]
+        o["ccs"] = [{"address": cc["user_id"], "name": cc["display_name"], "external_email": cc.get("external_email", None)} for cc in self.ccs]
+        o["bccs"] = [{"address": bcc["user_id"], "name": bcc["display_name"], "external_email": bcc.get("external_email", None)} for bcc in self.bccs]
         o["reply_to"] = [{"address": rpt["user_id"], "name": rpt["display_name"]} for rpt in self.reply_tos]
         o["in_reply_to"] = self.in_reply_to
         o["references"] = self.references
         o["message_id"] = self.message_id
         o["other_headers"] = self.other_headers
+        o["external_sender"] = self.external_sender
 
         if with_body:
             if not self.body.isLoaded():
@@ -165,7 +174,8 @@ class EmailV2(EmailHelpers, EmailBase):
             "body": self.body,
             "message_id": self.message_id,
             "server_attr": self.server_attr,
-            "other_headers": self.other_headers
+            "other_headers": self.other_headers,
+            "external_sender": self.external_sender
         }
 
     # TODO: get tos ccs and ...
@@ -191,7 +201,6 @@ class EmailV2(EmailHelpers, EmailBase):
         from_ = addresslib.address.parse(from_)
         if (from_, overwrite_sender) == (None, None):
             raise EmailException("either From header or overwrite_sender is expected")
-
         named_sender = overwrite_sender or {"user_id": from_.address, "display_name": from_.display_name}
         tos = raw_mime.headers.get("To")
         tos = addresslib.address.parse_list(tos)
@@ -210,7 +219,8 @@ class EmailV2(EmailHelpers, EmailBase):
         in_reply_to = raw_mime.headers.get("In-Reply-To", None)
         subject = raw_mime.headers.get("Subject", u"")
 
-
+        external_sender = raw_mime.headers.get("X-External-Sender", None)
+       
         other_headers = {}
         for key, value in raw_mime.headers.iteritems():
             if key.startswith("X-"):
@@ -230,4 +240,5 @@ class EmailV2(EmailHelpers, EmailBase):
         body = Content(body)
 
         return cls(NOT_ASSIGNED(), flags, named_tos, named_ccs, named_bccs, named_sender, \
-                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, other_headers=other_headers)
+                   named_reply_tos, subject, body, attachments, references, in_reply_to, message_id, \
+                   None, other_headers, external_sender)

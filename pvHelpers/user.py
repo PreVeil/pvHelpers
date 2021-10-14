@@ -70,12 +70,13 @@ class UserDBNode(object):
 
 
 class UserData(object):
-    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organization_info):
+    def __init__(self, user_id, display_name, mail_cid, public_user_keys, organization_info, external_email=None):
         self.user_id = user_id
         self.display_name = display_name
         self.mail_cid = mail_cid
         self.public_user_keys = public_user_keys
         self.org_info = organization_info
+        self.external_email = external_email
 
     @property
     def public_user_key(self):
@@ -89,7 +90,8 @@ class UserData(object):
             "user_id" : self.user_id,
             "display_name" : self.display_name,
             "mail_cid" : self.mail_cid,
-            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict()
+            "org_info" : self.org_info if self.org_info is None else self.org_info.toDict(),
+            "external_email" : self.external_email
         }
     def isClaimed(self):
         return len(self.public_user_keys) > 0
