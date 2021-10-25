@@ -545,6 +545,7 @@ def initDaemonDataDirs(wd, mode, is_test=False):
             preveil_pwuid = pwd.getpwnam("preveil")
             preveil_uid = preveil_pwuid.pw_uid
             preveil_gid = preveil_pwuid.pw_gid
+            os.chown(wd, preveil_uid, preveil_gid)
             recur_chown(daemonDataDir(wd), preveil_uid, preveil_gid)
         else:
             pass
