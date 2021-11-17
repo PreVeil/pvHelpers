@@ -542,9 +542,8 @@ def initDaemonDataDirs(wd, mode, is_test=False):
 
     if not is_test:
         if sys.platform in ["darwin", "linux2"]:
-            preveil_pwuid = pwd.getpwnam("preveil")
-            preveil_uid = preveil_pwuid.pw_uid
-            preveil_gid = preveil_pwuid.pw_gid
+            preveil_uid = pwd.getpwnam("preveil").pw_uid
+            preveil_gid = grp.getgrnam("preveil").gr_gid
             os.chown(wd, preveil_uid, preveil_gid)
             recur_chown(daemonDataDir(wd), preveil_uid, preveil_gid)
         else:
