@@ -24,11 +24,8 @@ class PublicKeyV3(PublicKeyBase):
         return self.curve25519_pub + self.p256_pub
 
 
-    @params(object, bytes, bool)
-    def seal(self, message, use_fips_derivation=False):
-        if not use_fips_derivation:
-            return FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message, False)
-
+    @params(object, bytes)
+    def seal(self, message):
         ciphertext = FC.hybrid_seal(self.curve25519_pub, self.p256_pub, message, True)
         buffer = SealedDataBuffer(
             protocol_version=1,
