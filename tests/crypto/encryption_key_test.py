@@ -30,11 +30,3 @@ def test_encryption_key_v3(protocol_version):
 
     assert k == k2
     assert k.serialize() == k2.serialize()
-
-
-@pytest.mark.parametrize("use_fips_derivation", [True, False])
-def test_encryption_key_v3_fips(use_fips_derivation):
-    k = PVKeyFactory.newAsymmKey(protocol_version=ASYMM_KEY_PROTOCOL_VERSION.V3)
-
-    plaintext = os.urandom(1024 * 2 + random.randint(0, 1024))
-    assert plaintext == k.unseal(k.public_key.seal(plaintext, use_fips_derivation))
