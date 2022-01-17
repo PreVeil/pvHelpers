@@ -103,7 +103,7 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
     remote_connections = filter(lambda c: c[1] == remote_addr and c[2] == remote_port and c[3] == local_process_addr and c[4] == local_process_port, tcp_connections)
 
     if len(remote_connections) != 1:
-        g_log.error(u"_get_conn_process_info_windows: couldn't fetch the connection file info, pcount: {}, p: {}".format(len(tcp_connections), tcp_connections))
+        g_log.error(u"_get_conn_process_info_windows: couldn't fetch the connection file info, pcount: {}".format(len(tcp_connections)))
         return False, None
 
     pid = remote_connections[0][0]
