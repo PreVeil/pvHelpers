@@ -5,7 +5,7 @@ if sys.platform == "win32":
     from .win_helpers import *
 
 
-LSOF_CACHE = collections.deque(maxlen=3)
+LSOF_CACHE = collections.deque(maxlen=20)
 
 
 @params({unicode, str}, int, {unicode, str}, int)
