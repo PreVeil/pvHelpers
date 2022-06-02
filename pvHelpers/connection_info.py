@@ -2,6 +2,7 @@ import subprocess, sys, re, socket, struct, collections
 from pvHelpers import g_log, NOT_ASSIGNED, toInt, LUserInfoWin, LUserInfo, params
 
 if sys.platform == "win32":
+    import pywintypes
     from .win_helpers import *
 
 
