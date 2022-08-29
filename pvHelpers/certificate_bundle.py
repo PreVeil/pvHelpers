@@ -86,6 +86,7 @@ class CertificateBundle(object):
                 os.chmod(p, 0755)
 
     def generate_and_write_pem(self):
+        print "PX56 pvHelpers: generate_and_write_pem(): self.path", self.path
         if not os.path.exists(os.path.dirname(self.path)):
             os.makedirs(os.path.dirname(self.path))
         f = open(self.path,"w+")

@@ -8,3 +8,5 @@ dist/
 .vscode
 .DS_Store
 .venv
+.idea/
+.mipy2env
