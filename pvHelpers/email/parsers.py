@@ -38,7 +38,12 @@ def createMime(text, html, attachments, message_id=None, time=None, subject=None
             html_part
         )
 
-        if len(regular_attachments) > 0:
+        if len(regular_attachments) == 1 and regular_attachments[0].metadata.content_type == "application/pkcs7-mime":
+            # Special case for S/MIME. Since an S/MIME attachment represents a wrapped MIME hierarchy, mail
+            # clients require it to be the only content in the message. We can't mix encrypted and
+            # plaintext MIME parts.
+            message = regular_attachments[0].toMime()
+        elif len(regular_attachments) > 0:
             message = mime.create.multipart("mixed")
             message.append(body_shell)
             for att in regular_attachments:
