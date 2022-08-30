@@ -24,6 +24,8 @@ from sqlalchemy import create_engine, event, orm
 from .hook_decorators import WrapExceptions
 from .params import params
 
+from px56 import px56log
+
 DATA_DIR_MODE = 0o750
 HTTP_TIMEOUT = 15
 
@@ -416,8 +418,11 @@ class DoAsPreVeil(object):
 def switchUserPreVeil():
     if sys.platform in ["darwin", "linux2"]:
         preveil_pwuid = pwd.getpwnam("preveil")
+        px56log(None)
         os.setregid(preveil_pwuid.pw_gid, preveil_pwuid.pw_gid)
+        px56log(None)
         os.setreuid(preveil_pwuid.pw_uid, preveil_pwuid.pw_uid)
+        px56log(None)
     elif "win32" == sys.platform:
         pass
 
