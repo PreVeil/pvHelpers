@@ -2,7 +2,7 @@ import pprint, inspect, datetime
 
 def px56log(obj, *msgs, **ppobjs):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-    pxpp = pprint.PrettyPrinter(indent=2)
+    pp = pprint.PrettyPrinter(indent=2)
     fl = inspect.stack()[1][1]
     ln = inspect.currentframe().f_back.f_lineno
     fn = inspect.stack()[1][3]
@@ -16,4 +16,15 @@ def px56log(obj, *msgs, **ppobjs):
         print "%s PX56L:- %s:%s %s.%s()" % (now, fl, ln, cl, fn)
     for key, value in ppobjs.items():
         print "%s PX56L:=: <%s> %s:" % (now, value.__class__.__name__, key)
-        pxpp.pprint(value)
+        pp.pprint(value)
+
+def px56dir(obj, prefix = "PX56L: "):
+    pp = pprint.PrettyPrinter(indent=2)
+    for name in dir(obj):
+        if name.startswith('_'):
+            pass
+        else:
+            if callable(getattr(obj, name)):
+                pass
+            else:
+                print prefix, name, '=', getattr(obj, name);
