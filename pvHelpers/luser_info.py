@@ -163,7 +163,7 @@ class LUserInfoUnix(LUserInfo):
         # root considered Admin
         px56log(self, "uid:", self.uid)
         # TODO: check if user's group info if is part of `root` group
-        return self.uid == 0 or self.uid == 501 # TODO:PX56: UNHACK 501
+        return self.uid == 0 or self.uid == 501  # TODO:PX56: UNHACK 501
 
     def isPreVeil(self):
         import pwd
