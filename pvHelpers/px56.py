@@ -1,6 +1,6 @@
 import pprint, inspect, datetime, traceback
 
-def px56stack(msg):
+def px56stack(msg, prefix = '    '):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     if msg:
         print "%s PX56L:===STACK===: %s" % (now, msg)
@@ -8,7 +8,8 @@ def px56stack(msg):
         print "%s PX56L:===STACK===:" % now
 
     for line in traceback.format_stack():
-        print(line.strip())
+        print(prefix + line.strip())
+    print "%s PX56L:============STACK============" % (prefix)
 
 
 def px56log(obj, *msgs, **ppobjs):
