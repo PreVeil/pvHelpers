@@ -1,0 +1,63 @@
+name: pvHelpers Builder
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Build pvHelpers package
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Check out pvHelpers
+        if: github.event_name == 'push'
+        uses: actions/checkout@v2
+        with:
+          path: ./pvHelpers
+
+      - name: Checkout pr's head commit
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v2
+        with:
+          path: ./pvHelpers
+          # on pull_request, we don't want to build on
+          # the merged commit
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Get head commit hash
+        run: |
+          [[ "${{ github.event_name }}" == "pull_request" ]] && HEAD_COMMIT=${{ github.event.pull_request.head.sha }}
+          [[ "${{ github.event_name }}" == "push" ]] && HEAD_COMMIT=${{ github.sha }}
+          echo "HEAD_COMMIT=$HEAD_COMMIT" >> $GITHUB_ENV
+        shell: bash
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "2.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+
+      - name: Install aws cli
+        run: |
+          pip install wheel
+          pip install awscli
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Run the build script
+        working-directory: ./pvHelpers
+        run: |
+          python setup.py sdist --format=gztar
+
+      - name: Upload to s3
+        working-directory: ./pvHelpers/dist
+        run: |
+          aws s3 cp ./*tar.gz s3://pv-bin-storage/public/vendor/python/pvHelpers/${{ env.HEAD_COMMIT }}/
+        shell: bash
