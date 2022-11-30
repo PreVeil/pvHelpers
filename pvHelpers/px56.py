@@ -9,7 +9,7 @@ def px56stack(msg, prefix = '    '):
 
     for line in traceback.format_stack():
         print(prefix + line.strip())
-    print "%s PX56L:============STACK============" % (prefix)
+    print "%s============================" % (prefix)
 
 
 def px56log(obj, *msgs, **ppobjs):
