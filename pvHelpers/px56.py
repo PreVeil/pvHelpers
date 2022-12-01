@@ -1,4 +1,4 @@
-import pprint, inspect, datetime, traceback
+import pprint, inspect, datetime, traceback, requests
 
 def px56stack(msg, prefix = '    '):
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
@@ -40,3 +40,34 @@ def px56dir(obj, prefix = "PX56L: "):
                 pass
             else:
                 print prefix, name, '=', getattr(obj, name);
+
+def fetchMail(ac):
+    from daemon.postlord_helpers.mail_fetcher import MailFetcher
+    import pvHelpers as H
+    from daemon.util import fetchAllUserDBNodes, deviceKeyRefreshAPI
+    from daemon.crypto_helpers.models import ExpiredDeviceKey
+
+    crypto_url = ac.crypto_url
+    resp = requests.put(
+        "{}/free_async_queue".format(crypto_url),
+        headers={"Content-Type": "application/json"}, allow_redirects=False,
+        auth=H.NOOPAuth, timeout=10
+    )
+    resp.raise_for_status()
+    status, users = fetchAllUserDBNodes(crypto_url)
+    if not status:
+        raise Exception("fetchMail: fetchAllUserDBNodes failed to fetch all users")
+    wd = ac.working_dir
+    for u in users:
+        try:
+            try:
+                MailFetcher(u, wd, crypto_url).fetchUpdates()
+                # EventFetcher(u, wd, crypto_url).fetchUpdates()
+            except ExpiredDeviceKey as e:
+                H.g_log.exception(e)
+                deviceKeyRefreshAPI(u.user_id, crypto_url=crypto_url)
+        except Exception as e:
+            # We don't clear user data between test suites, leading to invalid requests to the
+            # backend and exceptions that need to be ignored.
+            H.g_log.exception(u"user: `{}`, exception: {}".format(u.toDict(), e))
+            raise
