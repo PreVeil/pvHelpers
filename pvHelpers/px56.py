@@ -41,7 +41,7 @@ def px56dir(obj, prefix = "PX56L: "):
             else:
                 print prefix, name, '=', getattr(obj, name);
 
-def fetchMail(ac):
+def syncMail(ac):
     from daemon.postlord_helpers.mail_fetcher import MailFetcher
     import pvHelpers as H
     from daemon.util import fetchAllUserDBNodes, deviceKeyRefreshAPI
@@ -56,7 +56,7 @@ def fetchMail(ac):
     resp.raise_for_status()
     status, users = fetchAllUserDBNodes(crypto_url)
     if not status:
-        raise Exception("fetchMail: fetchAllUserDBNodes failed to fetch all users")
+        raise Exception("syncMail: fetchAllUserDBNodes failed to fetch all users")
     wd = ac.working_dir
     for u in users:
         try:
