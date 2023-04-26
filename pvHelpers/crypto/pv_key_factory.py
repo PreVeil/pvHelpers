@@ -129,6 +129,21 @@ class PVKeyFactory(object):
         except ProtobufErrors as e:
             raise CryptoException(e)
 
+    @staticmethod
+    def exportKeyFromSerializedBuffer(serialized_buffer):
+        try:
+            buffer = UserKeyBuffer()
+            buffer.ParseFromString(serialized_buffer)
+            if buffer.protocol_version == USER_KEY_PROTOCOL_VERSION.V1:
+                return UserKeyV1(
+                    buffer.key_version,
+                    PVKeyFactory.asymmKeyFromBuffer(buffer.private_key),
+                    PVKeyFactory.newSignKey()
+                )
+            else:
+                raise CryptoException(u"unsupported protocol_version {}".format(buffer.protocol_version))
+        except ProtobufErrors as e:
+            raise CryptoException(e)
 
     @staticmethod
     def deserializeSymmKey(key):
@@ -204,7 +219,11 @@ class PVKeyFactory(object):
         serialized = b64dec(user_key)
         return PVKeyFactory.userKeyFromSerializedBuffer(serialized)
 
-
+    @staticmethod
+    def deserializeExportKey(user_key):
+        serialized = b64dec(user_key)
+        return PVKeyFactory.exportKeyFromSerializedBuffer(serialized)
+        
     @staticmethod
     def userKeyfromDB(key, is_protobuf=True):
         if is_protobuf:
