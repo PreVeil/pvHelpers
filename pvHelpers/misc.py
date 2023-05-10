@@ -213,7 +213,7 @@ class _LogWrapper(object):
         self.logobj = logging.getLogger(name)
         self.logobj.setLevel(logging.DEBUG)
 
-        logpath = os.path.join(log_dir, "{}.log".format(name))
+        logpath = os.path.join(log_dir, "{}.log.bz2".format(name))
         # TimedRotatingFileHandler will only rotate the logs if the process is
         # running at midnight (assuming a log per day). This means that
         # clients who put their computer to sleep at night will never get a log
