@@ -219,7 +219,7 @@ class _LogWrapper(object):
         # clients who put their computer to sleep at night will never get a log
         # rotation. Just use RotatingFileHandler so we can avoid exploded logs.
         handler = logging.handlers.RotatingFileHandler(
-            logpath, maxBytes=5000000, backupCount=20)
+            logpath, maxBytes=10000000, backupCount=20, encoding='bz2')
         formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
         handler.setFormatter(formatter)
         self.logobj.addHandler(handler)
