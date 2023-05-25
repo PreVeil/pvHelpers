@@ -107,7 +107,7 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
         g_log.warn(u"_get_conn_process_info_windows: found multiple processes, pcount: {}".format(len(remote_connections)))
         # return False, None
 
-    users = set()
+    users = []
     pid = None
 
     for connection in remote_connections:
@@ -117,7 +117,9 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
             p_token = ws.OpenProcessToken(p_handle, ws.TOKEN_ALL_ACCESS)
             _sid = ws.GetTokenInformation(p_token, ws.TokenUser)[0]
             _psids = [psid[0] for psid in ws.GetTokenInformation(p_token, ws.TokenGroups)]
-            users.add(LUserInfoWin(_sid, _psids))
+            user = LUserInfoWin(_sid, _psids)
+            if user not in users:
+                users.append(LUserInfoWin(_sid, _psids))
         except (pywintypes.error, Exception) as e:
             g_log.exception(u"failed to get process handle, connection: {}, exception: {}".format(connection, e))
             return False, None
@@ -129,7 +131,7 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
         return False, None
 
     if len(users) != 1:
-        g_log.error(u"_get_conn_process_info_windows: found multiple users: {}".format(list(users)))
+        g_log.error(u"_get_conn_process_info_windows: found multiple users: {}".format(users))
         return False, None
 
     return True, {"pid": pid, "uid": list(users)[0]}
