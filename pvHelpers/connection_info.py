@@ -104,22 +104,35 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
     remote_connections = filter(lambda c: c[1] == remote_addr and c[2] == remote_port and c[3] == local_process_addr and c[4] == local_process_port, tcp_connections)
 
     if len(remote_connections) != 1:
-        g_log.error(u"_get_conn_process_info_windows: couldn't fetch the connection file info, pcount: {}".format(len(tcp_connections)))
+        g_log.warn(u"_get_conn_process_info_windows: found multiple processes, pcount: {}".format(len(remote_connections)))
+        # return False, None
+
+    users = set()
+    pid = None
+
+    for connection in remote_connections:
+        pid = connection[0]
+        try:
+            p_handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, 0, pid)
+            p_token = ws.OpenProcessToken(p_handle, ws.TOKEN_ALL_ACCESS)
+            _sid = ws.GetTokenInformation(p_token, ws.TokenUser)[0]
+            _psids = [psid[0] for psid in ws.GetTokenInformation(p_token, ws.TokenGroups)]
+            users.add(LUserInfoWin(_sid, _psids))
+        except (pywintypes.error, Exception) as e:
+            g_log.exception(u"failed to get process handle, connection: {}, exception: {}".format(connection, e))
+            return False, None
+        finally:
+            win32api.CloseHandle(p_handle)
+
+    if pid is None:
+        g_log.error(u"_get_conn_process_info_windows: found no pid")
         return False, None
 
-    pid = remote_connections[0][0]
-    try:
-        p_handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, 0, pid)
-        p_token = ws.OpenProcessToken(p_handle, ws.TOKEN_ALL_ACCESS)
-        _sid = ws.GetTokenInformation(p_token, ws.TokenUser)[0]
-        _psids = [psid[0] for psid in ws.GetTokenInformation(p_token, ws.TokenGroups)]
-    except (pywintypes.error, Exception) as e:
-        g_log.exception(u"failed to get process handle, pid: {}, exception: {}".format(remote_connections[0], e))
+    if len(users) != 1:
+        g_log.error(u"_get_conn_process_info_windows: found multiple users: {}".format(list(users)))
         return False, None
-    finally:
-        win32api.CloseHandle(p_handle)
 
-    return True, {"pid": pid, "uid":  LUserInfoWin(_sid, _psids)}
+    return True, {"pid": pid, "uid": list(users)[0]}
 
 
 # This function assumes the executed losf command is : `lsof -l -n -P -M -iTCP@REMOTE_ADDR:REMOTE_PORT -sTCP:ESTABLISHED -Fun`
