@@ -1,5 +1,6 @@
 import subprocess, sys, re, socket, struct, collections
 from pvHelpers import g_log, NOT_ASSIGNED, toInt, LUserInfoWin, LUserInfo, params
+from px56 import px56log
 
 if sys.platform == "win32":
     import pywintypes
@@ -19,7 +20,7 @@ def resolve_connection_info(remote_addr, remote_port, local_process_addr, local_
         return _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, local_process_port)
     elif sys.platform in ["win32"]:
         return _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr, local_process_port)
-    
+
     raise NotImplementedError(u"platform not supported")
 
 def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, local_process_port):
@@ -39,10 +40,13 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
     # [(pid, uid, (file descriptor, Internet address)*)*]
     ################
     lsof_command = "lsof -l -n -P -M -iTCP@{}:{} -sTCP:ESTABLISHED -Fufn".format(local_process_addr, local_process_port)
+    px56log(None, "lsof_command", lsof_command)
     try:
         result = subprocess.check_output(lsof_command.split(" "), close_fds=True)
         open_files = _materialize_lsof(result)
+        px56log(None, "open_files", open_files)
     except (subprocess.CalledProcessError, AttributeError, IndexError) as e:
+        px56log(None, u"lsof exception {}".format(e))
         g_log.exception(u"lsof exception {}".format(e))
         return False, None
 
@@ -50,6 +54,7 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
     remote_client_files = filter(lambda f: f["local_addr"] == remote_addr and f["local_port"] == remote_port, open_files)
 
     if len(remote_client_files) == 0:
+        px56log(None, u"_get_conn_process_info_unix: couldn't fetch the connection file info")
         g_log.error(u"_get_conn_process_info_unix: couldn't fetch the connection file info")
         return False, None
 
@@ -57,9 +62,11 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
     # they'll be identical in all attributes except for their file descriptor numbers
     status, uid = toInt(remote_client_files[0]["uid"])
     if not status:
+        px56log(None, u"_get_conn_process_info_unix: int coercion of uid failed")
         g_log.error(u"_get_conn_process_info_unix: int coercion of uid failed")
         return False, None
 
+    px56log(None, "pid", remote_client_files[0]["pid"], "uid", LUserInfo.new(sys.platform, uid))
     return True, {
         "pid": remote_client_files[0]["pid"],
         "uid": LUserInfo.new(sys.platform, uid)

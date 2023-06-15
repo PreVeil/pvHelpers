@@ -404,6 +404,7 @@ class DoAsPreVeil(object):
             pass
 
     def __exit__(self, type, value, traceback):
+        px56log(self, "type", type,"value",value, "traceback", traceback)
         if sys.platform in ["darwin", "linux2"]:
             if self._noop is False:
                 os.setegid(self.original_egid)
