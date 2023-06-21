@@ -35,7 +35,6 @@ jobs:
         shell: bash
 
       - name: Install Python 2
-        if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo DEBIAN_FRONTEND=noninteractive DEBIAN_FRONTEND=noninteractive apt-get install -y python2 libpython2.7 libpython2.7-dev
           curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output /tmp/get-pip.py && python2 /tmp/get-pip.py
