@@ -34,15 +34,15 @@ jobs:
           echo "HEAD_COMMIT=$HEAD_COMMIT" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-python@v2
-        with:
-          python-version: "2.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
-          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+      - name: Install Python 2
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive DEBIAN_FRONTEND=noninteractive apt-get install -y python2 libpython2.7 libpython2.7-dev
+          curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output /tmp/get-pip.py && python2 /tmp/get-pip.py
 
       - name: Install aws cli
         run: |
-          pip install wheel
-          pip install awscli
+          python2 -m pip install wheel
+          python2 -m pip install awscli
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -54,7 +54,7 @@ jobs:
       - name: Run the build script
         working-directory: ./pvHelpers
         run: |
-          python setup.py sdist --format=gztar
+          python2 setup.py sdist --format=gztar
 
       - name: Upload to s3
         working-directory: ./pvHelpers/dist
