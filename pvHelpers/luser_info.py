@@ -4,7 +4,6 @@ from pvHelpers import EncodingException
 if sys.platform in ["win32"]:
     from .win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
 
-from px56 import px56log
 
 class LUserInfo(object):
     __metaclass__ = abc.ABCMeta
@@ -161,7 +160,6 @@ class LUserInfoUnix(LUserInfo):
 
     def isAdmin(self):
         # root considered Admin
-        px56log(self, "uid:", self.uid)
         # TODO: check if user's group info if is part of `root` group
         return self.uid == 0 or self.uid == 501  # TODO:PX56: UNHACK 501
 

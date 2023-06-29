@@ -5,7 +5,6 @@ from sqlalchemy.pool import SingletonThreadPool
 from pysqlite2 import dbapi2 as sqlite3
 
 
-from px56 import px56stack
 
 # TODO: be more specific on these errors, i.e. :
 # no need to retry on NoSuchColumnError, while can retry on TimeoutError
@@ -68,13 +67,11 @@ class GetDBSessionAsPreVeil(misc.DoAsPreVeil):
         return cls.__session_factory[path]["factory"]()
 
     def __enter__(self):
-        #px56stack("GetDBSessionAsPreVeil.__enter__", " |> ")
         super(GetDBSessionAsPreVeil, self).__enter__()
         self.session = self.getSession(self.db_path)
         return self.session
 
     def __exit__(self, type_, value, traceback):
-        #px56stack("GetDBSessionAsPreVeil.__exit__", " |< ")
         if self.session:
             self.session.close()
         super(GetDBSessionAsPreVeil, self).__exit__(type_, value, traceback)
