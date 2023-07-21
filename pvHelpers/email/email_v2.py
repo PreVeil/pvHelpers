@@ -85,7 +85,12 @@ class EmailV2(EmailHelpers, EmailBase):
 
         if self.other_headers.get(ORIGINAL_SENDER_HEADER_KEY):
             raw_mime.headers["From"] = u"{} <{}>".format(self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["display_name"], self.other_headers[ORIGINAL_SENDER_HEADER_KEY]["user_id"])
-        return mime.from_string(raw_mime.to_string())
+
+        try:
+            return mime.from_string(raw_mime.to_string())
+        except:
+            g_log.error("{}".format(raw_mime.headers))
+            raise
 
     def toBrowser(self, with_body=False):
         o = {}
