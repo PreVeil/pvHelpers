@@ -1,4 +1,7 @@
+from __future__ import absolute_import
 import functools, inspect
+import six
+from six.moves import zip
 
 
 # check if the provided types are valid Type Annotations
@@ -25,7 +28,7 @@ def __checkParamValueValidity(value, type_annotation):
     if isinstance(type_annotation, dict):
         if not isinstance(value, dict):
             raise TypeError(u"provided value is not type of `{}`".format(type_annotation))
-        for param_name, child_t_a in type_annotation.iteritems():
+        for param_name, child_t_a in six.iteritems(type_annotation):
             if param_name not in value:
                 raise KeyError(u"`{}` missing key `{}`".format(value, param_name))
             __checkParamValueValidity(value[param_name], child_t_a)
@@ -47,7 +50,7 @@ def __checkParamValueValidity(value, type_annotation):
         if len(type_annotation) == 1:
             if not isinstance(value, dict):
                 raise TypeError(u"provided value is not type of dict")
-            for param_name, element_value in value.iteritems():
+            for param_name, element_value in six.iteritems(value):
                 if not isinstance(element_value, list(type_annotation)[0]):
                     raise TypeError(u"provided value is not of type `{}`".format(list(type_annotation)[0].__name__))
         else:
@@ -59,7 +62,7 @@ def __checkParamValueValidity(value, type_annotation):
                     wrong_type_count += 1
 
             if len(type_annotation) == wrong_type_count:
-                raise TypeError(u"provided value is not of any of the types `{}`".format(map(lambda ta: ta.__name__, list(type_annotation))))
+                raise TypeError(u"provided value is not of any of the types `{}`".format([ta.__name__ for ta in list(type_annotation)]))
 
     elif not isinstance(value, type_annotation):
         raise TypeError(u"provided value is not of type `{}`".format(type_annotation.__name__))
@@ -99,7 +102,7 @@ def params(*types):
                 except (KeyError, TypeError) as e:
                     raise type(e)(u"Invalid value for `{}`: {}".format(param_name, e))
 
-            for param_name, value in kwargs.iteritems():
+            for param_name, value in six.iteritems(kwargs):
                 type_ = types[func_signature.index(param_name)]
                 try:
                     __checkParamValueValidity(value, type_)

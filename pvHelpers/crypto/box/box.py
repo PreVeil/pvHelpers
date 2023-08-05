@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import struct, libnacl
 from ..asymm_key import AsymmKeyBase, PublicKeyBase
 from pvHelpers.hook_decorators import WrapExceptions

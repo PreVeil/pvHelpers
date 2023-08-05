@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types, libnacl, struct
 from .symm_key_base import *
 from pvHelpers.hook_decorators import WrapExceptions
@@ -9,7 +10,7 @@ class SymmKeyV0(SymmKeyBase):
     protocol_version = 0
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, secret=None):
         super(SymmKeyV0, self).__init__(self.protocol_version)
         self._box = libnacl.secret.SecretBox(secret)
@@ -42,7 +43,7 @@ class SymmKeyV0(SymmKeyBase):
 
 
     @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
-    @params(object, bytes, {dict, types.NoneType},  bool)
+    @params(object, bytes, {dict, type(None)},  bool)
     def encrypt(self, message, details=None, is_text=False):
         if is_text:
             message_with_header = struct.pack(">BBBB", TEXT_BIT | SECRET_BIT, 0x00, 0x00, 0x00) + message

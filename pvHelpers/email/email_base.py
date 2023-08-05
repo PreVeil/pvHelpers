@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import copy
 import types
 from .content import Content
@@ -5,6 +6,7 @@ from .attachment import Attachment
 from .email_helpers import EmailException
 from .server_attributes import ServerAttributes
 from ..misc import NOT_ASSIGNED
+import six
 
 
 #########################################
@@ -26,7 +28,7 @@ class EmailBase(object):
 
         if not isinstance(sender, dict):
             raise EmailException(u"EmailV1.__init__: sender must be of type dict")
-        if not isinstance(sender.get("user_id"), unicode) or not isinstance(sender.get("display_name"), unicode):
+        if not isinstance(sender.get("user_id"), six.text_type) or not isinstance(sender.get("display_name"), six.text_type):
             raise EmailException(u"EmailV1.__init__: sender['user_id']/sender['display_name'] must exist and be of type unicode")
         self.sender = sender
 
@@ -35,7 +37,7 @@ class EmailBase(object):
         for to in tos:
             if not isinstance(to, dict):
                 raise EmailException(u"EmailV1.__init__: tos element must be of type dict")
-            if not isinstance(to.get("user_id"), unicode) or not isinstance(to.get("display_name"), unicode):
+            if not isinstance(to.get("user_id"), six.text_type) or not isinstance(to.get("display_name"), six.text_type):
                 raise EmailException(u"EmailV1.__init__: to['user_id']/to['display_name'] must exist and be of type unicode")
         self.tos = tos
 
@@ -44,7 +46,7 @@ class EmailBase(object):
         for cc in ccs:
             if not isinstance(cc, dict):
                 raise EmailException(u"EmailV1.__init__: ccs element must be of type dict")
-            if not isinstance(cc.get("user_id"), unicode) or not isinstance(cc.get("display_name"), unicode):
+            if not isinstance(cc.get("user_id"), six.text_type) or not isinstance(cc.get("display_name"), six.text_type):
                 raise EmailException(u"EmailV1.__init__: cc['user_id']/cc['display_name'] must exist and be of type unicode")
         self.ccs = ccs
 
@@ -53,7 +55,7 @@ class EmailBase(object):
         for bcc in bccs:
             if not isinstance(bcc, dict):
                 raise EmailException(u"EmailV1.__init__: bccs element must be of type dict")
-            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
+            if not isinstance(bcc.get("user_id"), six.text_type) or not isinstance(bcc.get("display_name"), six.text_type):
                 raise EmailException(u"EmailV1.__init__: bcc['user_id']/bcc['display_name'] must exist and be of type unicode")
         self.bccs = bccs
 
@@ -63,18 +65,18 @@ class EmailBase(object):
         for rpt in reply_tos:
             if not isinstance(rpt, dict):
                 continue
-            if not isinstance(rpt.get("user_id"), unicode) or not isinstance(rpt.get("display_name"), unicode):
+            if not isinstance(rpt.get("user_id"), six.text_type) or not isinstance(rpt.get("display_name"), six.text_type):
                 continue
             self.reply_tos.append(rpt)
 
         if not isinstance(flags, list):
             raise EmailException(u"EmailBase.__init__: flags must be of type list")
         for flag in flags:
-            if not isinstance(flag, unicode):
+            if not isinstance(flag, six.text_type):
                 raise EmailException(u"EmailBase.__init__: flags element must be of type unicode")
         self.flags = flags
 
-        if not isinstance(subject, unicode):
+        if not isinstance(subject, six.text_type):
             raise EmailException(u"EmailBase.__init__: subject must be of type unicode")
         self.subject = subject
 
@@ -89,7 +91,7 @@ class EmailBase(object):
                 raise EmailException(u"EmailBase.__init__: bad attachment")
         self.attachments = attachments
 
-        if not isinstance(in_reply_to, (unicode, types.NoneType)):
+        if not isinstance(in_reply_to, (six.text_type, type(None))):
             raise EmailException(u"EmailBase.__init__: in_reply_to must be of type unicode")
         self.in_reply_to = in_reply_to
 
@@ -98,20 +100,20 @@ class EmailBase(object):
 
         self.references = []
         for reference in references:
-            if not isinstance(reference, unicode):
+            if not isinstance(reference, six.text_type):
                 # bad reference is fine, threading algo should work for the most part
                 continue
             self.references.append(reference)
 
-        if not isinstance(message_id, unicode):
+        if not isinstance(message_id, six.text_type):
             raise EmailException(u"EmailBase.__init__: message_id must be of type unicode")
         self.message_id = message_id
 
-        if not isinstance(snippet, (unicode, types.NoneType)):
+        if not isinstance(snippet, (six.text_type, type(None))):
             raise EmailException(u"EmailBase.__init__: snippet must be of type unicode")
         self._snippet = snippet
 
-        if not isinstance(external_sender, unicode):
+        if not isinstance(external_sender, six.text_type):
             if external_sender is not None:
                 raise EmailException(u"EmailBase.__init__: external_sender must be of type unicode")
         self.external_sender = external_sender

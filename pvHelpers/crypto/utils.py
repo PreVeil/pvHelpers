@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import libnacl
 from ..params import params
 from ..misc import jdumps, utf8Encode, b64enc, b64dec, jloads, utf8Decode, g_log

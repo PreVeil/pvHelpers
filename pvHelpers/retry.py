@@ -1,5 +1,7 @@
+from __future__ import absolute_import
 import time
 import traceback
+from six.moves import range
 
 
 class RetryError(Exception):
@@ -30,7 +32,7 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
         raise RetryError(u"expect the ret validator to be a function")
 
     exception_stack = []
-    for it in xrange(0, count):
+    for it in range(0, count):
         try:
             # TODO: it's worth devising a way to let caller know the function succeeded after
             # how many times of try, it'd help tuning the retry count

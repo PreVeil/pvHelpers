@@ -1,15 +1,17 @@
+from __future__ import absolute_import
 import types
 from ..asymm_key import AsymmKeyV0, PublicKeyV0, AsymmKeyBase, PublicKeyBase
 from ..sign_key import SignKeyV0, VerifyKeyV0, SignKeyBase, VerifyKeyBase
 from .user_key_base import *
 from ..utils import params, b64dec, CryptoException, g_log, utf8Encode, b64enc, utf8Decode, jloads
 from pvHelpers import EncodingException, WrapExceptions
+import six
 
 class PublicUserKeyV0(PublicUserKeyBase):
     protocol_version = 0
 
 
-    @params(object, {int, long}, PublicKeyBase, VerifyKeyBase)
+    @params(object, {int, int}, PublicKeyBase, VerifyKeyBase)
     def __init__(self, key_version, public_key, verify_key):
         super(PublicUserKeyV0, self).__init__(self.protocol_version, key_version)
         self._public_key = public_key
@@ -36,7 +38,7 @@ class PublicUserKeyV0(PublicUserKeyBase):
 
 
     @classmethod
-    @params(object, unicode)
+    @params(object, six.text_type)
     def deserialize(cls, json_serialized):
         public_user_key_dict = jloads(json_serialized)
         public_key = b64dec(public_user_key_dict["public_key"])
@@ -49,7 +51,7 @@ class UserKeyV0(UserKeyBase):
     public_side_model = PublicUserKeyV0
 
 
-    @params(object, {int, long}, AsymmKeyBase, SignKeyBase)
+    @params(object, {int, int}, AsymmKeyBase, SignKeyBase)
     def __init__(self, key_version, encryption_key, signing_key):
         super(UserKeyV0, self).__init__(self.protocol_version, key_version)
         self._encryption_key = encryption_key
@@ -74,7 +76,7 @@ class UserKeyV0(UserKeyBase):
 
     @classmethod
     @WrapExceptions(CryptoException, [EncodingException])
-    @params(object, unicode)
+    @params(object, six.text_type)
     def deserialize(cls, b64):
         encoded = b64dec(b64)
         json_serialized = utf8Decode(encoded)

@@ -1,9 +1,11 @@
+from __future__ import absolute_import
 from ..misc import ASCIIToUnicode, g_log, encodeContentIfUnicode, toInt, EncodingException
 from .email_helpers import EmailException
 from pvHelpers.hook_decorators import WrapExceptions
-import content as cnt
+from . import content as cnt
 from flanker import mime, addresslib
 import types, copy
+import six
 
 class AttachmentType(object):
     INLINE = u"inline"
@@ -17,14 +19,14 @@ class AttachmentMetadata(object):
         if isinstance(filename, str):
             filename = ASCIIToUnicode(filename)
 
-        if not isinstance(filename, (unicode, types.NoneType)):
+        if not isinstance(filename, (six.text_type, type(None))):
             raise EmailException(u"AttachmentMetadata.__init__: filename must be unicode, {}".format(filename))
         self.filename = filename
 
         if isinstance(content_type, str):
             content_type = ASCIIToUnicode(content_type)
 
-        if not isinstance(content_type, (unicode, types.NoneType)):
+        if not isinstance(content_type, (six.text_type, type(None))):
             raise EmailException(u"AttachmentMetadata.__init__:: content_type must be of type unicode, {}".format(content_type))
 
         if content_type is None:
@@ -39,25 +41,25 @@ class AttachmentMetadata(object):
         if isinstance(content_disposition, str):
             content_disposition = ASCIIToUnicode(content_disposition)
 
-        if not isinstance(content_disposition, unicode):
+        if not isinstance(content_disposition, six.text_type):
             raise EmailException(u"AttachmentMetadata.__init__: content_disposition must be unicode, value: {}".format(content_disposition))
         self.content_disposition = content_disposition
 
         if isinstance(content_id, str):
             content_id = ASCIIToUnicode(content_id)
 
-        if not isinstance(content_id, (unicode, types.NoneType)):
+        if not isinstance(content_id, (six.text_type, type(None))):
             raise EmailException(u"AttachmentMetadata.__init__: content_id must be unicode, value: {}".format(content_id))
         self.content_id = content_id
 
-        if isinstance(size, (str, unicode)):
+        if isinstance(size, (str, six.text_type)):
             status, int_size = toInt(size)
             if status == False:
                 g_log.error(u"AttachmentMetadata.__init__: size int coercion failed {}".format(size))
                 size = 0
             size = int_size
 
-        if not isinstance(size, (int, long, types.NoneType)):
+        if not isinstance(size, (int, int, type(None))):
             raise EmailException(u"AttachmentMetadata.__init__: size must be of type int/long/None")
         self.size = size
 

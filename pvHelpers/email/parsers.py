@@ -1,24 +1,26 @@
+from __future__ import absolute_import
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
 from .email_helpers import EmailException, EmailHelpers
 from ..misc import encodeContentIfUnicode, g_log
 import email.utils
 from flanker import mime, addresslib
+import six
 
 # Builder creates a simplified mime message that follows the following hierarchy
 # https://msdn.microsoft.com/en-us/library/office/aa563064(v=exchg.140).aspx
 def createMime(text, html, attachments, message_id=None, time=None, subject=None, tos=None, ccs=None, bccs=None, reply_tos=None, sender=None, in_reply_to=None, references=None, other_headers=None, external_sender=None):
-    if not isinstance(text, unicode):
+    if not isinstance(text, six.text_type):
         raise EmailException(u"createMime: text must be of type unicode")
-    if not isinstance(html, unicode):
+    if not isinstance(html, six.text_type):
         raise EmailException(u"createMime: html must be of type unicode")
     if not isinstance(attachments, list):
         raise EmailException(u"createMime: attachments must be of type list")
     for item in attachments:
         if not isinstance(item, Attachment):
             raise EmailException(u"createMime: attachment must be of type Attachment")
-    inline_attachments = filter(lambda att: att.metadata.content_disposition == u"inline" , attachments)
-    regular_attachments = filter(lambda att: att.metadata.content_disposition != u"inline" , attachments)
+    inline_attachments = [att for att in attachments if att.metadata.content_disposition == u"inline"]
+    regular_attachments = [att for att in attachments if att.metadata.content_disposition != u"inline"]
     try:
         #TODO: avoid receiving text from browser, just get html and build the text here
         if inline_attachments:

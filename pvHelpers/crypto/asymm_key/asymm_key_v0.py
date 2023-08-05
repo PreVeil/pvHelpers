@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import struct, types, libnacl, libnacl.public
 from .asymm_key_base import *
 from pvHelpers.hook_decorators import WrapExceptions
@@ -40,7 +41,7 @@ class AsymmKeyV0(AsymmKeyBase):
     public_side_model = PublicKeyV0
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, key=None):
         super(AsymmKeyV0, self).__init__(self.protocol_version)
         self._key_pair = libnacl.public.SecretKey(key)

@@ -1,4 +1,5 @@
 
+from __future__ import absolute_import
 import os
 import random
 import sys
@@ -8,6 +9,7 @@ import types
 import requests
 from pvHelpers import HTTP_TIMEOUT, g_log, getModeDir, params, readYAMLConfig
 from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
+import six
 
 
 def fetchConfigFromMaster(master_port, key):
@@ -35,7 +37,7 @@ class ApplicationConfig(object):
 
         return object.__getattribute__(self, attr)
 
-    @params(object, {types.NoneType, int}, {types.NoneType, unicode}, {types.NoneType, unicode})
+    @params(object, {type(None), int}, {type(None), six.text_type}, {type(None), six.text_type})
     def initConfig(self, master_port=None, config_file=None, mode=None):
         if self.initialized:
             return
@@ -51,15 +53,15 @@ class ApplicationConfig(object):
             if mode not in confs:
                 raise ValueError("config file missing mode {}".format(mode))
 
-            for (key, value) in confs[mode].iteritems():
+            for (key, value) in six.iteritems(confs[mode]):
                 self.__config__[key] = value
 
             self.__config__["mode"] = mode
 
             if sys.platform in ["darwin", "linux2"]:
-                self.__config__["root-dir"] = unicode(os.path.join("/", "var", "preveil"))
+                self.__config__["root-dir"] = six.text_type(os.path.join("/", "var", "preveil"))
             elif "win32" == sys.platform:
-                self.__config__["root-dir"] = unicode(os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData"))
+                self.__config__["root-dir"] = six.text_type(os.path.join(os.getenv("SystemDrive") + "\\", "PreVeilData"))
             else:
                 raise NotImplementedError("unsupported platform {}".format(sys.platform))
 
@@ -67,7 +69,7 @@ class ApplicationConfig(object):
             # ideally, each process's `working _dir` path shouldn't be dependent on
             # what `mode` it's running in. we can deal w this later when we have a
             # reliable updater that could safely change these fixed structures
-            self.__config__["working-dir"] = unicode(getModeDir(self.__config__["root-dir"], self.__config__["mode"]))
+            self.__config__["working-dir"] = six.text_type(getModeDir(self.__config__["root-dir"], self.__config__["mode"]))
 
         # replica instances
         elif master_port:

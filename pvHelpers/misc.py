@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import base64
 import collections
 import copy
@@ -13,16 +15,19 @@ import struct
 import sys
 import time
 import types
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 import requests
 import simplejson
-import urlparse
+import six.moves.urllib.parse
 import yaml
 from sqlalchemy import create_engine, event, orm
 
 from .hook_decorators import WrapExceptions
 from .params import params
+import six
+from six.moves import filter
+from six.moves import range
 
 DATA_DIR_MODE = 0o750
 HTTP_TIMEOUT = 15
@@ -57,7 +62,7 @@ def getdir(path):
 
 
 def resolvePreVeilMode(mode_file_path):
-    if not isinstance(mode_file_path, unicode):
+    if not isinstance(mode_file_path, six.text_type):
         g_log.error(u"resolvePreVeilMode: mode_file_path must be unicode")
         return False, None
 
@@ -82,7 +87,7 @@ def resolvePreVeilMode(mode_file_path):
 
 
 def readYAMLConfig(path):
-    if not isinstance(path, unicode):
+    if not isinstance(path, six.text_type):
         return False, None
 
     try:
@@ -95,7 +100,7 @@ def readYAMLConfig(path):
 
 def print_wrapper(msg):
     try:
-        print msg
+        print(msg)
     except IOError:
         return
 
@@ -205,7 +210,7 @@ class _LogWrapper(object):
                               log_dir,
                               twisted_observer_fn=None,
                               extra_logger=None):
-        if not isinstance(twisted_observer_fn, types.NoneType):
+        if not isinstance(twisted_observer_fn, type(None)):
             if not (callable(twisted_observer_fn) and
                     twisted_observer_fn.__name__ == "PythonLoggingObserver"):
                 return False
@@ -237,7 +242,7 @@ g_log = _LogWrapper()
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
-@params(unicode)
+@params(six.text_type)
 def unicodeToASCII(s):
     return s.encode("ascii")
 
@@ -255,7 +260,7 @@ def ASCIIToUnicode(s):
 
 @WrapExceptions(EncodingException,
                 [KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
-@params(unicode)
+@params(six.text_type)
 def utf8Encode(s):
     return s.encode("utf-8")
 
@@ -268,14 +273,14 @@ def utf8Decode(s):
 
 
 def unicodeIfUnicodeElseDecode(b):
-    if isinstance(b, unicode):
+    if isinstance(b, six.text_type):
         return b
     else:
         return utf8Decode(b)
 
 
 def encodeContentIfUnicode(content):
-    if isinstance(content, unicode):
+    if isinstance(content, six.text_type):
         return utf8Encode(content)
     return content
 
@@ -283,7 +288,7 @@ def encodeContentIfUnicode(content):
 @WrapExceptions(
     EncodingException,
     [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
-@params(bytes, {types.NoneType, str})
+@params(bytes, {type(None), str})
 def b64enc(data, altchars=None):
     enc = base64.b64encode(data, altchars=altchars)
     return ASCIIToUnicode(enc)
@@ -292,15 +297,15 @@ def b64enc(data, altchars=None):
 @WrapExceptions(
     EncodingException,
     [ValueError, KeyError, TypeError, UnicodeDecodeError, UnicodeEncodeError])
-@params(unicode, {types.NoneType, str})
+@params(six.text_type, {type(None), str})
 def b64dec(data, altchars=None):
     return base64.b64decode(data, altchars=altchars)
 
 
 def toInt(data):
     if not (isinstance(data,
-                       (unicode, str)) or (isinstance(data,
-                                                      (int, long, float)))):
+                       (six.text_type, str)) or (isinstance(data,
+                                                      (int, int, float)))):
         return False, None
 
     try:
@@ -318,7 +323,7 @@ def jdumps(data, ensure_ascii=False):
     KeyError, TypeError, ValueError, simplejson.JSONDecodeError,
     UnicodeDecodeError, UnicodeEncodeError
 ])
-@params(unicode)
+@params(six.text_type)
 def jloads(data):
     return simplejson.loads(data)
 
@@ -350,7 +355,7 @@ def getBodyFromFlankerMessage(message, flanker_from_string):
     elif message.content_type.is_multipart():
         # HACK: Print message text without the headers
         tmp = flanker_from_string(message.to_string())
-        tmp.remove_headers(*tmp.headers.keys())
+        tmp.remove_headers(*list(tmp.headers.keys()))
         return True, tmp.to_string()
     elif message.content_type.is_message_container():
         return True, message.enclosed.to_string()
@@ -562,7 +567,7 @@ class CaseInsensitiveSet(collections.Set):
         return item.upper() in self.data
 
     def __iter__(self):
-        for _, n in self.data.iteritems():
+        for _, n in six.iteritems(self.data):
             yield n
 
     def __len__(self):
@@ -576,7 +581,7 @@ class CaseInsensitiveSet(collections.Set):
         for o in other:
             new[o.upper()] = o
 
-        return CaseInsensitiveSet(new.values())
+        return CaseInsensitiveSet(list(new.values()))
 
     def difference(self, other):
         if not isinstance(other, list):
@@ -587,14 +592,14 @@ class CaseInsensitiveSet(collections.Set):
             if o.upper() in new:
                 del new[o.upper()]
 
-        return CaseInsensitiveSet(new.values())
+        return CaseInsensitiveSet(list(new.values()))
 
 
 # Lifted from m000 @ http://stackoverflow.com/a/32888599
 class CaseInsensitiveDict(dict):
     @classmethod
     def _k(cls, key):
-        if isinstance(key, basestring):
+        if isinstance(key, six.string_types):
             return key.lower()
         elif isinstance(key, tuple):
             return tuple([cls._k(i) for i in key])
@@ -618,7 +623,7 @@ class CaseInsensitiveDict(dict):
         return super(CaseInsensitiveDict, self).__contains__(self.__class__._k(key))
 
     def has_key(self, key):
-        return super(CaseInsensitiveDict, self).has_key(self.__class__._k(key))
+        return self.__class__._k(key) in super(CaseInsensitiveDict, self)
 
     def pop(self, key, *args, **kwargs):
         return super(CaseInsensitiveDict, self).pop(self.__class__._k(key), *args, **kwargs)
@@ -677,7 +682,7 @@ def partition(pred, iterable):
     'Use a predicate to partition entries into false entries and true entries'
     # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
     t1, t2 = itertools.tee(iterable)
-    return filter(pred, t2), filter(lambda x: not pred(x), t1)
+    return list(filter(pred, t2)), [x for x in t1 if not pred(x)]
 
 
 def parse_file_uri(path):
@@ -685,14 +690,14 @@ def parse_file_uri(path):
         Process the given path url to determine the scheme.
         :return: required_download, processed_url
     """
-    p = urlparse.urlparse(path)
+    p = six.moves.urllib.parse.urlparse(path)
 
     if p.scheme in ["https", "http"]:
         return True, path
     elif p.scheme == "file":
         # url to path name, i.e: convert %20 to space
-        path = urllib.url2pathname(p.path)
+        path = six.moves.urllib.request.url2pathname(p.path)
         return False, os.path.abspath(os.path.join(p.netloc, path))
     else:
         # treat as a local file
-        return False, urllib.unquote(path)
+        return False, six.moves.urllib.parse.unquote(path)

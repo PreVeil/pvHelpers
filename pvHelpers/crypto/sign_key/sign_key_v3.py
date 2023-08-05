@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types
 from .sign_key_base import SignKeyBase, VerifyKeyBase
 from ..utils import KeyBuffer, b64enc, params, b64dec, CryptoException, utf8Decode, utf8Encode, \
@@ -47,7 +48,7 @@ class SignKeyV3(SignKeyBase):
     public_side_model = VerifyKeyV3
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, key=None):
         super(SignKeyV3, self).__init__(self.protocol_version)
         if key is None:

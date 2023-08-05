@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import codecs
 import os
 import re
@@ -8,6 +9,7 @@ import sys
 import certifi
 
 from .misc import g_log
+from six.moves import range
 
 
 class CertificateBundle(object):
@@ -83,7 +85,7 @@ class CertificateBundle(object):
             pem_path_splits = self.path.split(os.sep)
             for i in range(len(pem_path_splits)-2):
                 p = os.sep.join(pem_path_splits[0:len(pem_path_splits)-i])
-                os.chmod(p, 0755)
+                os.chmod(p, 0o755)
 
     def generate_and_write_pem(self):
         if not os.path.exists(os.path.dirname(self.path)):

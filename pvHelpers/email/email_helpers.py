@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from ..misc import jdumps, jloads, utf8Decode, encodeContentIfUnicode, EncodingException
 from pvHelpers.hook_decorators import WrapExceptions
 import uuid

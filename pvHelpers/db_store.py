@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types, semver
 from . import misc
 from sqlalchemy import create_engine, event, orm, exc

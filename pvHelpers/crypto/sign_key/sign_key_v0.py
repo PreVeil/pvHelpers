@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types, libnacl, libnacl.sign
 from .sign_key_base import *
 from ..utils import CryptoException, b64enc, params, HexEncode, utf8Encode, b64dec
@@ -43,7 +44,7 @@ class SignKeyV0(SignKeyBase):
     public_side_model = VerifyKeyV0
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, key=None):
         super(SignKeyV0, self).__init__(self.protocol_version)
         self._signer = libnacl.sign.Signer(key)
