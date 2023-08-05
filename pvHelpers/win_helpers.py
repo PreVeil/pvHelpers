@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import ctypes
 import os
 import subprocess
@@ -14,6 +15,8 @@ import win32security as ws
 import win32ts
 
 from .misc import g_log
+import six
+from six.moves import range
 
 DWORD = ctypes.c_ulong
 ULONG = ctypes.c_ulong
@@ -484,7 +487,7 @@ class WinPopen(subprocess.Popen):
                            creationflags, shell, to_close, p2cread, p2cwrite,
                            c2pread, c2pwrite, errread, errwrite):
             """Execute program (MS Windows version)"""
-            commandline = (args if isinstance(args, types.StringTypes) else
+            commandline = (args if isinstance(args, (str,)) else
                            subprocess.list2cmdline(args))
             self._common_execute_child(executable, commandline, shell,
                                        close_fds, creationflags, env, cwd,
@@ -598,10 +601,7 @@ class WinPopen(subprocess.Popen):
 
 def list_active_sessions():
     # Filtering `Services` (session 0) session out. Windows (post-Vista) has service session isolation.
-    return filter(
-        lambda s: s["State"] == win32ts.WTSActive and s["SessionId"] != 0,
-        win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0)
-    )
+    return [s for s in win32ts.WTSEnumerateSessions(win32ts.WTS_CURRENT_SERVER_HANDLE, 1, 0) if s["State"] == win32ts.WTSActive and s["SessionId"] != 0]
 
 def runWindowsProcessAsCurrentUser(command):
     user_token, thread_handle, process_handle = None, None, None
@@ -614,7 +614,7 @@ def runWindowsProcessAsCurrentUser(command):
             session_id = sessions[0]["SessionId"]
         else:
             g_log.debug(u"multiple active sessions: {}".format(sessions))
-            console_session = filter(lambda s: s["WinStationName"].lower() == "console", sessions)
+            console_session = [s for s in sessions if s["WinStationName"].lower() == "console"]
             # taking the first session, ideally we'd correlate this with the uid acquired from `connection_info`
             session_id = console_session[0]["SessionId"] if len(console_session) == 1 else sessions[0]["SessionId"]
 
@@ -636,7 +636,7 @@ def runWindowsProcessAsCurrentUser(command):
         startupinfo.lpDesktop = None
         startupinfo.lpTitle = None
 
-        command = map(lambda x: unicode(x), command)
+        command = [six.text_type(x) for x in command]
         process_handle, thread_handle, process_id, thread_id = \
             win32process.CreateProcessAsUser(
                 user_token,

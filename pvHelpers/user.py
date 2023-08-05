@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 import requests, types
 from .crypto import PVKeyFactory
 from . import misc
 from .luser_info import LUserInfo
 from .params import params
+import six
 
 
 class OrganizationInfo(object):
@@ -35,15 +37,15 @@ class OrganizationInfo(object):
 class UserDBNode(object):
     @staticmethod
     def new(user_id, display_name, mail_cid, password, org_info, luser_info):
-        if not isinstance(user_id, unicode):
+        if not isinstance(user_id, six.text_type):
             return False, None
-        if not isinstance(display_name, unicode):
+        if not isinstance(display_name, six.text_type):
             return False, None
-        if not isinstance(mail_cid, unicode):
+        if not isinstance(mail_cid, six.text_type):
             return False, None
-        if not isinstance(password, unicode):
+        if not isinstance(password, six.text_type):
             return False, None
-        if not isinstance(org_info, (types.NoneType, OrganizationInfo)):
+        if not isinstance(org_info, (type(None), OrganizationInfo)):
             return False, None
         if not isinstance(luser_info, (LUserInfo, misc.NOT_ASSIGNED)):
             return False, None
@@ -96,7 +98,7 @@ class UserData(object):
     def isClaimed(self):
         return len(self.public_user_keys) > 0
 
-    @params(object, {int, long})
+    @params(object, {int, int})
     def getPublicUserKeyWithVersion(self, version=-1):
         if version == -1:
             return self.public_user_key

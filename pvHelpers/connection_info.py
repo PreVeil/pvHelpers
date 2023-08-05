@@ -1,5 +1,8 @@
+from __future__ import absolute_import
 import subprocess, sys, re, socket, struct, collections
 from pvHelpers import g_log, NOT_ASSIGNED, toInt, LUserInfoWin, LUserInfo, params
+import six
+from six.moves import range
 
 if sys.platform == "win32":
     import pywintypes
@@ -9,7 +12,7 @@ if sys.platform == "win32":
 LSOF_CACHE = collections.deque(maxlen=20)
 
 
-@params({unicode, str}, int, {unicode, str}, int)
+@params({six.text_type, str}, int, {six.text_type, str}, int)
 def resolve_connection_info(remote_addr, remote_port, local_process_addr, local_process_port):
     if remote_addr != u"127.0.0.1":
         g_log.error(u"resolve_connection_info: only 127.0.0.1 connections allowed, address: {}:{}".format(remote_addr, remote_port))
@@ -47,7 +50,7 @@ def _get_conn_process_info_unix(remote_addr, remote_port, local_process_addr, lo
         return False, None
 
     LSOF_CACHE.appendleft(open_files)
-    remote_client_files = filter(lambda f: f["local_addr"] == remote_addr and f["local_port"] == remote_port, open_files)
+    remote_client_files = [f for f in open_files if f["local_addr"] == remote_addr and f["local_port"] == remote_port]
 
     if len(remote_client_files) == 0:
         g_log.error(u"_get_conn_process_info_unix: couldn't fetch the connection file info")
@@ -101,7 +104,7 @@ def _get_conn_process_info_windows(remote_addr, remote_port, local_process_addr,
             pid = _row.dwOwningPid
             tcp_connections.add((pid, lAddr, lPort, rAddr, rPort))
 
-    remote_connections = filter(lambda c: c[1] == remote_addr and c[2] == remote_port and c[3] == local_process_addr and c[4] == local_process_port, tcp_connections)
+    remote_connections = [c for c in tcp_connections if c[1] == remote_addr and c[2] == remote_port and c[3] == local_process_addr and c[4] == local_process_port]
 
     if len(remote_connections) != 1:
         g_log.warn(u"_get_conn_process_info_windows: found multiple processes, pcount: {}".format(len(remote_connections)))

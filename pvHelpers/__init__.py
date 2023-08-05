@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .misc import *
 from .user import UserData, OrganizationInfo, UserDBNode
 from .email_factory import EmailFactory

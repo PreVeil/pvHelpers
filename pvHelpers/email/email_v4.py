@@ -12,11 +12,8 @@ class EmailV4(EmailV2):
 
     def indexableAttachmentNames(self):
         return u" ".join(
-            map(
-                lambda att: att.metadata.filename,
-                filter(
-                    lambda att: att.metadata.filename is not None or att.metadata.
-                    filename != u"untitled", self.attachments)))
+            [att.metadata.filename for att in [att for att in self.attachments if att.metadata.filename is not None or att.metadata.
+                    filename != u"untitled"]])
 
     def indexableRecipients(self):
         all_recips = [

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import struct, types, libnacl
 from .asymm_key_v0 import AsymmKeyV0, PublicKeyV0
 from ..utils import CryptoException, params, g_log, Sha512Sum, RandomBytes, KeyBuffer, b64enc
@@ -33,7 +34,7 @@ class AsymmKeyV2(AsymmKeyV0):
     public_side_model = PublicKeyV2
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, key=None):
         if not key:
             key = RandomBytes(crypto_box_SEEDBYTES)

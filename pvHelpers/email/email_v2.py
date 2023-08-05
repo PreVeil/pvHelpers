@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
 from ..misc import b64enc, g_log, NOT_ASSIGNED, EncodingException
@@ -5,6 +6,7 @@ import email.utils
 from .parsers import createMime, parseMime
 from flanker import mime, addresslib
 from .content import Content
+import six
 
 ORIGINAL_DATE_HEADER_KEY = "X-PV-MIME-DATE"
 ORIGINAL_SENDER_HEADER_KEY = "X-PV-MIME-SENDER"
@@ -40,7 +42,7 @@ class EmailV2(EmailHelpers, EmailBase):
             body = EmailHelpers.deserializeBody(body.content)
             if not isinstance(body, dict):
                 raise EmailException(u"EmailV2.__init__: body must be of a serialized dict")
-            if not isinstance(body.get("text"), unicode) or not isinstance(body.get("html"), unicode):
+            if not isinstance(body.get("text"), six.text_type) or not isinstance(body.get("html"), six.text_type):
                 raise EmailException(u"EmailV2.__init__: body['text']/body['html'] must exist and be of type unicode")
 
         self.other_headers = {} if other_headers is None else other_headers
@@ -70,14 +72,14 @@ class EmailV2(EmailHelpers, EmailBase):
             time = self.server_attr.server_time
 
         sender = EmailHelpers.format_ext_disp(self.sender)
-        tos = map(lambda r: EmailHelpers.format_ext_disp(r), self.tos)
-        ccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.ccs)
-        bccs = map(lambda r: EmailHelpers.format_ext_disp(r), self.bccs)
+        tos = [EmailHelpers.format_ext_disp(r) for r in self.tos]
+        ccs = [EmailHelpers.format_ext_disp(r) for r in self.ccs]
+        bccs = [EmailHelpers.format_ext_disp(r) for r in self.bccs]
 
         raw_mime = createMime(body["text"], body["html"], self.attachments, self.message_id, time, self.subject, tos, ccs, bccs, self.reply_tos, sender, self.in_reply_to, self.references, self.other_headers, self.external_sender)
 
-        for key, value in self.other_headers.iteritems():
-            if isinstance(value, str) or isinstance(value, unicode):
+        for key, value in six.iteritems(self.other_headers):
+            if isinstance(value, str) or isinstance(value, six.text_type):
                 raw_mime.headers[key] = value
 
         if self.other_headers.get(ORIGINAL_DATE_HEADER_KEY):
@@ -187,7 +189,7 @@ class EmailV2(EmailHelpers, EmailBase):
         if overwrite_sender is not None:
             if not isinstance(overwrite_sender, dict):
                 raise EmailException(u"overwrite_sender must be of type dict")
-            if not isinstance(overwrite_sender.get("user_id"), unicode) or not isinstance(overwrite_sender.get("display_name"), unicode):
+            if not isinstance(overwrite_sender.get("user_id"), six.text_type) or not isinstance(overwrite_sender.get("display_name"), six.text_type):
                 raise EmailException(u"overwrite_sender['user_id']/overwrite_sender['display_name'] must exist and be of type unicode")
 
         try:
@@ -222,7 +224,7 @@ class EmailV2(EmailHelpers, EmailBase):
         external_sender = raw_mime.headers.get("X-External-Sender", None)
        
         other_headers = {}
-        for key, value in raw_mime.headers.iteritems():
+        for key, value in six.iteritems(raw_mime.headers):
             if key.startswith("X-"):
                 # str(value)?
                 other_headers[key] = value

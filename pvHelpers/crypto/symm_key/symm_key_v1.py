@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types
 import fipscrypto as FC
 from .symm_key_base import SymmKeyBase
@@ -9,7 +10,7 @@ class SymmKeyV1(SymmKeyBase):
     protocol_version = 1
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, secret=None):
         super(SymmKeyV1, self).__init__(self.protocol_version)
         if secret and len(secret) != FC.AES_KEY_LENGTH:
@@ -35,7 +36,7 @@ class SymmKeyV1(SymmKeyBase):
         return self.buffer.SerializeToString()
 
 
-    @params(object, bytes, {dict, types.NoneType})
+    @params(object, bytes, {dict, type(None)})
     def encrypt(self, message, details=None):
         cipher, tag, iv = FC.aes_encrypt(self._secret, message)
         cipher = cipher + iv + tag

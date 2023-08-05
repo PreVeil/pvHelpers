@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import calendar
 import time
 
@@ -12,7 +13,7 @@ from pvHelpers.hook_decorators import WrapExceptions
 # https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
 def flatten_recipient_groups(recip_groups):
     return [
-        u for sublist in map(lambda g: g["users"], recip_groups)
+        u for sublist in [g["users"] for g in recip_groups]
         for u in sublist
     ]
 
@@ -78,13 +79,11 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         tos_groups_flatten = flatten_recipient_groups(tos_groups)
         ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
 
-        server_recips = CaseInsensitiveSet(map(lambda u: u.get("external_email", u["user_id"]), recipients))
+        server_recips = CaseInsensitiveSet([u.get("external_email", u["user_id"]) for u in recipients])
         pvm_recips = CaseInsensitiveSet(
-                map(
-                    lambda u: u["external_email"] if u.get("external_email") else u["user_id"], decrypted_private_metadata["ccs"] +
+                [u["external_email"] if u.get("external_email") else u["user_id"] for u in decrypted_private_metadata["ccs"] +
                     decrypted_private_metadata["tos"] + tos_groups_flatten +
-                    ccs_groups_flatten
-                )
+                    ccs_groups_flatten]
             )
 
         if server_recips != pvm_recips:
@@ -126,7 +125,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             "body": MergeDicts(message["body"], {"snippet": utf8Decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
             "private_metadata": decrypted_private_metadata,
             "timestamp": calendar.timegm(time.strptime(message["timestamp"], "%Y-%m-%dT%H:%M:%S")),
-            "attachments": map(lambda att: MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}), message["attachments"])
+            "attachments": [MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}) for att in message["attachments"]]
         })
 
 

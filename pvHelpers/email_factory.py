@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types
 
 
@@ -7,6 +8,7 @@ from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadat
                     EmailV5, EmailV6, EmailV7, EmailHelpers)
 from .misc import MergeDicts, NOT_ASSIGNED, jloads, toInt
 from .params import params
+import six
 
 
 #########################################
@@ -95,7 +97,7 @@ class EmailFactory(object):
     @staticmethod
     @WrapExceptions(EmailException, [KeyError])
     # TODO: give required props. in params
-    @params(unicode, dict, unicode, int, {object, types.NoneType})
+    @params(six.text_type, dict, six.text_type, int, {object, type(None)})
     def fromServerMessage(for_user_id, decrypted_msg, wrapped_key, key_version, mailbox):
         common_props = {
             "server_attr": ServerAttributes(
@@ -120,13 +122,13 @@ class EmailFactory(object):
         protocol_dependent_props = {}
         if decrypted_msg["protocol_version"] <= PROTOCOL_VERSION.V4:
             body = Content(
-                None, map(lambda b: b["id"], decrypted_msg["body"]["blocks"]), wrapped_key, key_version, decrypted_msg["body"]["size"])
+                None, [b["id"] for b in decrypted_msg["body"]["blocks"]], wrapped_key, key_version, decrypted_msg["body"]["size"])
             snippet = decrypted_msg["body"].get("snippet")
             attachments = [Attachment(
                 AttachmentMetadata(att["name"], att["metadata"].get("content_type"), att["metadata"].get(
                     "content_disposition"), att["metadata"].get("content_id"), att["size"]),
                 Content(
-                    None, map(lambda b: b["id"], att["blocks"]), wrapped_key, key_version)
+                    None, [b["id"] for b in att["blocks"]], wrapped_key, key_version)
             ) for att in decrypted_msg["attachments"]]
 
             if decrypted_msg["protocol_version"] < PROTOCOL_VERSION.V4:
@@ -134,12 +136,9 @@ class EmailFactory(object):
                 ccs = decrypted_msg["private_metadata"].get("ccs", [])
                 bccs = decrypted_msg["private_metadata"].get("bccs", [])
             else:
-                tos = map(lambda u: {"user_id": u, "display_name": u},
-                          decrypted_msg["private_metadata"]["tos"])
-                ccs = map(lambda u: {"user_id": u, "display_name": u},
-                          decrypted_msg["private_metadata"].get("ccs", []))
-                bccs = map(lambda u: {"user_id": u, "display_name": u},
-                           decrypted_msg["private_metadata"].get("bccs", []))
+                tos = [{"user_id": u, "display_name": u} for u in decrypted_msg["private_metadata"]["tos"]]
+                ccs = [{"user_id": u, "display_name": u} for u in decrypted_msg["private_metadata"].get("ccs", [])]
+                bccs = [{"user_id": u, "display_name": u} for u in decrypted_msg["private_metadata"].get("bccs", [])]
 
         elif decrypted_msg["protocol_version"] >= PROTOCOL_VERSION.V5:
             body = Content(
@@ -151,10 +150,8 @@ class EmailFactory(object):
                 Content(None, att["block_ids"], wrapped_key, key_version)
             ) for att in decrypted_msg["private_metadata"]["attachments"]]
 
-            tos = map(lambda r: EmailHelpers.format_recip(r),
-                      decrypted_msg["private_metadata"]["tos"])
-            ccs = map(lambda r: EmailHelpers.format_recip(r),
-                      decrypted_msg["private_metadata"].get("ccs", []))
+            tos = [EmailHelpers.format_recip(r) for r in decrypted_msg["private_metadata"]["tos"]]
+            ccs = [EmailHelpers.format_recip(r) for r in decrypted_msg["private_metadata"].get("ccs", [])]
 
             # if sender or gateway user, we can see all bccs;
             # else figure out whether we are bcced.
@@ -162,11 +159,10 @@ class EmailFactory(object):
             isGatewayUser = common_props.get("other_headers") and common_props["other_headers"].get("X-External-BCCs") and lfor_user_id == common_props["other_headers"]["X-External-BCCs"][0]["user_id"].lower()
             if lfor_user_id == decrypted_msg["private_metadata"]["sender"].lower() or isGatewayUser:
                 if decrypted_msg["protocol_version"] < 7:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": u["user_id"]},
-                           decrypted_msg["private_metadata"].get("bccs", []))
+                    bccs = [{"user_id": u["user_id"], "display_name": u["user_id"]} for u in decrypted_msg["private_metadata"].get("bccs", [])]
                 else:
-                    bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, decrypted_msg["private_metadata"].get("bccs", []))
-                    external_bccs = map(lambda u: {"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)}, common_props["other_headers"].get("X-External-BCCs", []))
+                    bccs = [{"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)} for u in decrypted_msg["private_metadata"].get("bccs", [])]
+                    external_bccs = [{"user_id": u["user_id"], "display_name": (u["external_email"] if u.get("external_email") else u["user_id"]), "external_email": u.get("external_email", None)} for u in common_props["other_headers"].get("X-External-BCCs", [])]
                     common_props["other_headers"]["X-External-BCCs"] = EmailFactory._extractExternalRecipients(external_bccs)
                     bccs += external_bccs
             elif lfor_user_id not in [
@@ -217,6 +213,6 @@ class EmailFactory(object):
 
     @staticmethod
     def _extractExternalRecipients(all_recipients):
-        recipients = filter(lambda r: "external_email" in r, all_recipients)
-        return map(lambda r: {"display_name": r["external_email"], "external_email": r["external_email"]}, recipients)
+        recipients = [r for r in all_recipients if "external_email" in r]
+        return [{"display_name": r["external_email"], "external_email": r["external_email"]} for r in recipients]
 

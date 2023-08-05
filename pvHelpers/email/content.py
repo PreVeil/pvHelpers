@@ -1,14 +1,16 @@
+from __future__ import absolute_import
 import types
-import email_helpers
+from . import email_helpers
 from ..params import params
+import six
 
 
 class Content(object):
     __initialized = False
 
-    @params(object, {bytes, str, types.NoneType}, [unicode],
-            {unicode, types.NoneType}, {int, long, types.NoneType},
-            {int, long, types.NoneType})
+    @params(object, {bytes, str, type(None)}, [six.text_type],
+            {six.text_type, type(None)}, {int, int, type(None)},
+            {int, int, type(None)})
     def __init__(self, content=None, block_ids=[], wrapped_key=None, key_version=None, size=None):
         self.content = content
         self.block_ids = block_ids

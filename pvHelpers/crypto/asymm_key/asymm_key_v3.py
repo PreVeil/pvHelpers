@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types
 from ..utils import params, b64enc, b64dec, utf8Decode, utf8Encode, KeyBuffer, CryptoException, SealedDataBuffer, ProtobufErrors, \
     CURVE25519_PUB_KEY_LENGTH, NISTP256_PUB_KEY_LENGTH, EC_SECRET_LENGTH
@@ -53,7 +54,7 @@ class AsymmKeyV3(AsymmKeyBase):
     public_side_model = PublicKeyV3
 
 
-    @params(object, {bytes, types.NoneType})
+    @params(object, {bytes, type(None)})
     def __init__(self, key=None):
         super(AsymmKeyV3, self).__init__(self.protocol_version)
         if key is None:

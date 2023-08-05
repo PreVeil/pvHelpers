@@ -8,7 +8,7 @@ class PublicUserKeyV1(PublicUserKeyV0):
     protocol_version = 1
 
 
-    @params(object, {int, long}, PublicKeyBase, VerifyKeyBase)
+    @params(object, {int, int}, PublicKeyBase, VerifyKeyBase)
     def __init__(self, key_version, public_key, verify_key):
         super(PublicUserKeyV1, self).__init__(key_version, public_key, verify_key)
 
@@ -33,7 +33,7 @@ class UserKeyV1(UserKeyV0):
     public_side_model = PublicUserKeyV1
 
 
-    @params(object, {int, long}, AsymmKeyBase, SignKeyBase)
+    @params(object, {int, int}, AsymmKeyBase, SignKeyBase)
     def __init__(self, key_version, encryption_key, signing_key):
         super(UserKeyV1, self).__init__(key_version, encryption_key, signing_key)
 

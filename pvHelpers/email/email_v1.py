@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import types
 
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
@@ -9,6 +10,7 @@ from .content import Content
 import email.utils
 from .parsers import parseMime
 from ..crypto import Sha256Sum, HexEncode
+import six
 
 
 # Using this with the flanker MIME class forces it to always reparse the
@@ -55,7 +57,7 @@ class EmailV1(EmailHelpers, EmailBase):
         if overwrite_sender is not None:
             if not isinstance(overwrite_sender, dict):
                 raise EmailException(u"overwrite_sender must be of type dict")
-            if not isinstance(overwrite_sender.get("user_id"), unicode) or not isinstance(overwrite_sender.get("display_name"), unicode):
+            if not isinstance(overwrite_sender.get("user_id"), six.text_type) or not isinstance(overwrite_sender.get("display_name"), six.text_type):
                 raise EmailException(u"overwrite_sender['user_id']/overwrite_sender['display_name'] must exist and be of type unicode")
 
         try:
@@ -190,7 +192,7 @@ class EmailV1(EmailHelpers, EmailBase):
         for bcc in bccs:
             if not isinstance(bcc, dict):
                 return False, None
-            if not isinstance(bcc.get("user_id"), unicode) or not isinstance(bcc.get("display_name"), unicode):
+            if not isinstance(bcc.get("user_id"), six.text_type) or not isinstance(bcc.get("display_name"), six.text_type):
                 return False, None
 
         if len(bccs) == 0:
@@ -358,11 +360,8 @@ class EmailV1(EmailHelpers, EmailBase):
 
     def indexableAttachmentNames(self):
         return u" ".join(
-            map(
-                lambda att: att.metadata.filename,
-                filter(
-                    lambda att: att.metadata.filename is not None or att.metadata.
-                    filename != u"untitled", self.attachments)))
+            [att.metadata.filename for att in [att for att in self.attachments if att.metadata.filename is not None or att.metadata.
+                    filename != u"untitled"]])
 
     def indexableRecipients(self):
         all_recips = [

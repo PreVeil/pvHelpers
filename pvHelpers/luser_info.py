@@ -1,12 +1,12 @@
+from __future__ import absolute_import
 import abc, sys
 from . import misc
 from pvHelpers import EncodingException
+import six
 if sys.platform in ["win32"]:
     from .win_helpers import PySID, ws, ADMINISTRATORS_SID, LOCAL_SYSTEM_SID
 
-class LUserInfo(object):
-    __metaclass__ = abc.ABCMeta
-
+class LUserInfo(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, platform):
         self.platform = platform
 

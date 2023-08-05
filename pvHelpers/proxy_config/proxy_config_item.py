@@ -2,6 +2,7 @@ from .constants import IPProtocol
 from .pac_parser import Pac
 
 from ..misc import g_log
+import six
 
 
 class ProxyPac(object):
@@ -138,12 +139,12 @@ class ProxyConfigItem(object):
         return self.toDict()
 
     def toDict(self):
-        return {k: v.toDict() for k, v in self.proxies.iteritems()}
+        return {k: v.toDict() for k, v in six.iteritems(self.proxies)}
 
     @classmethod
     def fromDict(cls, data_dict):
         proxies = {}
-        for k, v in data_dict.iteritems():
+        for k, v in six.iteritems(data_dict):
             if k not in ProxyConfigItem.PROTOCOL_TYPES:
                 raise ValueError(
                     u"{} is not a supported proxy protocol type".format(k))
@@ -164,7 +165,7 @@ class ProxyConfigItem(object):
 
         proxies_for_requests = {
             k: v.to_proxy_url
-            for k, v in self.proxies.iteritems()
+            for k, v in six.iteritems(self.proxies)
         }
         if len(proxies_for_requests) > 0:
             return [proxies_for_requests]

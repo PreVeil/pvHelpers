@@ -1,5 +1,7 @@
+from __future__ import absolute_import
 from .email_helpers import EmailException
 import types
+import six
 
 
 class ServerAttributes(object):
@@ -16,48 +18,48 @@ class ServerAttributes(object):
                  thread_id=None,
                  server_time=None,
                  expunged=None):
-        if not isinstance(server_id, unicode):
+        if not isinstance(server_id, six.text_type):
             raise EmailException(u"ServerAttributes.__init__: server_id must be of type unicode")
         self.server_id = server_id
 
-        if not isinstance(collection_id, (unicode, types.NoneType)):
+        if not isinstance(collection_id, (six.text_type, type(None))):
             raise EmailException(
                 u"ServerAttributes.__init__: collection_id must be of type unicode"
             )
         self.collection_id = collection_id
 
-        if not isinstance(revision_id, (int, types.NoneType)):
+        if not isinstance(revision_id, (int, type(None))):
             raise EmailException(u"ServerAttributes.__init__: revision_id must be of type int")
         self.revision_id = revision_id
 
-        if not isinstance(mailbox_server_id, (unicode, types.NoneType)):
+        if not isinstance(mailbox_server_id, (six.text_type, type(None))):
             raise EmailException(u"ServerAttributes.__init__: mailbox_server_id must be of type unicode")
         self.mailbox_server_id = mailbox_server_id
 
-        if not isinstance(mailbox_name, (unicode, types.NoneType)):
+        if not isinstance(mailbox_name, (six.text_type, type(None))):
             raise EmailException(u"ServerAttributes.__init__: mailbox_name must be of type unicode")
         self.mailbox_name = mailbox_name
 
-        if not isinstance(version, (unicode, types.NoneType)):
+        if not isinstance(version, (six.text_type, type(None))):
             raise EmailException(u"ServerAttributes.__init__: version must be of type unicode")
         self.version = version
 
-        if not isinstance(uid, (int, types.NoneType)):
+        if not isinstance(uid, (int, type(None))):
             raise EmailException(u"ServerAttributes.__init__: uid must be of type int")
         self.uid = uid
 
-        if not isinstance(thread_id, (unicode, types.NoneType)):
+        if not isinstance(thread_id, (six.text_type, type(None))):
             raise EmailException(u"ServerAttributes.__init__: thread_id must be of type unicode")
         self.thread_id = thread_id
 
-        if not isinstance(server_time, (int, types.NoneType)):
+        if not isinstance(server_time, (int, type(None))):
             raise EmailException(u"ServerAttributes.__init__: server_time must be of type int")
         self.server_time = server_time
 
         # TODO: Values are stored as `int`, need to correct DB inserts after schema update (full refetch)
-        if isinstance(expunged, (int, long)):
+        if isinstance(expunged, six.integer_types):
             expunged = bool(expunged)
-        if not isinstance(expunged, (bool, types.NoneType)):
+        if not isinstance(expunged, (bool, type(None))):
             raise EmailException(u"ServerAttributes.__init__: expunged must be of type bool")
         self.expunged = expunged
 
