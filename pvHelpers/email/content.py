@@ -1,4 +1,4 @@
-import types
+import copy, types
 import email_helpers
 from ..params import params
 
@@ -24,6 +24,18 @@ class Content(object):
         if self.__initialized and not hasattr(self, key):
             raise KeyError(u"Content has not attribute {}".format(key))
         object.__setattr__(self, key, value)
+
+    def __deepcopy__(self, memo):
+        # Do not deep copy the actual data as it is immutable and expensive to copy
+        return self.__class__(content=self.content, **copy.deepcopy(self._toThinDict(), memo))
+
+    def _toThinDict(self):
+        return {
+            "block_ids": self.block_ids,
+            "wrapped_key": self.wrapped_key,
+            "key_version": self.key_version,
+            "size": self.size
+        }
 
     def toDict(self):
         return {
