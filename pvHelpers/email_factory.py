@@ -1,7 +1,7 @@
 import types
 
 
-from pvHelpers import EncodingException, WrapExceptions
+from pvHelpers import EncodingException, WrapExceptions, g_log
 from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata,
                     EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment,
                     EmailV5, EmailV6, EmailV7, EmailHelpers)
@@ -113,8 +113,11 @@ class EmailFactory(object):
             "references": decrypted_msg["references"],
             "reply_tos": [],
             "protocol_version": decrypted_msg["protocol_version"],
-            "other_headers": decrypted_msg["private_metadata"].get("other_headers", {})
+            "other_headers": decrypted_msg["private_metadata"].get("other_headers", {}),
+            "is_expired": decrypted_msg.get("is_expired", False),
         }
+        g_log.info("DBG decrypted_msg.get(\"is_expired\", False): {}".format(decrypted_msg.get("is_expired", False)))
+        g_log.info("DBG decrypted_msg[\"is_expired\"].get(\"is_expired\", False): {}".format(decrypted_msg.get("is_expired", False)))
 
         # protocol < 5
         protocol_dependent_props = {}

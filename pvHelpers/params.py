@@ -97,7 +97,7 @@ def params(*types):
                 try:
                     __checkParamValueValidity(value, type_)
                 except (KeyError, TypeError) as e:
-                    raise type(e)(u"Invalid value for `{}`: {}".format(param_name, e))
+                    raise type(e)(u"Invalid value for `{}`: {} (actual type `{}`)".format(param_name, e, type_))
 
             for param_name, value in kwargs.iteritems():
                 type_ = types[func_signature.index(param_name)]

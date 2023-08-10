@@ -30,11 +30,12 @@ class EmailV2(EmailHelpers, EmailBase):
                  snippet=None,
                  other_headers=None,
                  external_sender=None,
+                 is_expired=False,
                  **kwargs):
         super(EmailV2, self).__init__(
             server_attr, self.__class__.protocol_version, flags, tos, ccs,
             bccs, sender, reply_tos, subject, body, attachments, references,
-            in_reply_to, message_id, snippet, other_headers, external_sender)
+            in_reply_to, message_id, snippet, other_headers, external_sender, is_expired)
 
         if body.content is not None:
             body = EmailHelpers.deserializeBody(body.content)
