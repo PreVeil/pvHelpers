@@ -116,8 +116,6 @@ class EmailFactory(object):
             "other_headers": decrypted_msg["private_metadata"].get("other_headers", {}),
             "is_expired": decrypted_msg.get("is_expired", False),
         }
-        g_log.info("DBG decrypted_msg.get(\"is_expired\", False): {}".format(decrypted_msg.get("is_expired", False)))
-        g_log.info("DBG decrypted_msg[\"is_expired\"].get(\"is_expired\", False): {}".format(decrypted_msg.get("is_expired", False)))
 
         # protocol < 5
         protocol_dependent_props = {}

@@ -64,8 +64,14 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         decrypted_private_metadata = jloads(utf8Decode(raw_private_metadata))
 
         bccs = []
-        recipients = jloads(utf8Decode(user_encryption_key.unseal(
-            b64dec(message["wrapped_recipients"]))))
+        wrapped_recipients = message["wrapped_recipients"]
+        # wrapped_recipients is empty for expired emails
+        if wrapped_recipients:
+            recipients = jloads(utf8Decode(user_encryption_key.unseal(
+                b64dec(wrapped_recipients))))
+        else:
+            recipients=u''
+            g_log.debug("wrapped_recipients empty")
 
         if message["wrapped_bccs"]:
             bccs = jloads(utf8Decode(user_encryption_key.unseal(
@@ -79,18 +85,19 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         ccs_groups_flatten = flatten_recipient_groups(ccs_groups)
 
         server_recips = CaseInsensitiveSet(map(lambda u: u.get("external_email", u["user_id"]), recipients))
-        pvm_recips = CaseInsensitiveSet(
-                map(
-                    lambda u: u["external_email"] if u.get("external_email") else u["user_id"], decrypted_private_metadata["ccs"] +
-                    decrypted_private_metadata["tos"] + tos_groups_flatten +
-                    ccs_groups_flatten
+        if server_recips:
+            pvm_recips = CaseInsensitiveSet(
+                    map(
+                        lambda u: u["external_email"] if u.get("external_email") else u["user_id"], decrypted_private_metadata["ccs"] +
+                        decrypted_private_metadata["tos"] + tos_groups_flatten +
+                        ccs_groups_flatten
+                    )
                 )
-            )
 
-        if server_recips != pvm_recips:
-            g_log.debug("pvm recips={}".format(list(pvm_recips)))
-            g_log.debug("decrypted server recips={}".format(list(server_recips)))
-            raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
+            if server_recips != pvm_recips:
+                g_log.debug("pvm recips={}".format(list(pvm_recips)))
+                g_log.debug("decrypted server recips={}".format(list(server_recips)))
+                raise EmailException(u"Server wrapped recipients don't match those of tos + ccs in private metadata")
 
         # combine group alias into tos and ccs for display purpose
         for tos_group in tos_groups:
