@@ -1,7 +1,7 @@
 import types
 
 
-from pvHelpers import EncodingException, WrapExceptions, g_log
+from pvHelpers import EncodingException, WrapExceptions
 from .email import (EmailException, PROTOCOL_VERSION, Content, AttachmentMetadata,
                     EmailV1, EmailV2, EmailV3, EmailV4, ServerAttributes, Attachment,
                     EmailV5, EmailV6, EmailV7, EmailHelpers)
