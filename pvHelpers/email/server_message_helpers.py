@@ -64,13 +64,13 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         decrypted_private_metadata = jloads(utf8Decode(raw_private_metadata))
 
         bccs = []
-        wrapped_recipients = message["wrapped_recipients"]
+        wrapped_recipients = message.get("wrapped_recipients")
         # wrapped_recipients is empty for expired emails
         if wrapped_recipients:
             recipients = jloads(utf8Decode(user_encryption_key.unseal(
                 b64dec(wrapped_recipients))))
         else:
-            recipients=u''
+            recipients= {}
             g_log.debug("wrapped_recipients empty")
 
         if message["wrapped_bccs"]:
