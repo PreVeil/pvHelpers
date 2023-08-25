@@ -15,7 +15,7 @@ class WrapExceptions(object):
             try:
                 return function(*args, **kwargs)
             except self._exs as e:
-                raise self._we(u"Function `{}` throwed {}: {}".format(function.__module__ + "." + function.__name__, type(e), traceback.format_exc()))
+                raise self._we(u"Function `{}` threw {}: {}".format(function.__module__ + "." + function.__name__, type(e), traceback.format_exc()))
 
         return wrapper
 

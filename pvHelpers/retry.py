@@ -43,7 +43,7 @@ def retry(func, args=[], kwargs={}, exceptions=[Exception], count=2, wait=0, wra
             continue
         except Exception as e:
             if wrapping_exception:
-                raise wrapping_exception(u"Function `{}` throwed {}: {}".format(func.__module__ + "." + func.__name__, type(e), traceback.format_exc()))
+                raise wrapping_exception(u"Function `{}` threw {}: {}".format(func.__module__ + "." + func.__name__, type(e), traceback.format_exc()))
             raise
         else:
             # ret_validator_func add conditions for value of `return_value` so to perform retry upon them
