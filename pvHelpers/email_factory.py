@@ -113,7 +113,8 @@ class EmailFactory(object):
             "references": decrypted_msg["references"],
             "reply_tos": [],
             "protocol_version": decrypted_msg["protocol_version"],
-            "other_headers": decrypted_msg["private_metadata"].get("other_headers", {})
+            "other_headers": decrypted_msg["private_metadata"].get("other_headers", {}),
+            "is_expired": decrypted_msg.get("is_expired", False),
         }
 
         # protocol < 5
