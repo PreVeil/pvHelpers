@@ -98,7 +98,7 @@ def params(*types):
         def wrapper(*args, **kwargs):
             # Checking callers provided values
             func_signature, _, _, default_values = inspect.getargspec(fn)
-            g_log.info("DBG wrapper({}(defaults{}, args({})))".format(func_signature, default_values, *args))
+            #g_log.info("DBG wrapper({}(defaults{}, args({})))".format(func_signature, default_values, *args))
             for value, type_, param_name in zip(args, types[:len(args)], func_signature[:len(args)]):
                 try:
                     __checkParamValueValidity(value, type_)
