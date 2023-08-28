@@ -1,7 +1,7 @@
 from .constants import IPProtocol
 from .pac_parser import Pac
 
-from ..misc import g_log
+from ..log import g_log
 
 
 class ProxyPac(object):

@@ -1,7 +1,8 @@
 from .attachment import Attachment, AttachmentMetadata, AttachmentType
 from .content import Content
 from .email_helpers import EmailException, EmailHelpers
-from ..misc import encodeContentIfUnicode, g_log
+from ..misc import encodeContentIfUnicode
+from ..log import g_log
 import email.utils
 from flanker import mime, addresslib
 

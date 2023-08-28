@@ -1,4 +1,5 @@
-from ..misc import ASCIIToUnicode, g_log, encodeContentIfUnicode, toInt, EncodingException
+from ..misc import ASCIIToUnicode, encodeContentIfUnicode, toInt, EncodingException
+from ..log import g_log
 from .email_helpers import EmailException
 from pvHelpers.hook_decorators import WrapExceptions
 import content as cnt
