@@ -1,5 +1,7 @@
 import functools, inspect
-
+from .log import g_log
+#from pvHelpers import g_log
+#import g_log
 
 # check if the provided types are valid Type Annotations
 def __checkTAValidity(*t_as):
@@ -74,6 +76,8 @@ def __checkParamValueValidity(value, type_annotation):
 def params(*types):
     __checkTAValidity(*types)
     def decoratorInstance(fn):
+        func_signature, _, _, default_values = inspect.getargspec(fn)
+        g_log.info("DBG decoratorInstance({}({}))".format(func_signature, default_values))
         func_signature, varargs, kwargs, default_values = inspect.getargspec(fn)
         if varargs or kwargs:
             raise NotImplemented(u"Don't use decorator on functions with `*`/`**` params")
@@ -93,6 +97,8 @@ def params(*types):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             # Checking callers provided values
+            func_signature, _, _, default_values = inspect.getargspec(fn)
+            g_log.info("DBG wrapper({}(defaults{}, args({})))".format(func_signature, default_values, *args))
             for value, type_, param_name in zip(args, types[:len(args)], func_signature[:len(args)]):
                 try:
                     __checkParamValueValidity(value, type_)

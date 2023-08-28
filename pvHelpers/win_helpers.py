@@ -13,7 +13,7 @@ import win32process
 import win32security as ws
 import win32ts
 
-from .misc import g_log
+from .log import g_log
 
 DWORD = ctypes.c_ulong
 ULONG = ctypes.c_ulong
