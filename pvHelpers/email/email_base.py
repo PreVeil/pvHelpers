@@ -15,7 +15,7 @@ class EmailBase(object):
 
     def __init__(self, server_attr, protocol_version, flags, tos, ccs, bccs,
                  sender, reply_tos, subject, body, attachments, references,
-                 in_reply_to, message_id, snippet, other_headers=None, external_sender=None):
+                 in_reply_to, message_id, snippet, other_headers=None, external_sender=None, is_expired=False):
         if not isinstance(server_attr, (ServerAttributes, NOT_ASSIGNED)):
             raise EmailException(u"EmailBase.__init__: server_attr must be of type ServerAttributes/NOT_ASSIGNED")
         self.server_attr = server_attr
@@ -115,6 +115,10 @@ class EmailBase(object):
             if external_sender is not None:
                 raise EmailException(u"EmailBase.__init__: external_sender must be of type unicode")
         self.external_sender = external_sender
+
+        if not isinstance(is_expired, bool):
+            raise EmailException(u"EmailBase.__init__: is_expired must be of type bool")
+        self.is_expired = is_expired
 
 
     def __setattr__(self, key, value):
