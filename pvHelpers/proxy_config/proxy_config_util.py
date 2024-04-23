@@ -4,7 +4,7 @@ import sys
 import time
 
 from .constants import IPProtocol, ProxyKey
-from ..misc import g_log
+from ..log import g_log
 from .proxy_config_item import ProxyConfigItem, ProxyPac, ProxyUrl
 
 if "win32" == sys.platform:

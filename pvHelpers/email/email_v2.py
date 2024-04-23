@@ -1,6 +1,7 @@
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION
 from .email_base import EmailBase
-from ..misc import b64enc, g_log, NOT_ASSIGNED, EncodingException
+from ..misc import b64enc, NOT_ASSIGNED, EncodingException
+from ..log import g_log
 import email.utils
 from .parsers import createMime, parseMime
 from flanker import mime, addresslib

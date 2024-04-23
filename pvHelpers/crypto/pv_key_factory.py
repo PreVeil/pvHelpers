@@ -4,7 +4,7 @@ from .user_key import UserKeyV0, PublicUserKeyV0, UserKeyV1, PublicUserKeyV1
 from .symm_key import SymmKeyV0, SymmKeyV1
 from .asymm_key import AsymmKeyV0, AsymmKeyV2, AsymmKeyV3, PublicKeyV3, PublicKeyV2, AsymmKeyV1, PublicKeyV1
 from .sign_key import SignKeyV3, SignKeyV1, SignKeyV0, VerifyKeyV1, VerifyKeyV0, VerifyKeyV3
-from .utils import CryptoException, g_log, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, \
+from .utils import CryptoException, UserKeyBuffer, ProtobufErrors, KeyBuffer, PublicUserKeyBuffer, b64dec, \
     utf8Decode, jloads, EC_SECRET_LENGTH
 from pvHelpers import EncodingException
 

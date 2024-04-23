@@ -2,7 +2,8 @@ import types
 
 from .email_helpers import EmailHelpers, EmailException, PROTOCOL_VERSION, DUMMY_DISPOSITION, DUMMY_CONTENT_TYPE
 from .email_base import EmailBase
-from ..misc import b64enc, NOT_ASSIGNED, g_log, encodeContentIfUnicode, EncodingException
+from ..misc import b64enc, NOT_ASSIGNED, encodeContentIfUnicode, EncodingException
+from ..log import g_log
 from flanker import mime, addresslib
 from .attachment import Attachment, AttachmentMetadata
 from .content import Content

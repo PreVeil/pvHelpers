@@ -7,7 +7,7 @@ import sys
 
 import certifi
 
-from .misc import g_log
+from .log import g_log
 
 
 class CertificateBundle(object):

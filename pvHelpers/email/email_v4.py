@@ -1,6 +1,6 @@
 from .email_v2 import EmailV2
 from .email_helpers import PROTOCOL_VERSION, EmailHelpers, EmailException
-from ..misc import g_log
+from ..log import g_log
 
 
 class EmailV4(EmailV2):
