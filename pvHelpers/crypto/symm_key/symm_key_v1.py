@@ -47,7 +47,7 @@ class SymmKeyV1(SymmKeyBase):
         return cipher
 
 
-    @params(object, bytes)
+    @params(object, bytes, {bool, types.NoneType})
     def decrypt(self, cipher, ignore_header=False):
         tag = cipher[-(FC.AES_TAG_LENGTH):]
         iv = cipher[-(FC.AES_TAG_LENGTH + FC.IV_LENGTH):-(FC.AES_TAG_LENGTH)]

@@ -1,4 +1,4 @@
-import struct, libnacl
+import struct, types, libnacl
 from ..asymm_key import AsymmKeyBase, PublicKeyBase
 from pvHelpers.hook_decorators import WrapExceptions
 from ..utils import CryptoException, utf8Encode, utf8Decode, b64enc, b64dec, HexEncode, Sha512Sum, params
@@ -25,7 +25,7 @@ class AsymmBox(object):
 
 
     @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
-    @params(object, bytes)
+    @params(object, bytes, {bool, types.NoneType})
     def decrypt(self, cipher, ignore_header=False):
         message_with_header = self.__box.decrypt(cipher)
         return message_with_header if ignore_header else message_with_header[HEADER_LENGTH:]
