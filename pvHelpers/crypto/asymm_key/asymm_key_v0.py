@@ -63,10 +63,10 @@ class AsymmKeyV0(AsymmKeyBase):
 
 
     @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
-    @params(object, bytes)
-    def unseal(self, cipher):
+    @params(object, bytes, {bool, types.NoneType})
+    def unseal(self, cipher, ignore_header=False):
         message_with_header = self._key_pair.seal_open(cipher)
-        return message_with_header[HEADER_LENGTH:]
+        return message_with_header if ignore_header else message_with_header[HEADER_LENGTH:]
 
 
     def serialize(self):

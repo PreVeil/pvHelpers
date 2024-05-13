@@ -87,8 +87,8 @@ class AsymmKeyV3(AsymmKeyBase):
         return self._public_key
 
 
-    @params(object, bytes)
-    def unseal(self, cipher):
+    @params(object, bytes, {bool, types.NoneType})
+    def unseal(self, cipher, ignore_header=False):
         try:
             buffer = SealedDataBuffer()
             buffer.ParseFromString(cipher)

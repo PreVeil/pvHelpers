@@ -58,11 +58,11 @@ class SymmKeyV0(SymmKeyBase):
 
 
     @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
-    @params(object, bytes)
-    def decrypt(self, cipher):
+    @params(object, bytes, {bool, types.NoneType})
+    def decrypt(self, cipher, ignore_header=False):
         message = self._box.decrypt(cipher)
         header_byte = struct.unpack(">BBBB", message[:HEADER_LENGTH])[0]
-        return message[HEADER_LENGTH:]
+        return message if ignore_header else message[HEADER_LENGTH:]
 
 
     def __eq__(self, other):
