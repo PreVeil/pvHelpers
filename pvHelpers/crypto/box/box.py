@@ -26,9 +26,9 @@ class AsymmBox(object):
 
     @WrapExceptions(CryptoException, [libnacl.CryptError, ValueError])
     @params(object, bytes)
-    def decrypt(self, cipher):
+    def decrypt(self, cipher, ignore_header=False):
         message_with_header = self.__box.decrypt(cipher)
-        return message_with_header[HEADER_LENGTH:]
+        return message_with_header if ignore_header else message_with_header[HEADER_LENGTH:]
 
 
     def getPin(self):
