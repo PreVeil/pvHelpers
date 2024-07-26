@@ -12,6 +12,7 @@ from .application_config import ApplicationConfig
 from .proxy_config import *
 from .connection_info import *
 from .certificate_bundle import *
+from .device_certificate import *
 
 import sys
 if sys.platform in ["win32"]:
