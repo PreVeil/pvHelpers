@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - pavel/*
   pull_request:
 
 jobs:
