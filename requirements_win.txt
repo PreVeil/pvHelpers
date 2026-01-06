@@ -11,4 +11,4 @@ https://github.com/PreVeil/vendor/raw/master/python/cffi-1.14.0-cp27-cp27m-win32
 https://github.com/PreVeil/vendor/raw/master/python/cryptography-3.2-cp27-cp27m-win32.whl
 
 # fipscrypto
-https://pv-bin-storage.s3.amazonaws.com/ci/fipscrypto_build_win_32/5b08db02589a1024c385d26c78651be5be69d5f4/fipscrypto-2.0.1-cp27-cp27m-win32.whl
+https://pv-bin-storage.s3.amazonaws.com/ci/fipscrypto_build_win_32/f018f568d1ab79b10f3c17825f32bca923aec18f/fipscrypto-2.0.1-cp27-cp27m-win32.whl
