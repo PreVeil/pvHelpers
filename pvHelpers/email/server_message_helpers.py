@@ -1,6 +1,7 @@
 import calendar
 import time
 
+from .. import parse_datetime_as_epoch
 from ..misc import utf8Encode, utf8Decode, jloads, b64dec, \
     MergeDicts, CaseInsensitiveSet, CaseInsensitiveDict, g_log
 from ..crypto import Sha256Sum
@@ -122,7 +123,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
             "body": decrypted_private_metadata["body"],
             "private_metadata": decrypted_private_metadata,
             "raw_private_metadata": raw_private_metadata,  # use for the signature verification
-            "timestamp": calendar.timegm(time.strptime(message["timestamp"], "%Y-%m-%dT%H:%M:%S")),
+            "timestamp": parse_datetime_as_epoch(message["timestamp"]),
             "attachments": decrypted_private_metadata["attachments"]
         })
     else:
@@ -132,7 +133,7 @@ def decryptServerMessage(message, user_encryption_key, mail_decrypt_key):
         return MergeDicts(message, {
             "body": MergeDicts(message["body"], {"snippet": utf8Decode(mail_decrypt_key.decrypt(b64dec(message["body"]["snippet"])))}),
             "private_metadata": decrypted_private_metadata,
-            "timestamp": calendar.timegm(time.strptime(message["timestamp"], "%Y-%m-%dT%H:%M:%S")),
+            "timestamp": parse_datetime_as_epoch(message["timestamp"]),
             "attachments": map(lambda att: MergeDicts(att, {"name": utf8Decode(mail_decrypt_key.decrypt(b64dec(att["name"])))}), message["attachments"])
         })
 
