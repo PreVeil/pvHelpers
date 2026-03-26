@@ -14,6 +14,9 @@ import sys
 import time
 import types
 import urllib
+import dateutil.parser
+import calendar
+from dateutil.tz import tzutc
 
 import requests
 import simplejson
@@ -696,3 +699,19 @@ def parse_file_uri(path):
     else:
         # treat as a local file
         return False, urllib.unquote(path)
+
+def parse_datetime_as_utc(dt_string):
+    """Parse a datetime string and ensure it's timezone-aware (UTC).
+    If the string has no timezone info, assume UTC.
+    """
+    dt = dateutil.parser.parse(dt_string)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=tzutc())
+    return dt
+
+def parse_datetime_as_epoch(dt_string):
+    """Parse a datetime string to a UTC epoch integer.
+    Handles both naive and timezone-aware ISO strings.
+    """
+    dt = parse_datetime_as_utc(dt_string)
+    return int(calendar.timegm(dt.utctimetuple()))
